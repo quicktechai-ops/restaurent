@@ -1,0 +1,1358 @@
+
+## 1. CORE & SECURITY
+
+### 1.1. `Branches`
+
+Represents each location / restaurant.
+
+* `BranchId` INT IDENTITY PK
+* `Name` NVARCHAR(100) NOT NULL
+* `Code` NVARCHAR(50) UNIQUE
+* `Country` NVARCHAR(100)
+* `City` NVARCHAR(100)
+* `Address` NVARCHAR(255)
+* `Phone` NVARCHAR(50)
+* `DefaultCurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies.CurrencyCode`
+* `VATPercent` DECIMAL(5,2) NOT NULL
+* `ServiceChargePercent` DECIMAL(5,2) NOT NULL
+* `IsActive` BIT NOT NULL DEFAULT 1
+* `DeletedAt` DATETIME2 NULL
+* `CreatedAt` DATETIME2 NOT NULL
+* `CreatedByUserId` INT NULL → FK `Users.UserId`
+* `UpdatedAt` DATETIME2 NULL
+* `UpdatedByUserId` INT NULL → FK `Users.UserId`
+
+**Note:** `CreatedByUserId` is NULL for the initial seed branch to avoid circular dependency with Users table.
+
+---
+
+### 1.2. `Users`
+
+* `UserId` INT IDENTITY PK
+* `Username` NVARCHAR(50) UNIQUE NOT NULL
+* `PasswordHash` VARBINARY(MAX) NOT NULL
+* `FullName` NVARCHAR(100) NOT NULL
+* `Phone` NVARCHAR(50) NULL
+* `Email` NVARCHAR(100) NULL
+* `DefaultBranchId` INT NULL → FK `Branches.BranchId`
+* `IsActive` BIT NOT NULL DEFAULT 1
+* `DeletedAt` DATETIME2 NULL
+* `LastLoginAt` DATETIME2 NULL
+* `CreatedAt` DATETIME2 NOT NULL
+* `CreatedByUserId` INT NULL → FK `Users.UserId`
+* `UpdatedAt` DATETIME2 NULL
+* `UpdatedByUserId` INT NULL → FK `Users.UserId`
+
+---
+
+### 1.3. `Roles`
+
+* `RoleId` INT IDENTITY PK
+* `BranchId` INT NULL → FK `Branches` (NULL = global role, applies to all branches)
+* `Name` NVARCHAR(50) NOT NULL
+* `Description` NVARCHAR(255) NULL
+* `IsActive` BIT NOT NULL DEFAULT 1
+* `CreatedAt` DATETIME2 NOT NULL
+* `UpdatedAt` DATETIME2 NULL
+
+**Constraint:** UNIQUE(`BranchId`, `Name`) - role names unique per branch scope
+
+---
+
+### 1.4. `UserRoles` (many-to-many)
+
+* `UserRoleId` INT IDENTITY PK
+* `UserId` INT NOT NULL → FK `Users`
+* `RoleId` INT NOT NULL → FK `Roles`
+* `AssignedAt` DATETIME2 NOT NULL
+* `AssignedByUserId` INT NULL → FK `Users`
+
+**Constraint:** UNIQUE(`UserId`, `RoleId`) - prevents duplicate role assignments
+
+---
+
+### 1.5. `Permissions`
+
+(optional but powerful)
+
+* `PermissionId` INT IDENTITY PK
+* `Code` NVARCHAR(100) UNIQUE NOT NULL  (e.g. `POS.OPEN_SHIFT`, `DISCOUNT.APPROVE_HIGH`)
+* `Description` NVARCHAR(255)
+
+---
+
+### 1.6. `RolePermissions`
+
+* `RolePermissionId` INT IDENTITY PK
+* `RoleId` INT NOT NULL → FK `Roles`
+* `PermissionId` INT NOT NULL → FK `Permissions`
+
+**Constraint:** UNIQUE(`RoleId`, `PermissionId`) - prevents duplicate permission assignments
+
+This lets you implement all those “can approve discount”, “can void paid invoice”, etc.
+
+---
+
+### 1.7. `PaymentMethods`
+
+* `PaymentMethodId` INT IDENTITY PK
+* `Name` NVARCHAR(50) NOT NULL (Cash, Card, Voucher, GiftCard…)
+* `Type` NVARCHAR(20) NOT NULL (Cash, Card, GiftCard, LoyaltyPoints, Other)
+* `RequiresReference` BIT NOT NULL DEFAULT 0 (e.g., card requires approval code)
+* `IsActive` BIT NOT NULL DEFAULT 1
+* `SortOrder` INT NOT NULL DEFAULT 0
+* `CreatedAt` DATETIME2 NOT NULL
+* `UpdatedAt` DATETIME2 NULL
+
+---
+
+## 2. CURRENCIES & EXCHANGE
+
+### 2.1. `Currencies`
+
+* `CurrencyCode` NVARCHAR(3) PK (e.g. USD, LBP)
+* `Name` NVARCHAR(50)
+* `Symbol` NVARCHAR(10)
+* `DecimalPlaces` TINYINT NOT NULL
+* `IsDefault` BIT NOT NULL DEFAULT 0
+* `IsActive` BIT NOT NULL DEFAULT 1
+
+---
+
+### 2.2. `ExchangeRates`
+
+* `ExchangeRateId` INT IDENTITY PK
+* `BaseCurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies` (e.g. USD)
+* `ForeignCurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies` (e.g. LBP)
+* `Rate` DECIMAL(18,6) NOT NULL
+
+  * Meaning: 1 BaseCurrency = Rate * ForeignCurrency
+* `ValidFrom` DATETIME2 NOT NULL
+* `ValidTo` DATETIME2 NULL
+
+When saving an order in a non-base currency, store the **rate used** there:
+
+```sql
+-- Conceptual formula:
+BaseAmount = ForeignAmount / RateUsedOnInvoice
+```
+
+---
+
+## 3. DINING AREA (TABLES & KITCHEN)
+
+### 3.1. `RestaurantTables`
+
+* `TableId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `TableName` NVARCHAR(50) NOT NULL
+* `Zone` NVARCHAR(50) NULL (Hall, Terrace, VIP…)
+* `Capacity` INT NOT NULL
+* `IsActive` BIT NOT NULL DEFAULT 1
+
+---
+
+### 3.2. `KitchenStations`
+
+* `KitchenStationId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `Name` NVARCHAR(50) NOT NULL (Grill, Salad, Bar…)
+* `IsActive` BIT NOT NULL DEFAULT 1
+
+---
+
+## 4. MENU, MODIFIERS & RECIPES
+
+### 4.1. `Categories`
+
+* `CategoryId` INT IDENTITY PK
+* `BranchId` INT NULL → FK `Branches` (NULL = global category)
+* `ParentCategoryId` INT NULL → FK `Categories` (self)
+* `Name` NVARCHAR(100) NOT NULL
+* `NameAr` NVARCHAR(100) NULL (Arabic name for multi-language)
+* `SortOrder` INT NOT NULL DEFAULT 0
+* `IsActive` BIT NOT NULL DEFAULT 1
+* `CreatedAt` DATETIME2 NOT NULL
+* `UpdatedAt` DATETIME2 NULL
+
+---
+
+### 4.2. `MenuItems`
+
+* `MenuItemId` INT IDENTITY PK
+* `BranchId` INT NULL (if null → global, else branch-specific item/pricing)
+* `CategoryId` INT NOT NULL → FK `Categories`
+* `Name` NVARCHAR(100) NOT NULL
+* `NameAr` NVARCHAR(100) NULL (Arabic name for multi-language support)
+* `Code` NVARCHAR(50) NULL UNIQUE
+* `Description` NVARCHAR(255) NULL
+* `DescriptionAr` NVARCHAR(255) NULL
+* `DefaultPrice` DECIMAL(18,2) NOT NULL
+* `CurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies`
+* `TaxIncluded` BIT NOT NULL DEFAULT 0
+* `AllowSizes` BIT NOT NULL DEFAULT 0
+* `HasRecipe` BIT NOT NULL DEFAULT 0
+* `KitchenStationId` INT NULL → FK `KitchenStations`
+* `IsVisibleOnlineMenu` BIT NOT NULL DEFAULT 1
+* `ItemCommissionPerUnit` DECIMAL(18,2) NULL
+* `IsActive` BIT NOT NULL DEFAULT 1
+* `CreatedAt` DATETIME2 NOT NULL
+* `UpdatedAt` DATETIME2 NULL
+
+---
+
+### 4.2.1. `MenuItemPriceHistory`
+
+Tracks all price changes for audit and historical reporting.
+
+* `PriceHistoryId` INT IDENTITY PK
+* `MenuItemId` INT NOT NULL → FK `MenuItems`
+* `MenuItemSizeId` INT NULL → FK `MenuItemSizes`
+* `OldPrice` DECIMAL(18,2) NOT NULL
+* `NewPrice` DECIMAL(18,2) NOT NULL
+* `CurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies`
+* `ChangedAt` DATETIME2 NOT NULL
+* `ChangedByUserId` INT NOT NULL → FK `Users`
+* `Reason` NVARCHAR(255) NULL
+
+---
+
+### 4.3. `MenuItemSizes`
+
+* `MenuItemSizeId` INT IDENTITY PK
+* `MenuItemId` INT NOT NULL → FK `MenuItems`
+* `SizeName` NVARCHAR(50) NOT NULL (Small, Medium…)
+* `Price` DECIMAL(18,2) NOT NULL
+* `CurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies`
+* `Cost` DECIMAL(18,4) NULL
+
+---
+
+### 4.4. `Modifiers` (e.g. extra cheese)
+
+* `ModifierId` INT IDENTITY PK
+* `BranchId` INT NULL → FK `Branches` (NULL = global modifier, applies to all branches)
+* `Name` NVARCHAR(100) NOT NULL
+* `NameAr` NVARCHAR(100) NULL (Arabic name for multi-language)
+* `Description` NVARCHAR(255) NULL
+* `ExtraPrice` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `CurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies`
+* `IsActive` BIT NOT NULL DEFAULT 1
+* `CreatedAt` DATETIME2 NOT NULL
+* `UpdatedAt` DATETIME2 NULL
+
+**Constraint:** UNIQUE(`BranchId`, `Name`) - modifier names unique per branch scope
+
+---
+
+### 4.5. `MenuItemModifiers` (which modifiers allowed for which item)
+
+* `MenuItemModifierId` INT IDENTITY PK
+* `MenuItemId` INT NOT NULL → FK `MenuItems`
+* `ModifierId` INT NOT NULL → FK `Modifiers`
+* `IsRequired` BIT NOT NULL DEFAULT 0
+* `MaxQuantity` INT NULL (NULL = unlimited, e.g., max 3 extra toppings)
+* `SortOrder` INT NOT NULL DEFAULT 0
+
+**Constraint:** UNIQUE(`MenuItemId`, `ModifierId`) - prevents duplicate modifier assignments
+
+---
+
+### 4.6. `InventoryItems` (Ingredients)
+
+* `InventoryItemId` INT IDENTITY PK
+* `Name` NVARCHAR(100) NOT NULL
+* `Code` NVARCHAR(50) NULL UNIQUE
+* `UnitOfMeasure` NVARCHAR(20) NOT NULL (kg, g, liter, pcs…)
+* `Category` NVARCHAR(50) NULL (Food, Beverage…)
+* `MinLevel` DECIMAL(18,4) NOT NULL DEFAULT 0
+* `ReorderQty` DECIMAL(18,4) NOT NULL DEFAULT 0
+* `CostMethod` NVARCHAR(20) NOT NULL DEFAULT 'Average'
+* `IsActive` BIT NOT NULL DEFAULT 1
+
+*Current stock is derived from `StockTransactions`.*
+
+---
+
+### 4.7. `Recipes`
+
+Supports recipes per menu item OR per size (e.g., Large Pizza uses more ingredients than Small).
+
+* `RecipeId` INT IDENTITY PK
+* `MenuItemId` INT NOT NULL → FK `MenuItems`
+* `MenuItemSizeId` INT NULL → FK `MenuItemSizes` (NULL = default recipe for item, specific size overrides)
+* `YieldQuantity` DECIMAL(18,4) NOT NULL DEFAULT 1  (how many sale units this recipe covers)
+* `IsActive` BIT NOT NULL DEFAULT 1
+* `CreatedAt` DATETIME2 NOT NULL
+* `UpdatedAt` DATETIME2 NULL
+
+**Constraint:** UNIQUE(`MenuItemId`, `MenuItemSizeId`) - one recipe per item/size combination
+
+**Logic:**
+```text
+When selling:
+1. If MenuItemSizeId is specified, look for recipe with that SizeId
+2. If not found, fall back to recipe where MenuItemSizeId IS NULL
+```
+
+---
+
+### 4.8. `RecipeIngredients`
+
+* `RecipeIngredientId` INT IDENTITY PK
+* `RecipeId` INT NOT NULL → FK `Recipes`
+* `InventoryItemId` INT NOT NULL → FK `InventoryItems`
+* `QuantityPerYield` DECIMAL(18,4) NOT NULL  (amount for the defined yield)
+
+*When selling, app calculates for sold quantity:*
+
+```text
+IngredientConsumptionQty = QuantityPerYield * (SoldQty / YieldQuantity)
+```
+
+---
+
+## 5. CUSTOMERS, ADDRESSES, HISTORY
+
+### 5.1. `Customers`
+
+* `CustomerId` INT IDENTITY PK
+* `CustomerCode` NVARCHAR(50) NULL UNIQUE
+* `Name` NVARCHAR(100) NOT NULL
+* `Phone` NVARCHAR(50) NULL
+* `Email` NVARCHAR(100) NULL
+* `DefaultBranchId` INT NULL → FK `Branches`
+* `DefaultCurrencyCode` NVARCHAR(3) NULL → FK `Currencies`
+* `Notes` NVARCHAR(255) NULL
+* `IsActive` BIT NOT NULL DEFAULT 1
+
+---
+
+### 5.2. `CustomerAddresses`
+
+* `CustomerAddressId` INT IDENTITY PK
+* `CustomerId` INT NOT NULL → FK `Customers`
+* `Label` NVARCHAR(50) NOT NULL (Home, Work…)
+* `AddressLine1` NVARCHAR(255) NOT NULL
+* `AddressLine2` NVARCHAR(255) NULL
+* `City` NVARCHAR(100) NOT NULL
+* `Area` NVARCHAR(100) NULL
+* `Latitude` DECIMAL(9,6) NULL
+* `Longitude` DECIMAL(9,6) NULL
+* `DeliveryZoneId` INT NULL → FK `DeliveryZones`
+* `IsDefault` BIT NOT NULL DEFAULT 0
+
+---
+
+## 6. LOYALTY (POINTS & TIERS)
+
+### 6.1. `LoyaltySettings` (Singleton row or per branch)
+
+* `LoyaltySettingsId` INT IDENTITY PK
+* `BranchId` INT NULL → FK `Branches` (null = global)
+* `PointsPerAmount` DECIMAL(18,4) NOT NULL DEFAULT 1   (e.g. 1 point)
+* `AmountUnit` DECIMAL(18,4) NOT NULL DEFAULT 10       (per 10 currency)
+* `EarnOnNetBeforeTax` BIT NOT NULL DEFAULT 1
+* `PointsRedeemValue` DECIMAL(18,4) NOT NULL DEFAULT 0.1 -- each point = 0.1
+* `PointsExpiryMonths` INT NULL (null = no expiry)
+
+**Formula (conceptual, not DB):**
+
+```text
+NetAmountForLoyalty = (NetBeforeTax or NetAfterTax)
+
+PointsEarned = FLOOR(NetAmountForLoyalty / AmountUnit) * PointsPerAmount
+RedeemValue = PointsToRedeem * PointsRedeemValue
+```
+
+---
+
+### 6.2. `LoyaltyTiers`
+
+* `LoyaltyTierId` INT IDENTITY PK
+* `Name` NVARCHAR(50) NOT NULL (Bronze, Silver, Gold)
+* `MinTotalSpent` DECIMAL(18,2) NOT NULL
+* `MinTotalPoints` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `TierDiscountPercent` DECIMAL(5,2) NOT NULL DEFAULT 0
+* `IsActive` BIT NOT NULL DEFAULT 1
+
+---
+
+### 6.3. `LoyaltyAccounts`
+
+* `LoyaltyAccountId` INT IDENTITY PK
+* `CustomerId` INT NOT NULL → FK `Customers`
+* `PointsBalance` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `LoyaltyTierId` INT NULL → FK `LoyaltyTiers`
+* `TierAssignedAt` DATETIME2 NULL
+
+---
+
+### 6.4. `LoyaltyTransactions`
+
+* `LoyaltyTransactionId` INT IDENTITY PK
+* `LoyaltyAccountId` INT NOT NULL → FK `LoyaltyAccounts`
+* `TransactionDate` DATETIME2 NOT NULL
+* `Type` NVARCHAR(20) NOT NULL  (Earn, Redeem, Adjust, Expire)
+* `PointsChange` DECIMAL(18,2) NOT NULL  (+/-)
+* `PointsBefore` DECIMAL(18,2) NOT NULL
+* `PointsAfter` DECIMAL(18,2) NOT NULL
+* `OrderId` INT NULL → FK `Orders`
+* `Notes` NVARCHAR(255) NULL
+* `UserId` INT NULL → FK `Users`
+
+---
+
+## 7. GIFT CARDS / VOUCHERS
+
+### 7.1. `GiftCards`
+
+* `GiftCardId` INT IDENTITY PK
+* `GiftCardNumber` NVARCHAR(50) UNIQUE NOT NULL
+* `BranchIssuedId` INT NOT NULL → FK `Branches`
+* `IssueDate` DATETIME2 NOT NULL
+* `CurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies`
+* `InitialValue` DECIMAL(18,2) NOT NULL
+* `CurrentBalance` DECIMAL(18,2) NOT NULL
+* `ExpiryDate` DATETIME2 NULL
+* `Status` NVARCHAR(20) NOT NULL  (Active, UsedUp, Expired, Blocked)
+* `CustomerId` INT NULL → FK `Customers`
+
+---
+
+### 7.2. `GiftCardTransactions`
+
+* `GiftCardTransactionId` INT IDENTITY PK
+* `GiftCardId` INT NOT NULL → FK `GiftCards`
+* `TransactionDate` DATETIME2 NOT NULL
+* `Type` NVARCHAR(20) NOT NULL (Load, Redeem, Refund, Adjust)
+* `Amount` DECIMAL(18,2) NOT NULL
+* `CurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies`
+* `BalanceBefore` DECIMAL(18,2) NOT NULL
+* `BalanceAfter` DECIMAL(18,2) NOT NULL
+* `OrderId` INT NULL → FK `Orders`
+* `UserId` INT NULL → FK `Users`
+* `Notes` NVARCHAR(255) NULL
+
+---
+
+## 8. RESERVATIONS (NO-SHOW + DEPOSITS)
+
+### 8.1. `Reservations`
+
+* `ReservationId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `CustomerId` INT NULL → FK `Customers`
+* `ReservationDate` DATE NOT NULL
+* `StartTime` TIME NOT NULL
+* `DurationMinutes` INT NOT NULL
+* `PartySize` INT NOT NULL
+* `TableId` INT NULL → FK `RestaurantTables`
+* `Status` NVARCHAR(20) NOT NULL  (Pending, Confirmed, Seated, Canceled, NoShow)
+* `Channel` NVARCHAR(20) NOT NULL  (Phone, WalkIn, Online)
+* `Notes` NVARCHAR(255) NULL
+* `CreatedAt` DATETIME2 NOT NULL
+* `CreatedByUserId` INT NOT NULL → FK `Users`
+
+**Deposit info can be separate:**
+
+---
+
+### 8.2. `ReservationDeposits`
+
+* `ReservationDepositId` INT IDENTITY PK
+* `ReservationId` INT NOT NULL → FK `Reservations`
+* `Amount` DECIMAL(18,2) NOT NULL
+* `CurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies`
+* `Status` NVARCHAR(20) NOT NULL  (Pending, Paid, Forfeited, Refunded)
+* `PaymentMethodId` INT NULL → FK `PaymentMethods`
+* `PaidAt` DATETIME2 NULL
+* `RefundedAt` DATETIME2 NULL
+* `UserId` INT NULL → FK `Users`
+
+---
+
+## 9. DELIVERY ZONES & FEES
+
+### 9.1. `DeliveryZones`
+
+* `DeliveryZoneId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `ZoneName` NVARCHAR(100) NOT NULL
+* `Description` NVARCHAR(255) NULL
+* `MinOrderAmount` DECIMAL(18,2) NULL
+* `BaseFee` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `ExtraFeePerKm` DECIMAL(18,2) NULL
+* `MaxDistanceKm` DECIMAL(18,2) NULL
+* `IsActive` BIT NOT NULL DEFAULT 1
+
+---
+
+## 10. POS: SHIFTS, ORDERS, PAYMENTS
+
+### 10.1. `Shifts`
+
+* `ShiftId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `CashierUserId` INT NOT NULL → FK `Users`
+* `OpenTime` DATETIME2 NOT NULL
+* `CloseTime` DATETIME2 NULL
+* `ExpectedCloseTime` DATETIME2 NULL (for auto-close reminders)
+* `OpeningCash` DECIMAL(18,2) NOT NULL
+* `ClosingCash` DECIMAL(18,2) NULL
+* `ExpectedCash` DECIMAL(18,2) NULL
+* `CashDifference` DECIMAL(18,2) NULL
+* `Status` NVARCHAR(20) NOT NULL DEFAULT 'Open' (Open, Closed, ForceClosedBySystem)
+* `ForceClosedAt` DATETIME2 NULL (if system auto-closed)
+* `ForceCloseReason` NVARCHAR(255) NULL
+* `Notes` NVARCHAR(255) NULL
+
+**Validation Rules:**
+```text
+1. Only one shift can be Open per CashierUserId at a time
+2. System job can auto-close shifts open > 24 hours with Status = 'ForceClosedBySystem'
+3. New shift cannot open if previous shift has CashDifference not reconciled
+```
+
+---
+
+### 10.2. `Orders`
+
+This is your invoice header.
+
+* `OrderId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `ShiftId` INT NULL → FK `Shifts`
+* `OrderNumber` NVARCHAR(50) NOT NULL
+* `OrderType` NVARCHAR(20) NOT NULL (DineIn, Takeaway, Delivery)
+
+**Constraint:** UNIQUE(`BranchId`, `OrderNumber`) - order numbers unique per branch
+* `TableId` INT NULL → FK `RestaurantTables`
+* `WaiterUserId` INT NULL → FK `Users`
+* `CashierUserId` INT NULL → FK `Users`
+* `CustomerId` INT NULL → FK `Customers`
+* `OrderStatus` NVARCHAR(20) NOT NULL (Draft, SentToKitchen, Ready, Served, Paid, Voided)
+* `CurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies`
+* `ExchangeRateToBase` DECIMAL(18,6) NOT NULL DEFAULT 1
+* `SubTotal` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `TotalLineDiscount` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `BillLevelDiscount` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `ServiceChargeAmount` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `TaxAmount` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `DeliveryFee` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `TipsAmount` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `GrandTotal` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `NetAmountForLoyalty` DECIMAL(18,2) NULL
+* `LoyaltyPointsEarned` DECIMAL(18,2) NULL
+* `LoyaltyPointsRedeemed` DECIMAL(18,2) NULL
+* `CreatedAt` DATETIME2 NOT NULL
+* `PaidAt` DATETIME2 NULL
+* `TotalPaid` DECIMAL(18,2) NOT NULL DEFAULT 0 (sum of all payments)
+* `BalanceDue` DECIMAL(18,2) NOT NULL DEFAULT 0 (GrandTotal - TotalPaid)
+* `PaymentStatus` NVARCHAR(20) NOT NULL DEFAULT 'Unpaid' (Unpaid, PartiallyPaid, Paid, Overpaid)
+* `VoidedAt` DATETIME2 NULL
+* `VoidReason` NVARCHAR(255) NULL
+* `VoidByUserId` INT NULL → FK `Users`
+* `ApprovedVoidByUserId` INT NULL → FK `Users`
+* `MergedFromOrderId` INT NULL → FK `Orders` (if merged from another table)
+* `SplitFromOrderId` INT NULL → FK `Orders` (if split from another order)
+* `UpdatedAt` DATETIME2 NULL
+
+**Calculations (app logic):**
+
+```text
+SubTotal = Σ(LineNetBeforeLineDiscount)
+TotalLineDiscount = Σ(LineDiscount)
+BillLevelDiscount = maybe % or fixed
+NetBeforeServiceAndTax = SubTotal - TotalLineDiscount - BillLevelDiscount
+ServiceChargeAmount = NetBeforeServiceAndTax * ServiceCharge% / 100
+NetBeforeTax = NetBeforeServiceAndTax + ServiceChargeAmount + DeliveryFee
+TaxAmount = NetBeforeTax * VAT% / 100
+GrandTotal = NetBeforeTax + TaxAmount + TipsAmount
+```
+
+---
+
+### 10.3. `OrderLines`
+
+* `OrderLineId` INT IDENTITY PK
+* `OrderId` INT NOT NULL → FK `Orders`
+* `MenuItemId` INT NOT NULL → FK `MenuItems`
+* `MenuItemSizeId` INT NULL → FK `MenuItemSizes`
+* `Quantity` DECIMAL(18,4) NOT NULL
+* `BaseUnitPrice` DECIMAL(18,2) NOT NULL (without modifiers)
+* `ModifiersExtraPrice` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `EffectiveUnitPrice` AS (`BaseUnitPrice` + `ModifiersExtraPrice`) PERSISTED (optional computed column)
+* `LineGross` DECIMAL(18,2) NOT NULL  (EffectiveUnitPrice * Quantity)
+* `LineDiscount` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `LineNet` DECIMAL(18,2) NOT NULL  (LineGross - LineDiscount)
+* `Notes` NVARCHAR(255) NULL
+* `KitchenStatus` NVARCHAR(20) NOT NULL DEFAULT 'New' (New, InProgress, Ready, Served)
+
+---
+
+### 10.4. `OrderLineModifiers`
+
+* `OrderLineModifierId` INT IDENTITY PK
+* `OrderLineId` INT NOT NULL → FK `OrderLines`
+* `ModifierId` INT NOT NULL → FK `Modifiers`
+* `Quantity` DECIMAL(18,4) NOT NULL DEFAULT 1
+* `ExtraPrice` DECIMAL(18,2) NOT NULL  (per modifier unit)
+
+Sum of `ExtraPrice * Quantity` feeds into `ModifiersExtraPrice` on the line.
+
+---
+
+### 10.5. `OrderPayments`
+
+* `OrderPaymentId` INT IDENTITY PK
+* `OrderId` INT NOT NULL → FK `Orders`
+* `PaymentMethodId` INT NOT NULL → FK `PaymentMethods`
+* `CurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies`
+* `Amount` DECIMAL(18,2) NOT NULL
+* `ExchangeRateToOrderCurrency` DECIMAL(18,6) NOT NULL DEFAULT 1
+
+  * if paying in LBP for USD order, etc.
+* `GiftCardId` INT NULL → FK `GiftCards` (if method = GiftCard)
+* `CreatedAt` DATETIME2 NOT NULL
+* `UserId` INT NOT NULL → FK `Users`
+
+**Payment Status Calculation:**
+
+```text
+TotalPaid = Σ(OrderPayments.Amount converted to order currency)
+BalanceDue = GrandTotal - TotalPaid
+
+If BalanceDue == 0:
+  PaymentStatus = 'Paid'
+Else If TotalPaid > 0 AND BalanceDue > 0:
+  PaymentStatus = 'PartiallyPaid'
+Else If TotalPaid > GrandTotal:
+  PaymentStatus = 'Overpaid' (needs refund)
+Else:
+  PaymentStatus = 'Unpaid'
+```
+
+---
+
+### 10.6. `OrderStatusHistory`
+
+* `OrderStatusHistoryId` INT IDENTITY PK
+* `OrderId` INT NOT NULL → FK `Orders`
+* `OldStatus` NVARCHAR(20) NULL
+* `NewStatus` NVARCHAR(20) NOT NULL
+* `ChangedAt` DATETIME2 NOT NULL
+* `UserId` INT NULL → FK `Users`
+
+---
+
+### 10.7. `OrderDeliveryDetails`
+
+(for Delivery orders)
+
+* `OrderDeliveryDetailsId` INT IDENTITY PK
+* `OrderId` INT NOT NULL → FK `Orders`
+* `CustomerAddressId` INT NOT NULL → FK `CustomerAddresses`
+* `DeliveryZoneId` INT NULL → FK `DeliveryZones`
+* `DistanceKm` DECIMAL(18,2) NULL
+* `DeliveryFeeCalculated` DECIMAL(18,2) NOT NULL
+* `DriverName` NVARCHAR(100) NULL
+* `OutForDeliveryAt` DATETIME2 NULL
+* `DeliveredAt` DATETIME2 NULL
+
+---
+
+## 11. INVENTORY & PURCHASING
+
+### 11.1. `Suppliers`
+
+* `SupplierId` INT IDENTITY PK
+* `Name` NVARCHAR(100) NOT NULL
+* `ContactPerson` NVARCHAR(100) NULL
+* `Phone` NVARCHAR(50) NULL
+* `Email` NVARCHAR(100) NULL
+* `Address` NVARCHAR(255) NULL
+* `PaymentTerms` NVARCHAR(50) NULL
+* `IsActive` BIT NOT NULL DEFAULT 1
+
+---
+
+### 11.2. `PurchaseOrders`
+
+* `PurchaseOrderId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `SupplierId` INT NOT NULL → FK `Suppliers`
+* `PONumber` NVARCHAR(50) NOT NULL
+* `PODate` DATE NOT NULL
+* `Status` NVARCHAR(20) NOT NULL (Draft, Approved, Closed, Canceled)
+* `ExpectedDeliveryDate` DATE NULL
+* `CurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies`
+* `TotalEstimatedAmount` DECIMAL(18,2) NOT NULL DEFAULT 0
+
+---
+
+### 11.3. `PurchaseOrderLines`
+
+* `PurchaseOrderLineId` INT IDENTITY PK
+* `PurchaseOrderId` INT NOT NULL → FK `PurchaseOrders`
+* `InventoryItemId` INT NOT NULL → FK `InventoryItems`
+* `OrderedQty` DECIMAL(18,4) NOT NULL
+* `ExpectedUnitCost` DECIMAL(18,4) NOT NULL
+* `LineEstimatedTotal` DECIMAL(18,2) NOT NULL
+
+---
+
+### 11.4. `GoodsReceipts`
+
+* `GoodsReceiptId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `SupplierId` INT NOT NULL → FK `Suppliers`
+* `PurchaseOrderId` INT NULL → FK `PurchaseOrders`
+* `GRNNumber` NVARCHAR(50) NOT NULL
+* `GRNDate` DATETIME2 NOT NULL
+* `Status` NVARCHAR(20) NOT NULL (Draft, Posted)
+* `CurrencyCode` NVARCHAR(3) NOT NULL → FK `Currencies`
+* `TotalBeforeTax` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `TaxAmount` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `GrandTotal` DECIMAL(18,2) NOT NULL DEFAULT 0
+
+---
+
+### 11.5. `GoodsReceiptLines`
+
+* `GoodsReceiptLineId` INT IDENTITY PK
+* `GoodsReceiptId` INT NOT NULL → FK `GoodsReceipts`
+* `InventoryItemId` INT NOT NULL → FK `InventoryItems`
+* `ReceivedQty` DECIMAL(18,4) NOT NULL
+* `UnitCost` DECIMAL(18,4) NOT NULL
+* `LineTotal` DECIMAL(18,2) NOT NULL
+
+When GRN is posted:
+
+* Create `StockTransactions` type `IN-Purchase`
+* Update avg cost:
+
+```text
+NewQtyOnHand = OldQty + ReceivedQty
+NewTotalCost = OldQty * OldCostPerUnit + ReceivedQty * UnitCost
+NewCostPerUnit = NewTotalCost / NewQtyOnHand
+```
+
+---
+
+### 11.6. `StockTransactions`
+
+Central table for every movement.
+
+* `StockTransactionId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `InventoryItemId` INT NOT NULL → FK `InventoryItems`
+* `TransactionDate` DATETIME2 NOT NULL
+* `Type` NVARCHAR(20) NOT NULL
+
+  * (IN-Purchase, OUT-Sales, OUT-Waste, IN-Adjust, OUT-Adjust, TransferIn, TransferOut, Reserve, ReleaseReserve)
+* `Quantity` DECIMAL(18,4) NOT NULL  (+ for IN, - for OUT)
+* `CostPerUnit` DECIMAL(18,4) NULL
+* `ReferenceType` NVARCHAR(20) NULL (Order, GRN, Wastage, Adjustment…)
+* `ReferenceId` INT NULL
+* `UserId` INT NULL → FK `Users`
+* `Reason` NVARCHAR(255) NULL
+
+---
+
+### 11.6.1. `BranchInventory` (Snapshot Table)
+
+Materialized stock balance per branch for fast queries. Updated by triggers or scheduled jobs.
+
+* `BranchInventoryId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `InventoryItemId` INT NOT NULL → FK `InventoryItems`
+* `QuantityOnHand` DECIMAL(18,4) NOT NULL DEFAULT 0
+* `QuantityReserved` DECIMAL(18,4) NOT NULL DEFAULT 0 (reserved for pending orders)
+* `QuantityAvailable` AS (`QuantityOnHand` - `QuantityReserved`) PERSISTED
+* `AverageCost` DECIMAL(18,4) NOT NULL DEFAULT 0
+* `TotalValue` AS (`QuantityOnHand` * `AverageCost`) PERSISTED
+* `LastUpdatedAt` DATETIME2 NOT NULL
+* `LastTransactionId` INT NULL → FK `StockTransactions`
+
+**Constraint:** UNIQUE(`BranchId`, `InventoryItemId`)
+
+**Sync Logic:**
+```text
+On each StockTransaction insert:
+1. Update QuantityOnHand += Transaction.Quantity
+2. If Type = 'Reserve': QuantityReserved += abs(Quantity)
+3. If Type = 'ReleaseReserve': QuantityReserved -= abs(Quantity)
+4. Recalculate AverageCost for IN transactions
+5. Update LastUpdatedAt and LastTransactionId
+```
+
+---
+
+### 11.7. `StockAdjustments`
+
+* `StockAdjustmentId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `AdjustmentDate` DATETIME2 NOT NULL
+* `Status` NVARCHAR(20) NOT NULL (Draft, Posted)
+* `UserId` INT NOT NULL → FK `Users`
+* `Notes` NVARCHAR(255) NULL
+
+### 11.8. `StockAdjustmentLines`
+
+* `StockAdjustmentLineId` INT IDENTITY PK
+* `StockAdjustmentId` INT NOT NULL → FK `StockAdjustments`
+* `InventoryItemId` INT NOT NULL → FK `InventoryItems`
+* `SystemQty` DECIMAL(18,4) NOT NULL
+* `PhysicalQty` DECIMAL(18,4) NOT NULL
+* `DifferenceQty` DECIMAL(18,4) NOT NULL  (Physical - System)
+
+Posting creates `StockTransactions` of type IN-Adjust or OUT-Adjust.
+
+---
+
+### 11.9. `StockCounts`
+
+* `StockCountId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `CountDate` DATETIME2 NOT NULL
+* `Area` NVARCHAR(50) NULL (Kitchen, Freezer…)
+* `Status` NVARCHAR(20) NOT NULL (Draft, Completed, Posted)
+
+### 11.10. `StockCountLines`
+
+* `StockCountLineId` INT IDENTITY PK
+* `StockCountId` INT NOT NULL → FK `StockCounts`
+* `InventoryItemId` INT NOT NULL → FK `InventoryItems`
+* `SystemQty` DECIMAL(18,4) NOT NULL
+* `PhysicalQty` DECIMAL(18,4) NOT NULL
+
+(After review, convert to `StockAdjustments`.)
+
+---
+
+### 11.11. `WastageRecords`  (or use StockTransactions with Reason; this gives extra detail)
+
+* `WastageId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `InventoryItemId` INT NOT NULL → FK `InventoryItems`
+* `WastageDate` DATETIME2 NOT NULL
+* `Quantity` DECIMAL(18,4) NOT NULL
+* `Reason` NVARCHAR(255) NOT NULL
+* `UserId` INT NOT NULL → FK `Users`
+
+Also creates `StockTransactions` type OUT-Waste.
+
+---
+
+### 11.12. `InventoryReservations`
+
+Tracks stock reserved for pending/draft orders until they are completed or canceled.
+
+* `ReservationId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `OrderId` INT NOT NULL → FK `Orders`
+* `InventoryItemId` INT NOT NULL → FK `InventoryItems`
+* `ReservedQty` DECIMAL(18,4) NOT NULL
+* `ReservedAt` DATETIME2 NOT NULL
+* `Status` NVARCHAR(20) NOT NULL DEFAULT 'Active' (Active, Released, Consumed)
+* `ReleasedAt` DATETIME2 NULL
+
+**Constraint:** UNIQUE(`OrderId`, `InventoryItemId`)
+
+**Logic:**
+```text
+1. When order is created/updated: Reserve ingredients based on recipes
+2. When order is Paid: Release reservation and create OUT-Sales transaction
+3. When order is Voided/Canceled: Release reservation only
+4. Prevents overselling high-demand items
+```
+
+---
+
+## 12. HR & COMMISSIONS
+
+### 12.1. `Employees`
+
+* `EmployeeId` INT IDENTITY PK
+* `UserId` INT NULL → FK `Users` (if they log in)
+* `BranchId` INT NOT NULL → FK `Branches`
+* `FullName` NVARCHAR(100) NOT NULL
+* `Position` NVARCHAR(50) NOT NULL (Waiter, Chef…)
+* `BaseSalary` DECIMAL(18,2) NULL
+* `HireDate` DATE NULL
+* `IsActive` BIT NOT NULL DEFAULT 1
+
+---
+
+### 12.2. `AttendanceRecords`
+
+* `AttendanceId` INT IDENTITY PK
+* `EmployeeId` INT NOT NULL → FK `Employees`
+* `BranchId` INT NOT NULL → FK `Branches`
+* `Date` DATE NOT NULL
+* `ClockIn` DATETIME2 NULL
+* `ClockOut` DATETIME2 NULL
+* `TotalHours` DECIMAL(18,2) NULL
+
+---
+
+### 12.3. `CommissionPolicies`
+
+(keep it simple)
+
+* `CommissionPolicyId` INT IDENTITY PK
+* `BranchId` INT NULL → FK `Branches` (null = global)
+* `SalesPercent` DECIMAL(5,2) NOT NULL DEFAULT 0
+* `FixedPerInvoice` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `ApplyOnNetBeforeTax` BIT NOT NULL DEFAULT 1
+* `ExcludeDiscountedInvoices` BIT NOT NULL DEFAULT 0
+
+---
+
+### 12.4. `CommissionTransactions`
+
+* `CommissionTransactionId` INT IDENTITY PK
+* `EmployeeId` INT NOT NULL → FK `Employees` (for waiters/cashiers)
+* `OrderId` INT NOT NULL → FK `Orders`
+* `CommissionDate` DATETIME2 NOT NULL
+* `SalesCommission` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `ItemCommission` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `UpsellCommission` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `TipsShare` DECIMAL(18,2) NOT NULL DEFAULT 0
+* `TotalCommission` DECIMAL(18,2) NOT NULL DEFAULT 0
+
+**Typical formula:**
+
+```text
+SalesCommission = NetSales * SalesPercent / 100
+TotalCommission = SalesCommission + ItemCommission + UpsellCommission + TipsShare
+```
+
+---
+
+## 13. APPROVALS & AUDIT
+
+### 13.1. `ApprovalRules`
+
+* `ApprovalRuleId` INT IDENTITY PK
+* `RuleType` NVARCHAR(50) NOT NULL
+
+  * ('MaxDiscount', 'PriceChange', 'VoidPaidInvoice')
+* `RoleId` INT NOT NULL → FK `Roles`
+* `MaxDiscountPercentWithoutApproval` DECIMAL(5,2) NULL
+* `AllowPriceChange` BIT NULL
+* `RequireManagerPINForPriceChange` BIT NULL
+* `CanVoidPaidInvoice` BIT NULL
+* `RequireManagerApprovalForVoid` BIT NULL
+
+---
+
+### 13.2. `ApprovalRequests` (optional, for asynchronous approvals)
+
+* `ApprovalRequestId` INT IDENTITY PK
+* `RuleType` NVARCHAR(50) NOT NULL
+* `RequestedByUserId` INT NOT NULL → FK `Users`
+* `RelatedOrderId` INT NULL → FK `Orders`
+* `RequestedAt` DATETIME2 NOT NULL
+* `Status` NVARCHAR(20) NOT NULL (Pending, Approved, Rejected)
+* `ApprovedByUserId` INT NULL → FK `Users`
+* `ApprovedAt` DATETIME2 NULL
+* `Details` NVARCHAR(MAX) NULL
+
+In your first version, you can rely mainly on **PIN-based instant approval** and just use `AuditLog`.
+
+---
+
+### 13.3. `AuditLog`
+
+* `AuditLogId` INT IDENTITY PK
+* `Timestamp` DATETIME2 NOT NULL
+* `UserId` INT NULL → FK `Users`
+* `BranchId` INT NULL → FK `Branches`
+* `ActionType` NVARCHAR(50) NOT NULL
+
+  * (Login, CreateOrder, ApplyDiscount, ChangePrice, VoidInvoice, AdjustStock…)
+* `EntityName` NVARCHAR(50) NULL (Order, StockAdjustment…)
+* `EntityId` INT NULL
+* `Details` NVARCHAR(MAX) NULL (JSON before/after, reason, etc.)
+
+---
+
+## 14. REPORTING
+
+Most reports are **queries/views** on top of the tables above; you don’t need extra tables except maybe **materialized summary tables** later if performance requires.
+
+---
+
+## 15. CATEGORIES MULTI-LANGUAGE
+
+### 15.1. `CategoryTranslations`
+
+* `CategoryTranslationId` INT IDENTITY PK
+* `CategoryId` INT NOT NULL → FK `Categories`
+* `Language` NVARCHAR(10) NOT NULL (en, ar, etc.)
+* `Name` NVARCHAR(100) NOT NULL
+* `Description` NVARCHAR(255) NULL
+
+**Constraint:** UNIQUE(`CategoryId`, `Language`)
+
+---
+
+## 16. PRINTING & RECEIPTS
+
+### 16.1. `Printers`
+
+* `PrinterId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `Name` NVARCHAR(50) NOT NULL (Kitchen Printer, Receipt Printer…)
+* `PrinterType` NVARCHAR(20) NOT NULL (Receipt, Kitchen, Label)
+* `ConnectionType` NVARCHAR(20) NOT NULL (USB, Network, Bluetooth)
+* `ConnectionString` NVARCHAR(255) NULL (IP address, port, etc.)
+* `PaperWidth` INT NOT NULL DEFAULT 80 (mm)
+* `IsDefault` BIT NOT NULL DEFAULT 0
+* `IsActive` BIT NOT NULL DEFAULT 1
+
+---
+
+### 16.2. `KitchenStationPrinters`
+
+Maps kitchen stations to their printers.
+
+* `KitchenStationPrinterId` INT IDENTITY PK
+* `KitchenStationId` INT NOT NULL → FK `KitchenStations`
+* `PrinterId` INT NOT NULL → FK `Printers`
+
+**Constraint:** UNIQUE(`KitchenStationId`, `PrinterId`)
+
+---
+
+### 16.3. `ReceiptTemplates`
+
+* `ReceiptTemplateId` INT IDENTITY PK
+* `BranchId` INT NULL → FK `Branches` (NULL = global template)
+* `TemplateType` NVARCHAR(20) NOT NULL (CustomerReceipt, KitchenTicket, DailyReport)
+* `Name` NVARCHAR(50) NOT NULL
+* `HeaderText` NVARCHAR(500) NULL
+* `FooterText` NVARCHAR(500) NULL
+* `ShowLogo` BIT NOT NULL DEFAULT 1
+* `ShowBarcode` BIT NOT NULL DEFAULT 0
+* `Language` NVARCHAR(10) NOT NULL DEFAULT 'en' (en, ar, both)
+* `IsDefault` BIT NOT NULL DEFAULT 0
+* `IsActive` BIT NOT NULL DEFAULT 1
+
+---
+
+## 17. OFFLINE SYNC & QUEUE
+
+### 17.1. `OfflineQueue`
+
+Stores transactions created while offline, to be synced when connection is restored.
+
+* `QueueId` INT IDENTITY PK
+* `BranchId` INT NOT NULL
+* `TerminalId` NVARCHAR(50) NOT NULL (identifies the POS terminal)
+* `EntityType` NVARCHAR(50) NOT NULL (Order, Payment, StockTransaction…)
+* `EntityLocalId` NVARCHAR(50) NOT NULL (local temp ID before sync)
+* `EntityServerId` INT NULL (assigned after sync)
+* `Payload` NVARCHAR(MAX) NOT NULL (JSON of the full entity)
+* `CreatedAt` DATETIME2 NOT NULL
+* `Status` NVARCHAR(20) NOT NULL DEFAULT 'Pending' (Pending, Syncing, Synced, Failed)
+* `SyncedAt` DATETIME2 NULL
+* `RetryCount` INT NOT NULL DEFAULT 0
+* `LastError` NVARCHAR(500) NULL
+
+---
+
+### 17.2. `SyncLog`
+
+Tracks sync operations for debugging and conflict resolution.
+
+* `SyncLogId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `TerminalId` NVARCHAR(50) NOT NULL
+* `SyncStartedAt` DATETIME2 NOT NULL
+* `SyncCompletedAt` DATETIME2 NULL
+* `Status` NVARCHAR(20) NOT NULL (InProgress, Completed, PartialFailure, Failed)
+* `TotalRecords` INT NOT NULL DEFAULT 0
+* `SyncedRecords` INT NOT NULL DEFAULT 0
+* `FailedRecords` INT NOT NULL DEFAULT 0
+* `ErrorDetails` NVARCHAR(MAX) NULL
+
+---
+
+### 17.3. `ConflictResolutions`
+
+Tracks conflicts detected during sync (e.g., same order modified on two terminals).
+
+* `ConflictId` INT IDENTITY PK
+* `SyncLogId` INT NOT NULL → FK `SyncLog`
+* `EntityType` NVARCHAR(50) NOT NULL
+* `EntityId` INT NOT NULL
+* `LocalPayload` NVARCHAR(MAX) NOT NULL
+* `ServerPayload` NVARCHAR(MAX) NOT NULL
+* `Resolution` NVARCHAR(20) NOT NULL (LocalWins, ServerWins, Merged, Manual)
+* `ResolvedPayload` NVARCHAR(MAX) NULL
+* `ResolvedAt` DATETIME2 NULL
+* `ResolvedByUserId` INT NULL → FK `Users`
+
+---
+
+## 18. TABLE OPERATIONS
+
+### 18.1. `TableMerges`
+
+Tracks when multiple tables are merged into one bill.
+
+* `TableMergeId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `TargetOrderId` INT NOT NULL → FK `Orders` (the order that receives all items)
+* `MergedAt` DATETIME2 NOT NULL
+* `MergedByUserId` INT NOT NULL → FK `Users`
+
+---
+
+### 18.2. `TableMergeDetails`
+
+* `TableMergeDetailId` INT IDENTITY PK
+* `TableMergeId` INT NOT NULL → FK `TableMerges`
+* `SourceOrderId` INT NOT NULL → FK `Orders` (the order being merged)
+* `SourceTableId` INT NOT NULL → FK `RestaurantTables`
+
+---
+
+### 18.3. `TableSplits`
+
+Tracks when one table's bill is split into multiple bills.
+
+* `TableSplitId` INT IDENTITY PK
+* `BranchId` INT NOT NULL → FK `Branches`
+* `SourceOrderId` INT NOT NULL → FK `Orders` (original order)
+* `SplitAt` DATETIME2 NOT NULL
+* `SplitByUserId` INT NOT NULL → FK `Users`
+* `SplitType` NVARCHAR(20) NOT NULL (ByItem, ByAmount, ByGuest, Equal)
+
+---
+
+### 18.4. `TableSplitDetails`
+
+* `TableSplitDetailId` INT IDENTITY PK
+* `TableSplitId` INT NOT NULL → FK `TableSplits`
+* `NewOrderId` INT NOT NULL → FK `Orders` (newly created split order)
+* `Amount` DECIMAL(18,2) NOT NULL (portion of original bill)
+
+---
+
+## 19. SYSTEM SETTINGS
+
+### 19.1. `SystemSettings`
+
+Global configuration settings.
+
+* `SettingId` INT IDENTITY PK
+* `BranchId` INT NULL → FK `Branches` (NULL = global setting)
+* `SettingKey` NVARCHAR(100) NOT NULL
+* `SettingValue` NVARCHAR(MAX) NULL
+* `SettingType` NVARCHAR(20) NOT NULL (String, Integer, Decimal, Boolean, JSON)
+* `Description` NVARCHAR(255) NULL
+* `UpdatedAt` DATETIME2 NOT NULL
+* `UpdatedByUserId` INT NULL → FK `Users`
+
+**Constraint:** UNIQUE(`BranchId`, `SettingKey`)
+
+**Example Settings:**
+```text
+- DefaultLanguage: 'en' or 'ar'
+- AllowOfflineMode: true/false
+- MaxOfflineHours: 24
+- AutoCloseShiftAfterHours: 24
+- RequirePINForVoid: true
+- AllowNegativeStock: false
+- KitchenDisplayRefreshSeconds: 5
+```
+
+---
+
+## 20. SUPERADMIN (MULTI-TENANT SaaS)
+
+This section defines the SuperAdmin portal for managing multiple restaurant companies (tenants).
+
+### 20.1. `SuperAdmins`
+
+Platform administrators who manage all tenant companies.
+
+* `SuperAdminId` INT IDENTITY PK
+* `Username` NVARCHAR(50) UNIQUE NOT NULL
+* `PasswordHash` VARBINARY(MAX) NOT NULL
+* `FullName` NVARCHAR(100) NOT NULL
+* `Email` NVARCHAR(100) NOT NULL
+* `Phone` NVARCHAR(50) NULL
+* `IsActive` BIT NOT NULL DEFAULT 1
+* `LastLoginAt` DATETIME2 NULL
+* `CreatedAt` DATETIME2 NOT NULL
+* `UpdatedAt` DATETIME2 NULL
+
+---
+
+### 20.2. `Companies` (Tenants)
+
+Each company is a separate restaurant business with its own branches.
+
+* `CompanyId` INT IDENTITY PK
+* `Name` NVARCHAR(100) NOT NULL
+* `Username` NVARCHAR(50) UNIQUE NOT NULL (company admin login)
+* `PasswordHash` VARBINARY(MAX) NOT NULL
+* `Email` NVARCHAR(100) NULL
+* `Phone` NVARCHAR(50) NULL
+* `Address` NVARCHAR(255) NULL
+* `Logo` NVARCHAR(500) NULL (URL to logo)
+* `Status` NVARCHAR(20) NOT NULL DEFAULT 'active' (active, inactive, suspended, trial)
+* `PlanId` INT NULL → FK `SubscriptionPlans`
+* `PlanExpiryDate` DATETIME2 NULL
+* `MaxBranches` INT NOT NULL DEFAULT 1
+* `MaxUsers` INT NOT NULL DEFAULT 5
+* `TrialEndsAt` DATETIME2 NULL
+* `Notes` NVARCHAR(500) NULL
+* `CreatedAt` DATETIME2 NOT NULL
+* `CreatedBySuperAdminId` INT NULL → FK `SuperAdmins`
+* `UpdatedAt` DATETIME2 NULL
+
+**Note:** All existing tables (Branches, Users, Orders, etc.) should have `CompanyId` as tenant identifier.
+
+---
+
+### 20.3. `SubscriptionPlans`
+
+Available subscription plans for companies.
+
+* `PlanId` INT IDENTITY PK
+* `Name` NVARCHAR(50) NOT NULL (Basic, Professional, Enterprise)
+* `Description` NVARCHAR(255) NULL
+* `Price` DECIMAL(18,2) NOT NULL
+* `CurrencyCode` NVARCHAR(3) NOT NULL DEFAULT 'USD'
+* `BillingCycle` NVARCHAR(20) NOT NULL (Monthly, Yearly)
+* `DurationDays` INT NOT NULL (30, 365)
+* `MaxBranches` INT NOT NULL
+* `MaxUsers` INT NOT NULL
+* `MaxOrdersPerMonth` INT NULL (NULL = unlimited)
+* `Features` NVARCHAR(MAX) NULL (JSON array of feature flags)
+* `IsActive` BIT NOT NULL DEFAULT 1
+* `SortOrder` INT NOT NULL DEFAULT 0
+* `CreatedAt` DATETIME2 NOT NULL
+* `UpdatedAt` DATETIME2 NULL
+
+**Example Features JSON:**
+```json
+[
+  "pos_module",
+  "inventory_module",
+  "loyalty_module",
+  "delivery_module",
+  "multi_language",
+  "api_access",
+  "priority_support"
+]
+```
+
+---
+
+### 20.4. `CompanySubscriptions`
+
+Subscription history for each company.
+
+* `SubscriptionId` INT IDENTITY PK
+* `CompanyId` INT NOT NULL → FK `Companies`
+* `PlanId` INT NOT NULL → FK `SubscriptionPlans`
+* `StartDate` DATETIME2 NOT NULL
+* `EndDate` DATETIME2 NOT NULL
+* `Status` NVARCHAR(20) NOT NULL (active, expired, cancelled, upgraded)
+* `Amount` DECIMAL(18,2) NOT NULL
+* `CurrencyCode` NVARCHAR(3) NOT NULL
+* `PaymentId` INT NULL → FK `CompanyPayments`
+* `CreatedAt` DATETIME2 NOT NULL
+
+---
+
+### 20.5. `CompanyPayments`
+
+Payment records from companies.
+
+* `PaymentId` INT IDENTITY PK
+* `CompanyId` INT NOT NULL → FK `Companies`
+* `Amount` DECIMAL(18,2) NOT NULL
+* `CurrencyCode` NVARCHAR(3) NOT NULL
+* `PaymentMethod` NVARCHAR(50) NOT NULL (CreditCard, BankTransfer, Cash, PayPal)
+* `PaymentReference` NVARCHAR(100) NULL (transaction ID from gateway)
+* `PaymentDate` DATETIME2 NOT NULL
+* `Status` NVARCHAR(20) NOT NULL (pending, completed, failed, refunded)
+* `Notes` NVARCHAR(255) NULL
+* `RecordedBySuperAdminId` INT NULL → FK `SuperAdmins`
+* `CreatedAt` DATETIME2 NOT NULL
+
+---
+
+### 20.6. `CompanyActivityLog`
+
+Tracks important company activities for SuperAdmin visibility.
+
+* `ActivityLogId` INT IDENTITY PK
+* `CompanyId` INT NOT NULL → FK `Companies`
+* `ActivityType` NVARCHAR(50) NOT NULL (Login, BranchCreated, UserCreated, OrderPlaced, PlanUpgraded, etc.)
+* `Description` NVARCHAR(500) NULL
+* `Metadata` NVARCHAR(MAX) NULL (JSON details)
+* `CreatedAt` DATETIME2 NOT NULL
+
+---
+
+### 20.7. `SuperAdminAuditLog`
+
+Tracks SuperAdmin actions for security.
+
+* `AuditLogId` INT IDENTITY PK
+* `SuperAdminId` INT NOT NULL → FK `SuperAdmins`
+* `ActionType` NVARCHAR(50) NOT NULL (Login, CompanyCreated, CompanyUpdated, PasswordReset, PlanChanged, etc.)
+* `TargetCompanyId` INT NULL → FK `Companies`
+* `Details` NVARCHAR(MAX) NULL
+* `IPAddress` NVARCHAR(50) NULL
+* `CreatedAt` DATETIME2 NOT NULL
+
+---
+
+### 20.8. Multi-Tenant Data Isolation
+
+**Every tenant-specific table must include:**
+
+```sql
+CompanyId INT NOT NULL → FK Companies
+```
+
+**Tables requiring CompanyId:**
+- Branches
+- Users
+- Roles
+- Categories
+- MenuItems
+- Customers
+- Orders
+- InventoryItems
+- Suppliers
+- Employees
+- All related tables
+
+**Tenant isolation approaches:**
+
+| Approach | Description |
+|----------|-------------|
+| Row-Level | All tenants share tables, filtered by CompanyId |
+| Schema-Level | Each tenant gets separate schema (complex) |
+| Database-Level | Each tenant gets separate database (most isolated) |
+
+**Recommended:** Row-Level with CompanyId for simplicity and cost efficiency.
+
+**Security Requirements:**
+```text
+1. All API queries MUST filter by CompanyId from JWT token
+2. CompanyId should never come from user input
+3. Cross-tenant data access = security breach
+4. Implement Row-Level Security (RLS) in database if supported
+```

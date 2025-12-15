@@ -1,0 +1,1934 @@
+## 0. GLOBAL CONCEPTS (APPLY TO ALL MODULES)
+
+### 0.1. Core dimensions
+
+Every major record has:
+
+* **BranchId** – for multi-branches
+* **CurrencyCode** – for multi-currency (USD, LBP…)
+* **CreatedBy, CreatedAt, UpdatedBy, UpdatedAt**
+
+### 0.2. Order Types
+
+* DineIn
+* Takeaway
+* Delivery
+
+### 0.3. Order Statuses
+
+* Draft
+* SentToKitchen
+* InPreparation
+* Ready
+* Served (for dine-in)
+* ReadyToPay
+* Paid
+* Canceled / Voided
+
+### 0.4. Roles & Permissions
+
+* Admin, Manager, Cashier, Waiter, Kitchen, Inventory, HR, Accountant
+* Plus **Approval permissions** (we’ll detail later)
+
+---
+
+# 1. SECURITY & USERS
+
+### 1.1. Page: Login
+
+**Fields:**
+
+* Username
+* Password
+* Branch (dropdown, if user has multiple branches)
+
+**Actions:**
+
+* Validate user & branch
+* Load permissions & role
+* Redirect to proper home page (POS / Waiter / Kitchen / Admin)
+
+---
+
+### 1.2. Page: Users
+
+**Grid:**
+
+* Username, FullName, Role, Branch access, Active, LastLogin
+
+**Form:**
+
+* FullName
+* Username
+* Password + Confirm
+* Role (dropdown)
+* DefaultBranch
+* AllowedBranches (multi-select)
+* Phone / Email
+* IsActive (checkbox)
+
+---
+
+### 1.3. Page: Roles & Permissions
+
+**Form:**
+
+* RoleName
+* Description
+* Permissions (checkbox groups):
+
+Examples:
+
+* POS:
+
+  * CanOpenShift, CanCloseShift
+  * MaxDiscountPercent
+  * CanChangePriceInOrder
+  * CanVoidPaidInvoice
+* Inventory:
+
+  * CanCreatePO, CanApprovePO, CanAdjustStock…
+* HR:
+
+  * CanViewPayroll, CanEditEmployees…
+* Approvals:
+
+  * CanApproveHighDiscount
+  * CanApprovePriceOverride
+  * CanApproveInvoiceVoidAfterPayment
+
+---
+
+# 2. MASTER DATA & SETTINGS
+
+### 2.1. Page: Branches
+
+**Fields:**
+
+* BranchName
+* Code
+* Country, City, Address
+* Phone
+* DefaultCurrencyCode (e.g. USD, LBP)
+* VATPercent
+* ServiceChargePercent
+* PriceLevel (if you support multiple price lists later)
+* IsActive
+
+---
+
+### 2.2. Page: Currencies
+
+**Fields:**
+
+* CurrencyCode (USD, LBP…)
+* Name
+* Symbol
+* DecimalPlaces (2 for USD, maybe 0 for LBP)
+* IsDefault
+* IsActive
+
+---
+
+### 2.3. Page: Exchange Rates
+
+**Fields:**
+
+* BaseCurrency (e.g. USD)
+* ForeignCurrency (e.g. LBP)
+* Rate (e.g. 1 USD = X LBP → Rate = X)
+* ValidFrom, ValidTo
+
+**Usage:**
+
+* When invoice/payments are in a different currency than branch base, convert for reporting:
+
+```text
+BaseAmount = ForeignAmount / ExchangeRate
+```
+
+---
+
+### 2.4. Page: Tables (for Dine-In)
+
+**Fields:**
+
+* TableId
+* BranchId
+* TableName/Number
+* Zone (Hall, Terrace…)
+* Capacity
+* IsActive
+
+---
+
+### 2.5. Page: Categories (Menu Groups)
+
+**Fields:**
+
+* Name
+* ParentCategoryId (optional)
+* SortOrder
+* IsActive
+
+---
+
+### 2.6. Page: Menu Items (Products)
+
+**Fields:**
+
+* ItemName
+* Code / SKU
+* CategoryId
+* IsActive
+* IsVisibleOnlineMenu (view only)
+
+**Pricing:**
+
+* DefaultPrice (per branch or global + override)
+* TaxIncluded? (bool)
+* AllowSizes? (bool)
+
+**Sizes List (if enabled):**
+
+* SizeName
+* Price
+* Cost (optional)
+
+**Inventory Link:**
+
+* HasRecipe? (bool)
+* LinkedRecipeId
+
+**Commission:**
+
+* ItemCommissionPerUnit (optional)
+
+**Kitchen:**
+
+* DefaultKitchenStationId
+
+---
+
+### 2.7. Page: Ingredients (Inventory Items)
+
+**Fields:**
+
+* IngredientName
+* Code
+* UnitOfMeasure (kg, g, liter, pcs…)
+* Category (Food, Beverage, Packaging…)
+* MinLevel
+* ReorderQty
+* CostMethod (Average / Last)
+* IsActive
+
+(Stock on hand calculated from movements, not stored directly.)
+
+---
+
+### 2.8. Page: Recipes (BOM)
+
+**Header:**
+
+* SaleItemId (Menu item)
+* Yield (optional; default 1 unit)
+
+**Lines Grid:**
+
+* IngredientId
+* QuantityPerUnit
+* Unit (from ingredient)
+* IngredientCostPerUnit (read-only from inventory cost)
+* LineCost = QuantityPerUnit * IngredientCostPerUnit
+
+**Totals (calculated):**
+
+```text
+RecipeTotalCost = Σ(LineCost)
+Margin = SellingPrice - RecipeTotalCost
+Margin% = (Margin / SellingPrice) * 100
+```
+
+---
+
+### 2.9. Page: Kitchen Stations
+
+**Fields:**
+
+* StationName (Grill, Salad, Bar…)
+* BranchId
+* Printer/Screen config (if needed)
+* IsActive
+
+---
+
+### 2.10. Page: Payment Methods
+
+**Fields:**
+
+* Name (Cash, Card, Voucher, GiftCard…)
+* Type (Cash / Card / GiftCard / Other)
+* IsActive
+
+---
+
+# 3. CUSTOMERS, PROFILES & HISTORY
+
+### 3.1. Page: Customers
+
+**Fields:**
+
+* CustomerCode (optional)
+* Name
+* Phone (primary key in practice)
+* Email
+* DefaultBranch (optional)
+* DefaultCurrency (optional)
+* Notes
+* IsActive
+
+---
+
+### 3.2. Page: Customer Profile (Detail View)
+
+**Sections:**
+
+1. **Basic Info** (from above)
+
+2. **Loyalty Info:**
+
+   * LoyaltyCardNumber
+   * CurrentPointsBalance
+   * CurrentTier (Bronze / Silver / Gold…)
+   * TierSinceDate
+
+3. **Stats (calculated):**
+
+   * TotalVisits
+   * TotalOrders
+   * TotalSpent (in base currency or per currency)
+   * AverageTicket = TotalSpent / TotalOrders
+   * LastVisitDate
+
+4. **Favorite Items (calculated):**
+
+   * Top N items by Qty sold to this customer
+
+```text
+FavoriteItems = Top 5 items ordered by this customer (group by ItemId, sum Qty)
+```
+
+5. **Order History List:**
+
+   * Date, Branch, OrderType, GrandTotal, PaymentMethod
+
+Click one → open invoice detail.
+
+---
+
+### 3.3. Page: Customer Addresses (for Delivery)
+
+**Fields:**
+
+* CustomerId
+* Label (Home, Work…)
+* AddressLine1, AddressLine2
+* City
+* Area / Neighborhood
+* Geolocation (lat/long) – optional
+* LinkedDeliveryZoneId
+* Notes
+
+---
+
+# 4. LOYALTY PROGRAM (POINTS & TIERS)
+
+### 4.1. Page: Loyalty Settings
+
+**Fields:**
+
+* PointsEarnMode:
+
+  * PerAmount (e.g., 1 point per 10 base currency)
+
+* PointsPerXAmount (e.g., X = 10, PointsPer = 1)
+
+* PointsEarnBasedOn:
+
+  * NetBeforeTax
+  * or NetAfterTax
+
+* PointsRedeemValue:
+
+  * 1 point = Y base currency
+
+```text
+PointsEarned = floor(NetAmount / PointsPerXAmount) * PointsPer
+RedeemValue = PointsToRedeem * PointsRedeemValue
+```
+
+* PointsExpiryEnabled?
+* ExpiryMonths (e.g., 12)
+
+---
+
+### 4.2. Page: Loyalty Tiers
+
+**Fields:**
+
+* TierName (Bronze, Silver, Gold…)
+* MinTotalSpent
+* MinTotalPoints
+* TierDiscountPercent (applied automatically on bill)
+* Other benefits text
+
+**Tier Calculation rule:**
+
+```text
+CustomerTotalSpent = Σ(AllPaidInvoices for customer within defined timeframe)
+
+Assign highest Tier where CustomerTotalSpent >= MinTotalSpent
+```
+
+---
+
+### 4.3. Entity: Loyalty Account
+
+Per customer:
+
+* CustomerId
+* PointsBalance
+* CurrentTierId
+
+---
+
+### 4.4. Entity & Page: Loyalty Transactions
+
+**Fields:**
+
+* CustomerId
+* Date
+* Type (Earn, Redeem, Adjust, Expire)
+* PointsChange (+/-)
+* PointsBefore, PointsAfter
+* LinkedInvoiceId (if from sale)
+* Notes / Reason
+* PerformedByUserId
+
+**On invoice Paid:**
+
+```text
+NetAmountForLoyalty = (NetBeforeTax or NetAfterTax) based on settings
+
+PointsEarned = floor(NetAmountForLoyalty / PointsPerXAmount) * PointsPer
+
+NewPointsBalance = OldPointsBalance + PointsEarned
+```
+
+**On redemption:**
+
+* In payment screen:
+
+  * Show PointsBalance
+  * Convert requested points to money:
+
+```text
+RedeemAmount = PointsToRedeem * PointsRedeemValue
+```
+
+* Apply as discount line or payment method,
+* Add LoyaltyTransaction with negative points.
+
+---
+
+# 5. GIFT CARDS / VOUCHERS
+
+### 5.1. Entity: GiftCard
+
+**Fields:**
+
+* GiftCardNumber (unique)
+* BranchIssuedId
+* IssueDate
+* CurrencyCode
+* InitialValue
+* CurrentBalance
+* ExpiryDate (optional)
+* Status (Active, UsedUp, Expired, Blocked)
+* LinkedCustomerId (optional)
+
+---
+
+### 5.2. Page: Issue Gift Card
+
+**Fields:**
+
+* GiftCardNumber (auto or manual)
+* CurrencyCode
+* InitialValue
+* CustomerId (optional)
+* ExpiryDate (optional)
+
+**On save:**
+
+* Create GiftCard.
+* Create GiftCardTransaction type “Load”:
+
+```text
+BalanceAfter = BalanceBefore + InitialValue
+```
+
+---
+
+### 5.3. Page: Gift Card Transactions
+
+**Fields:**
+
+* GiftCardId
+* Date
+* Type (Load, Redeem, Refund, Adjust)
+* Amount
+* CurrencyCode
+* LinkedInvoiceId (if redeem)
+* BalanceBefore, BalanceAfter
+* UserId
+
+**Redeem during payment:**
+
+* Payment method = GiftCard.
+* Enter GiftCardNumber and AmountToUse.
+
+**Checks:**
+
+```text
+If AmountToUse > CurrentBalance → Reject
+Else:
+  NewBalance = CurrentBalance - AmountToUse
+```
+
+* Save payment line.
+* Save GiftCardTransaction Redeem.
+
+---
+
+# 6. RESERVATIONS SYSTEM (BOOKING, NO-SHOW, DEPOSITS)
+
+### 6.1. Entity: Reservation
+
+**Fields:**
+
+* ReservationId
+* BranchId
+* CustomerId (optional, but recommended)
+* ReservationDate (date)
+* StartTime (time)
+* EndTime or DurationMinutes
+* PartySize (number of guests)
+* PreferredTableId (optional)
+* Status:
+
+  * Pending, Confirmed, Seated, Canceled, NoShow
+* Channel:
+
+  * Phone, Walk-in, Online (from website), App
+* Notes
+
+**Deposit:**
+
+* DepositRequired? (bool)
+* DepositAmount
+* DepositCurrencyCode
+* DepositStatus:
+
+  * NotRequired, Pending, Paid, Forfeited, Refunded
+
+---
+
+### 6.2. Page: Reservation Calendar / List
+
+**Views:**
+
+* Day / Week / Month Calendar
+* List View with filters (date, branch, status)
+
+**Columns:**
+
+* Time
+* Customer
+* PartySize
+* Table (if assigned)
+* Status
+* DepositStatus
+
+**Actions:**
+
+* Create Reservation
+* Edit
+* Cancel (with Reason)
+* Mark as Confirmed
+* Mark as Seated
+* Mark as NoShow
+
+---
+
+### 6.3. Page: Reservation Form
+
+**Fields:**
+
+* Branch
+* Customer (search / add new)
+* Date
+* StartTime
+* DurationMinutes
+* PartySize
+* Table (optional; can be auto-assigned later)
+* DepositRequired?
+* DepositAmount
+* DepositCurrencyCode
+* Channel
+* Notes
+
+**Validations:**
+
+* No overlapping reservations for same table & time window.
+* Capacity: PartySize <= TableCapacity (if table selected).
+
+---
+
+### 6.4. Deposit Flow
+
+**Deposit Payment:**
+
+* When DepositStatus = Pending and DepositRequired = true:
+
+Actions:
+
+* “Take Deposit” button → open mini payment form:
+
+Fields:
+
+* Amount
+* Currency
+* PaymentMethod
+
+On save:
+
+* Create **DepositTransaction** linked to reservation.
+* Set DepositStatus = Paid.
+
+**Applying deposit to final bill:**
+
+* When status → Seated:
+
+  * Convert reservation to Dine-In order on specific table.
+  * At payment time:
+
+    * Show "Available Deposit": amount + currency.
+    * Apply as prepayment / negative line:
+
+```text
+GrandTotalAfterDeposit = GrandTotal - DepositAmountConverted
+```
+
+(If currencies differ, convert using exchange rate.)
+
+**No-show logic:**
+
+* If status set to NoShow:
+
+  * If policy = “Keep deposit”:
+
+    * DepositStatus = Forfeited.
+  * If policy = “Refund deposit” (manual case):
+
+    * Create refund transaction and set status Refunded.
+
+---
+
+# 7. DELIVERY ZONES & FEES
+
+### 7.1. Entity: DeliveryZone
+
+**Fields:**
+
+* BranchId
+* ZoneName (e.g., “Hamra”, “Achrafieh”)
+* Description
+* MinOrderAmount (optional)
+* BaseFee
+* ExtraFeePerKm (optional, if distance-based)
+* MaxDistanceKm (optional)
+* IsActive
+
+---
+
+### 7.2. Mapping Addresses → Zones
+
+Option A (simple):
+
+* On **CustomerAddress**, choose DeliveryZoneId manually.
+
+Option B (advanced):
+
+* Store polygon / geofence and decide programmatically. (You can add later.)
+
+For now, we assume **manual** zone assignment.
+
+---
+
+### 7.3. Delivery Fee Calculation
+
+When creating a **Delivery Order**:
+
+1. Choose **Customer + Address**.
+2. System looks up DeliveryZoneId.
+
+Calculate:
+
+```text
+If simple flat fee:
+  DeliveryFee = BaseFee
+
+If using distance:
+  DeliveryFee = BaseFee + (DistanceInKm * ExtraFeePerKm)
+```
+
+Where DistanceInKm can be:
+
+* manually input
+* or calculated via external map in future.
+
+Add DeliveryFee as a **service line** in the bill (separate from food items).
+
+---
+
+# 8. POS, WAITER, KITCHEN (STRUCTURE SUMMARY)
+
+I’ll keep this part compact because we already covered it, just tying everything:
+
+### 8.1. POS Pages
+
+* Open Shift
+* POS Main (New Takeaway, New Delivery, Go to Tables)
+* Tables View
+* Order Detail (items, discounts, notes, delivery fee…)
+* Checkout / Payment (multi-payment, loyalty redeem, gift cards)
+* Close Shift
+
+**Key formulas:** as given before
+(SubTotal, Discounts, ServiceCharge, Tax, GrandTotal, Change…)
+
+---
+
+### 8.2. Waiter App Pages
+
+* Waiter Login
+* My Tables (assigned tables, status)
+* Take Order (items, modifiers, send to kitchen)
+* Ready Orders (from kitchen)
+* My Commissions (sales, commissions, tips)
+
+---
+
+### 8.3. Kitchen Display
+
+* Kitchen Screen per Station
+* Orders list (New / InProgress / Ready)
+* Mark InProgress / Ready
+
+---
+
+# 9. INVENTORY & PURCHASING (SUMMARY)
+
+* Suppliers
+* Purchase Orders (Draft → Approved)
+* Goods Receipt (update cost & stock)
+* Stock Movements (IN, OUT-Sales via recipes, OUT-Waste, Adjustments, Transfers)
+* Wastage
+* Stock Adjustment
+* Stock Count
+
+**Recipe-based deduction** on invoice Paid, as defined before.
+
+---
+
+# 10. HR, ATTENDANCE, COMMISSIONS
+
+### 10.1. Employees
+
+* Employee master (name, role, branch, salary…)
+
+### 10.2. Attendance
+
+* Clock In / Out
+* Attendance reports & total hours
+
+### 10.3. Commissions
+
+* Global Commission Policy screen
+* Commission transactions per invoice
+* Waiter “My Commissions” page
+* Manager Commission Report
+
+Formulas detailed before (sales %, per item, upsell, tips share).
+
+---
+
+# 11. APPROVAL WORKFLOWS (DISCOUNTS, PRICE CHANGE, VOID)
+
+### 11.1. Page: Approval Rules
+
+**Fields:**
+
+* RuleType (enum):
+
+  * MaxDiscountForRole
+  * PriceChangeInOrder
+  * VoidPaidInvoice
+
+* RoleId (which role the rule applies to)
+
+* Threshold values:
+
+  * For MaxDiscount:
+
+    * MaxDiscountPercentAllowedWithoutApproval (e.g. 10%)
+  * For PriceChange:
+
+    * AllowPriceChange = true/false
+    * RequireManagerPIN = bool
+  * For VoidPaidInvoice:
+
+    * AllowedRoles (list)
+    * RequireReason = true
+    * RequireManagerApproval = bool
+
+---
+
+### 11.2. Discount Approval Flow (خصم أكبر من X%)
+
+User tries to apply discount at line or bill level.
+
+Steps:
+
+1. Compute **RequestedDiscountPercent**:
+
+```text
+RequestedDiscountPercent = (DiscountAmount / EligibleAmount) * 100
+```
+
+2. Check role’s allowed limit:
+
+```text
+If RequestedDiscountPercent <= Role.MaxDiscountWithoutApproval:
+  → Apply directly
+Else
+  → Trigger Approval Workflow
+```
+
+**Approval Workflow Options:**
+
+* **Manager PIN popup:**
+
+Fields:
+
+* ManagerUsername or Code
+* ManagerPIN
+
+Validation:
+
+* Check if user is Manager role
+* Check permission `CanApproveHighDiscount`
+
+If ok:
+
+* Log Approval record:
+
+  * ApprovedByUserId
+  * ApprovedAtDateTime
+  * RuleType = HighDiscount
+  * DiscountPercentApproved
+
+If not ok:
+
+* Reject discount.
+
+All logged in **ApprovalLog / AuditLog**.
+
+---
+
+### 11.3. Price Change in Order (تعديل سعر Item يحتاج PIN مدير)
+
+When cashier or waiter tries to modify unit price manually:
+
+1. Check role settings:
+
+```text
+If Role.AllowPriceChange == false:
+  → Block
+Else if Role.AllowPriceChange == true AND Rule.RequireManagerPIN == false:
+  → Allow direct
+Else
+  → Show Manager PIN dialog
+```
+
+2. Manager enters PIN → if valid & has `CanApprovePriceOverride`:
+
+* Allow price change
+* Log in AuditLog:
+
+Fields in log:
+
+* OldPrice, NewPrice, ItemId, InvoiceId, UserId, ManagerId, Reason(optional)
+
+---
+
+### 11.4. Void / Cancel Paid Invoice (إلغاء فاتورة بعد الدفع)
+
+When user requests to void an already paid invoice:
+
+1. Check role permission:
+
+```text
+If not Role.CanVoidPaidInvoice:
+  → Block
+```
+
+2. Ask for **Void Reason** (required):
+
+* Reason text field (e.g., Mistaken entry, Customer refund…)
+
+3. If Rule says “Require Manager Approval”:
+
+* Show Manager PIN popup
+* Validate manager has `CanApproveInvoiceVoidAfterPayment`
+
+4. On approval:
+
+* Create Reverse / Credit transaction depending on accounting design
+* Mark Invoice as:
+
+  * Status = Voided
+  * VoidReason, VoidByUserId, VoidApprovedByUserId, VoidDateTime
+
+5. If integrated with inventory & loyalty:
+
+* Reverse inventory consumption (OUT-Sales) via reversal transactions
+* Reverse loyalty points & commissions & gift card usage accordingly
+
+---
+
+### 11.5. Page: Pending Approvals (optional)
+
+If you want *asynchronous* approvals:
+
+* List of pending approval requests:
+
+  * Type (High Discount, Void Invoice, etc.)
+  * RequestedBy, Invoice, Amount, Date
+* Manager can:
+
+  * Approve
+  * Reject
+  * Add comment
+
+For your first version, PIN-based instant approval is enough.
+
+---
+
+# 12. REPORTS & AUDIT LOG
+
+### 12.1. Sales Reports
+
+* Sales Summary
+* Sales by Item / Category / Hour / Branch / Waiter / Channel (DineIn, Takeaway, Delivery)
+* Tax & Service Charge reports
+
+---
+
+### 12.2. Inventory Reports
+
+* Stock on Hand (with value)
+* Movements
+* Wastage
+* Reorder suggestions
+
+---
+
+### 12.3. Customer & Loyalty Reports
+
+* Customer rankings (most visits, most spent)
+* Loyalty points balances
+* Points expiring soon
+
+---
+
+### 12.4. Commission Reports
+
+* By waiter
+* By branch
+* By period
+
+---
+
+### 12.5. Reservations & No-show Reports
+
+* Reservation counts per day/hour
+* No-show rate
+* Deposits collected, forfeited, refunded
+
+---
+
+### 12.6. Delivery Reports
+
+* Orders by zone
+* Delivery fee vs food revenue
+* Average delivery time (if you track dispatch & delivered times)
+
+---
+
+### 12.7. Gift Card Reports
+
+* Issued cards (value, status)
+* Redemptions
+* Outstanding liability (sum of balances)
+
+---
+
+### 12.8. Audit Log / Approval Log
+
+**Fields:**
+
+* DateTime
+* UserId
+* ActionType:
+
+  * Login, CreateInvoice, ApplyDiscount, ChangePrice, VoidInvoice, StockAdjustment, POApprove…
+* Details (JSON/text) – before/after
+* ManagerId (if approval)
+* Reason (if provided)
+
+Filter by date, user, action, branch.
+
+---
+
+# 13. OFFLINE MODE & SYNC STRATEGY
+
+### 13.1. Offline Mode Overview
+
+POS terminals must continue operating during network outages.
+
+**Capabilities while offline:**
+* Create new orders
+* Add items, apply discounts
+* Process cash payments
+* Print receipts (local printer)
+* View cached menu items and prices
+
+**Not available offline:**
+* Card payment processing (requires online gateway)
+* Loyalty points redemption (balance unknown)
+* Gift card redemption (balance unknown)
+* Real-time inventory checks
+* Customer history lookup
+
+---
+
+### 13.2. Local Data Cache
+
+Each terminal maintains local cache of:
+
+```text
+- Menu items with prices
+- Categories
+- Modifiers
+- Payment methods
+- Tax rates
+- Current shift info
+- Recent customers (last 100)
+```
+
+**Cache refresh:** On every successful sync or manual refresh.
+
+---
+
+### 13.3. Offline Queue Workflow
+
+**When creating order offline:**
+
+1. Generate local temporary OrderId (e.g., `LOCAL-{TerminalId}-{Timestamp}`)
+2. Save order to local SQLite/IndexedDB
+3. Add to OfflineQueue with Status = 'Pending'
+4. Print receipt with "OFFLINE" watermark
+5. Display sync pending indicator in UI
+
+**On network restore:**
+
+1. System detects connectivity
+2. Process OfflineQueue in FIFO order
+3. For each pending record:
+   - Send to server API
+   - On success: Update EntityServerId, Status = 'Synced'
+   - On failure: Increment RetryCount, log error
+4. After 3 failures, mark as 'Failed' for manual review
+
+---
+
+### 13.4. Conflict Resolution
+
+**Conflict scenarios:**
+
+| Scenario | Resolution |
+|----------|------------|
+| Same order modified on 2 terminals | Server version wins, local changes logged |
+| Order number collision | Server assigns new number, update local |
+| Price changed while offline | Use price at time of sale (logged) |
+| Item deleted while offline | Keep in order, flag for review |
+
+**Manual review queue:** Manager can view conflicts and manually resolve.
+
+---
+
+### 13.5. Sync Indicators
+
+**UI must show:**
+* Connection status (Online/Offline)
+* Pending sync count badge
+* Last successful sync timestamp
+* Sync progress during active sync
+
+---
+
+# 14. TABLE OPERATIONS (MERGE & SPLIT)
+
+### 14.1. Table Merge Flow
+
+**Use case:** Two groups dining separately want to pay together.
+
+**Steps:**
+
+1. Waiter selects "Merge Tables" from Tables View
+2. Select target table (will receive all items)
+3. Select source table(s) to merge from
+4. Confirm merge
+
+**System actions:**
+
+```text
+1. Move all OrderLines from source orders to target order
+2. Recalculate target order totals
+3. Set source orders: Status = 'Merged', MergedIntoOrderId = TargetOrderId
+4. Create TableMerge record for audit
+5. Release source table (set to Available)
+```
+
+**Validation:**
+* Cannot merge orders with different currencies
+* Cannot merge if any source order has payments
+
+---
+
+### 14.2. Table Split Flow
+
+**Use case:** Group wants separate bills.
+
+**Split Types:**
+
+| Type | Description |
+|------|-------------|
+| By Item | Select which items go to each bill |
+| By Guest | Assign items to guest numbers |
+| By Amount | Enter custom amounts per split |
+| Equal | Divide total equally among N bills |
+
+**Steps (By Item):**
+
+1. Cashier selects "Split Bill"
+2. Choose split type
+3. For By Item: Drag items to new bill panels
+4. Review split totals
+5. Confirm split
+
+**System actions:**
+
+```text
+1. Create new order(s) for split portions
+2. Move/copy selected OrderLines
+3. Set SplitFromOrderId on new orders
+4. Recalculate all order totals
+5. Create TableSplit record for audit
+```
+
+**Validation:**
+* Cannot split orders that are already Paid
+* Split totals must equal original total
+
+---
+
+### 14.3. Table Transfer
+
+**Use case:** Guest moves to different table.
+
+**Steps:**
+
+1. Select order from current table
+2. Choose "Transfer to Table"
+3. Select new table
+4. Confirm transfer
+
+**System actions:**
+* Update order's TableId
+* Update table statuses
+* Log in AuditLog
+
+---
+
+# 15. ORDER MODIFICATION RULES
+
+### 15.1. Modification by Order Status
+
+| Status | Can Add Items | Can Remove Items | Can Modify Qty | Can Change Price |
+|--------|--------------|------------------|----------------|------------------|
+| Draft | ✓ | ✓ | ✓ | With PIN |
+| SentToKitchen | ✓ | With PIN* | With PIN* | With PIN |
+| InPreparation | ✓ | With PIN* | With PIN* | With PIN |
+| Ready | ✓ | With PIN* | With PIN* | With PIN |
+| Served | ✓ | With PIN* | With PIN* | With PIN |
+| Paid | ✗ | ✗ (Void only) | ✗ | ✗ |
+| Voided | ✗ | ✗ | ✗ | ✗ |
+
+*Removing/modifying items already sent to kitchen requires manager PIN and creates kitchen cancellation ticket.
+
+---
+
+### 15.2. Kitchen Cancellation Flow
+
+When item is removed after SentToKitchen:
+
+1. Require Manager PIN
+2. Enter cancellation reason
+3. System creates "CANCEL" ticket for kitchen printer
+4. Update KitchenStatus = 'Cancelled'
+5. Log in AuditLog with reason
+
+**Kitchen Cancel Ticket shows:**
+```text
+*** CANCEL ***
+Table: 5
+Item: Grilled Salmon x 1
+Reason: Customer changed mind
+Time: 14:32
+Authorized by: Manager Ali
+```
+
+---
+
+### 15.3. Quantity Modification After Kitchen Send
+
+**Increase quantity:** 
+* Creates new kitchen ticket for additional quantity only
+
+**Decrease quantity:**
+* Requires Manager PIN
+* Creates cancellation ticket for removed quantity
+
+---
+
+# 16. SHIFT MANAGEMENT
+
+### 16.1. Shift Validation Rules
+
+**Opening a Shift:**
+
+```text
+1. Check no open shift exists for this user
+2. If previous shift has unreconciled CashDifference > threshold:
+   → Block opening, require manager override
+3. Enter opening cash amount
+4. Record OpenTime = NOW()
+5. Log in AuditLog
+```
+
+**Closing a Shift:**
+
+```text
+1. Count all orders in this shift
+2. Calculate ExpectedCash:
+   ExpectedCash = OpeningCash + CashPayments - CashRefunds
+3. Enter actual ClosingCash (physical count)
+4. Calculate CashDifference = ClosingCash - ExpectedCash
+5. If |CashDifference| > threshold:
+   → Require explanation note
+   → Optional: Require manager approval
+6. Record CloseTime = NOW()
+7. Print shift summary report
+```
+
+---
+
+### 16.2. Shift Auto-Close Rules
+
+**System scheduled job (runs every hour):**
+
+```text
+For each shift where Status = 'Open':
+  If (NOW() - OpenTime) > MaxShiftHours (default 24):
+    1. Set Status = 'ForceClosedBySystem'
+    2. Set ForceClosedAt = NOW()
+    3. Set ForceCloseReason = 'Exceeded maximum shift duration'
+    4. Send notification to manager
+    5. Log in AuditLog
+```
+
+**Shift handover:** User cannot open new shift until previous is closed.
+
+---
+
+### 16.3. Shift Reports
+
+**End-of-Shift Summary:**
+
+* Total orders count
+* Sales by payment method
+* Discounts given (requires approval log)
+* Voids (requires void reasons)
+* Cash expected vs actual
+* Tips collected
+
+---
+
+# 17. PRINTING & RECEIPTS
+
+### 17.1. Printer Configuration
+
+**Printer Types:**
+
+| Type | Use |
+|------|-----|
+| Receipt | Customer receipts at checkout |
+| Kitchen | Order tickets per station |
+| Label | Food labels (optional) |
+
+**Connection Types:** USB, Network (IP), Bluetooth
+
+---
+
+### 17.2. Kitchen Ticket Workflow
+
+**On "Send to Kitchen":**
+
+1. Group OrderLines by KitchenStationId
+2. For each station:
+   - Find assigned printer
+   - Generate ticket content
+   - Send to print queue
+3. Update OrderLine.KitchenStatus = 'New'
+
+**Kitchen Ticket Content:**
+
+```text
+┌─────────────────────────┐
+│ ORDER #1234 - TABLE 5   │
+│ 14:32 - Waiter: Ahmed   │
+├─────────────────────────┤
+│ 2x Grilled Salmon       │
+│    - No onions          │
+│    - Extra lemon        │
+│ 1x Caesar Salad         │
+│    - Dressing on side   │
+├─────────────────────────┤
+│ NOTES: Birthday cake at │
+│ dessert time            │
+└─────────────────────────┘
+```
+
+---
+
+### 17.3. Customer Receipt Content
+
+**Header:**
+* Restaurant name, logo
+* Branch address, phone
+* Tax registration number
+
+**Body:**
+* Order number, date, time
+* Table/Order type
+* Items with prices
+* Modifiers
+* Discounts
+* Service charge
+* Tax breakdown
+* Grand total
+* Payment breakdown
+
+**Footer:**
+* Thank you message
+* WiFi password (optional)
+* Social media links
+* QR code for feedback
+
+---
+
+### 17.4. Printer Failure Handling
+
+**If printer unavailable:**
+
+1. Show error notification
+2. Queue print job locally
+3. Retry automatically every 30 seconds
+4. After 3 failures:
+   - Alert manager
+   - Option to print to backup printer
+   - Option to skip printing (with confirmation)
+
+**Kitchen ticket failure is critical** - must alert immediately.
+
+---
+
+# 18. MULTI-LANGUAGE SUPPORT
+
+### 18.1. Supported Languages
+
+* English (en) - default
+* Arabic (ar) - RTL support
+
+---
+
+### 18.2. Language Fields
+
+**Entities with translations:**
+
+| Entity | Fields |
+|--------|--------|
+| Categories | Name, NameAr |
+| MenuItems | Name, NameAr, Description, DescriptionAr |
+| Modifiers | Name, NameAr |
+
+---
+
+### 18.3. UI Language Switching
+
+**User preference:**
+* Each user has DefaultLanguage in profile
+* UI loads in user's language on login
+* Language toggle available in settings
+
+**Receipt language:**
+* Configurable per ReceiptTemplate
+* Options: en, ar, both (bilingual)
+
+**Kitchen tickets:**
+* Typically in staff's working language
+* Configurable per KitchenStation
+
+---
+
+### 18.4. RTL Support (Arabic)
+
+**UI considerations:**
+* Mirror layout for RTL
+* Numbers remain LTR
+* Currency symbols positioned correctly
+* Date formats: locale-appropriate
+
+---
+
+# 19. STOCK RESERVATION WORKFLOW
+
+### 19.1. Reserve on Order Create
+
+When order is created/updated:
+
+```text
+For each OrderLine:
+  1. Find recipe for MenuItem (+ Size if applicable)
+  2. For each RecipeIngredient:
+     RequiredQty = IngredientQty * OrderLineQty
+  3. Check BranchInventory.QuantityAvailable >= RequiredQty
+  4. If available:
+     - Create InventoryReservation record
+     - Update BranchInventory.QuantityReserved += RequiredQty
+  5. If not available:
+     - Show warning (optional: allow negative if setting enabled)
+```
+
+---
+
+### 19.2. Release on Order Complete
+
+**When order Status → Paid:**
+
+```text
+For each InventoryReservation:
+  1. Set Status = 'Consumed'
+  2. Create StockTransaction (Type = 'OUT-Sales')
+  3. Update BranchInventory.QuantityOnHand -= ReservedQty
+  4. Update BranchInventory.QuantityReserved -= ReservedQty
+```
+
+**When order Status → Voided/Canceled:**
+
+```text
+For each InventoryReservation:
+  1. Set Status = 'Released'
+  2. Update BranchInventory.QuantityReserved -= ReservedQty
+  (No OUT-Sales transaction created)
+```
+
+---
+
+### 19.3. Low Stock Alerts
+
+**Real-time checks:**
+
+```text
+If QuantityAvailable <= MinLevel:
+  - Show low stock warning in POS
+  - Send notification to inventory manager
+  - Optional: Block sales if AllowNegativeStock = false
+```
+
+---
+
+# 20. PARTIAL PAYMENT WORKFLOW
+
+### 20.1. Partial Payment Flow
+
+**Use case:** Customer pays part now, rest later (e.g., corporate account).
+
+**Steps:**
+
+1. At checkout, enter payment amount less than GrandTotal
+2. Select payment method
+3. System calculates:
+   ```text
+   TotalPaid = Σ(AllPayments)
+   BalanceDue = GrandTotal - TotalPaid
+   ```
+4. Update PaymentStatus:
+   - If BalanceDue == 0: 'Paid'
+   - If BalanceDue > 0 && TotalPaid > 0: 'PartiallyPaid'
+5. Print receipt showing balance due
+6. Order remains open until fully paid
+
+---
+
+### 20.2. Collecting Remaining Balance
+
+**Later payment:**
+
+1. Find order by OrderNumber or Customer
+2. View BalanceDue
+3. Add payment(s) until BalanceDue = 0
+4. Status → 'Paid'
+
+---
+
+### 20.3. Partial Payment Reports
+
+* Orders with outstanding balance
+* Aging report (days since partial payment)
+* Customer outstanding balances
+
+---
+
+# 21. SUPERADMIN PORTAL
+
+The SuperAdmin portal manages multiple restaurant companies (multi-tenant SaaS).
+
+### 21.1. SuperAdmin Authentication
+
+**Login Page:**
+
+* Username
+* Password
+* "Remember me" option
+
+**Security:**
+```text
+1. Separate authentication endpoint: /auth/superadmin/login
+2. Separate JWT token with isSuperAdmin flag
+3. Session timeout: 8 hours
+4. Failed login lockout after 5 attempts
+5. All actions logged to SuperAdminAuditLog
+```
+
+---
+
+### 21.2. SuperAdmin Dashboard
+
+**Stats Cards:**
+
+| Metric | Description |
+|--------|-------------|
+| Total Companies | Count of all companies |
+| Active Companies | Companies with status = 'active' |
+| Suspended Companies | Companies with status = 'suspended' |
+| Total Revenue | Sum of all CompanyPayments |
+| Expiring Soon | Companies with plan expiring in 7 days |
+
+**Charts:**
+
+* Revenue by month (line chart)
+* Companies by status (pie chart)
+* New signups trend (bar chart)
+
+**Quick Actions:**
+
+* Add Company
+* View Plans
+* View Billing
+
+**Recent Activity:**
+
+* Latest 10 company activities
+* Latest 5 payments received
+
+---
+
+### 21.3. Companies Management
+
+**List View:**
+
+| Column | Description |
+|--------|-------------|
+| Company Name | Click to view details |
+| Username | Login username |
+| Phone | Contact phone |
+| Plan | Current subscription plan |
+| Expiry | Plan expiration date |
+| Status | active/inactive/suspended/trial |
+| Actions | Edit, Reset Password, Delete |
+
+**Filters:**
+
+* Search by name, username, phone
+* Filter by status
+* Filter by plan
+* Filter by expiry (expiring soon, expired)
+
+---
+
+### 21.4. Add/Edit Company
+
+**Form Fields:**
+
+```text
+Company Information:
+- Company Name *
+- Username * (unique, for login)
+- Password * (or leave empty when editing)
+- Email
+- Phone
+- Address
+- Logo (file upload)
+
+Subscription:
+- Plan (dropdown from SubscriptionPlans)
+- Plan Expiry Date (auto-calculated from plan duration)
+- Max Branches (from plan or custom)
+- Max Users (from plan or custom)
+
+Status:
+- Status (active, inactive, suspended, trial)
+- Notes (internal notes)
+```
+
+**On Create:**
+
+```text
+1. Validate unique username
+2. Hash password
+3. Create company record
+4. Create default branch for company
+5. Create admin user for company
+6. Log to SuperAdminAuditLog
+7. Send welcome email (optional)
+```
+
+---
+
+### 21.5. Company Actions
+
+**Reset Password:**
+
+1. SuperAdmin enters new password
+2. System hashes and updates
+3. Display new password (copy to clipboard)
+4. Log action
+
+**Toggle Status:**
+
+```text
+Suspend → Sets status = 'suspended', blocks company login
+Activate → Sets status = 'active', allows login
+```
+
+**View Company Details:**
+
+* Company info
+* Current plan & subscription history
+* Payment history
+* Usage stats (branches, users, orders)
+* Activity log
+* Login as company (impersonation)
+
+---
+
+### 21.6. Plans Management
+
+**List View:**
+
+| Column | Description |
+|--------|-------------|
+| Plan Name | Name of the plan |
+| Price | Amount with currency |
+| Billing Cycle | Monthly/Yearly |
+| Duration | Days of validity |
+| Max Branches | Branch limit |
+| Max Users | User limit |
+| Status | Active/Inactive |
+| Actions | Edit, Toggle, Delete |
+
+---
+
+### 21.7. Add/Edit Plan
+
+**Form Fields:**
+
+```text
+Basic Info:
+- Plan Name *
+- Description
+- Price *
+- Currency (USD, LBP, etc.)
+- Billing Cycle (Monthly, Yearly)
+- Duration in Days *
+
+Limits:
+- Max Branches *
+- Max Users *
+- Max Orders per Month (optional)
+
+Features (checkboxes):
+- POS Module
+- Inventory Module
+- Loyalty Module
+- Delivery Module
+- Reservations Module
+- Multi-Language
+- API Access
+- Priority Support
+- Custom Reports
+
+Display:
+- Sort Order
+- Is Active
+```
+
+---
+
+### 21.8. Billing & Payments
+
+**List View:**
+
+| Column | Description |
+|--------|-------------|
+| Company | Company name |
+| Amount | Payment amount |
+| Method | CreditCard, BankTransfer, Cash |
+| Reference | Transaction ID |
+| Date | Payment date |
+| Status | pending, completed, failed |
+| Actions | View, Edit |
+
+**Filters:**
+
+* Date range
+* Company
+* Payment method
+* Status
+
+---
+
+### 21.9. Record Payment
+
+**Form Fields:**
+
+```text
+- Company * (dropdown)
+- Amount *
+- Currency *
+- Payment Method *
+- Payment Reference (transaction ID)
+- Payment Date *
+- Status (pending, completed)
+- Notes
+```
+
+**On Save:**
+
+```text
+1. Create CompanyPayments record
+2. If linked to subscription renewal:
+   - Extend plan expiry date
+   - Update CompanySubscriptions
+3. Log to SuperAdminAuditLog
+```
+
+---
+
+### 21.10. Reports
+
+**Available Reports:**
+
+| Report | Description |
+|--------|-------------|
+| Revenue Report | Revenue by period, company, plan |
+| Companies Report | Active, new, churned companies |
+| Subscription Report | Renewals, expirations, upgrades |
+| Usage Report | Orders, users, branches per company |
+
+**Export Options:**
+
+* PDF
+* Excel
+* CSV
+
+---
+
+### 21.11. System Settings
+
+**SuperAdmin Settings:**
+
+```text
+- Platform Name
+- Platform Logo
+- Support Email
+- Support Phone
+- Default Currency
+- Trial Period Days
+- Auto-Suspend After Days (grace period)
+- Email Notifications (on/off)
+```
+
+---
+
+### 21.12. SuperAdmin Audit Log
+
+**View all SuperAdmin actions:**
+
+| Column | Description |
+|--------|-------------|
+| Timestamp | When action occurred |
+| SuperAdmin | Who performed action |
+| Action | What was done |
+| Target Company | Affected company |
+| Details | JSON details |
+| IP Address | Request source |
+
+**Filters:**
+
+* Date range
+* SuperAdmin
+* Action type
+* Company
+
+---
+
+### 21.13. Company Impersonation
+
+**"Login as Company" Feature:**
+
+```text
+1. SuperAdmin clicks "Login as" on company row
+2. System generates temporary token for company admin
+3. SuperAdmin is redirected to company's admin panel
+4. Banner shows "You are viewing as [Company Name]"
+5. Exit button returns to SuperAdmin portal
+6. All actions logged with impersonation flag
+```
+
+**Security:**
+```text
+- Impersonation sessions expire in 1 hour
+- Cannot change company password while impersonating
+- Logged as ImpersonationStarted/ImpersonationEnded
+```
+
+---
+
+### 21.14. Notifications & Alerts
+
+**Automated Alerts to SuperAdmin:**
+
+| Alert | Trigger |
+|-------|---------|
+| Subscription Expiring | 7 days before expiry |
+| Subscription Expired | On expiry date |
+| Payment Failed | When payment status = failed |
+| Company Suspended | When auto-suspended |
+| High Usage | Company exceeds 80% of limits |
+| New Signup | New company created (if trial) |
+
+**Delivery Methods:**
+
+* In-app notifications
+* Email notifications
+* Dashboard widgets
+
+---
+
+### 21.15. API Endpoints Summary
+
+**Authentication:**
+```text
+POST /api/auth/superadmin/login
+GET  /api/auth/superadmin/me
+POST /api/auth/superadmin/logout
+```
+
+**Companies:**
+```text
+GET    /api/superadmin/companies
+GET    /api/superadmin/companies/:id
+POST   /api/superadmin/companies
+PUT    /api/superadmin/companies/:id
+DELETE /api/superadmin/companies/:id
+PATCH  /api/superadmin/companies/:id/reset-password
+PATCH  /api/superadmin/companies/:id/toggle-status
+POST   /api/superadmin/companies/:id/impersonate
+```
+
+**Plans:**
+```text
+GET    /api/superadmin/plans
+GET    /api/superadmin/plans/:id
+POST   /api/superadmin/plans
+PUT    /api/superadmin/plans/:id
+DELETE /api/superadmin/plans/:id
+PATCH  /api/superadmin/plans/:id/toggle
+```
+
+**Billing:**
+```text
+GET    /api/superadmin/billing
+GET    /api/superadmin/billing/:id
+POST   /api/superadmin/billing
+PUT    /api/superadmin/billing/:id
+```
+
+**Dashboard & Reports:**
+```text
+GET /api/superadmin/dashboard
+GET /api/superadmin/reports/revenue
+GET /api/superadmin/reports/companies
+GET /api/superadmin/reports/subscriptions
+```
+
+**Audit:**
+```text
+GET /api/superadmin/audit-log
+```

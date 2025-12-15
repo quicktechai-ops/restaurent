@@ -1,0 +1,138 @@
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { reservationsApi, branchesApi, tablesApi } from '../lib/api'
+import { Plus, Edit, Trash2, Clock, Users } from 'lucide-react'
+
+export default function Reservations() {
+  const queryClient = useQueryClient()
+  const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [dateFilter, setDateFilter] = useState(new Date().toISOString().split('T')[0])
+  const [branchFilter, setBranchFilter] = useState<number | undefined>()
+  const [formData, setFormData] = useState({ branchId: 0, customerName: '', customerPhone: '', reservationDate: '', startTime: '', durationMinutes: 90, partySize: 2, tableId: '', channel: 'Phone', notes: '' })
+
+  const { data: reservations, isLoading } = useQuery({ 
+    queryKey: ['reservations', dateFilter, branchFilter], 
+    queryFn: () => reservationsApi.getAll({ date: dateFilter, branchId: branchFilter }) 
+  })
+  const { data: branches } = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.getAll() })
+  const { data: tables } = useQuery({ queryKey: ['tables', formData.branchId], queryFn: () => tablesApi.getAll(formData.branchId || undefined), enabled: !!formData.branchId })
+
+  const createMutation = useMutation({ mutationFn: reservationsApi.create, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['reservations'] }); resetForm() } })
+  const updateMutation = useMutation({ mutationFn: ({ id, data }: { id: number; data: any }) => reservationsApi.update(id, data), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['reservations'] }); resetForm() } })
+  const deleteMutation = useMutation({ mutationFn: reservationsApi.delete, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reservations'] }) })
+  const statusMutation = useMutation({ mutationFn: ({ id, status }: { id: number; status: string }) => reservationsApi.updateStatus(id, status), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reservations'] }) })
+
+  const resetForm = () => { setShowForm(false); setEditingId(null); setFormData({ branchId: 0, customerName: '', customerPhone: '', reservationDate: '', startTime: '', durationMinutes: 90, partySize: 2, tableId: '', channel: 'Phone', notes: '' }) }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const data = { ...formData, tableId: formData.tableId ? parseInt(formData.tableId) : null }
+    if (editingId) updateMutation.mutate({ id: editingId, data })
+    else createMutation.mutate(data)
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Confirmed': return 'bg-green-100 text-green-800'
+      case 'Seated': return 'bg-blue-100 text-blue-800'
+      case 'Canceled': return 'bg-red-100 text-red-800'
+      case 'NoShow': return 'bg-gray-100 text-gray-800'
+      default: return 'bg-yellow-100 text-yellow-800'
+    }
+  }
+
+  if (isLoading) return <div className="p-6">Loading...</div>
+
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Reservations</h1>
+        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
+          <Plus size={20} /> New Reservation
+        </button>
+      </div>
+
+      <div className="flex gap-4 mb-4">
+        <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="input-field" />
+        <select value={branchFilter || ''} onChange={(e) => setBranchFilter(e.target.value ? parseInt(e.target.value) : undefined)} className="input-field">
+          <option value="">All Branches</option>
+          {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+        </select>
+      </div>
+
+      {showForm && (
+        <div className="card mb-6">
+          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit' : 'New'} Reservation</h2>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <select value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: parseInt(e.target.value) })} className="input-field" required>
+              <option value="">Select Branch *</option>
+              {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+            <input type="text" placeholder="Customer Name *" value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} className="input-field" required />
+            <input type="tel" placeholder="Phone *" value={formData.customerPhone} onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })} className="input-field" required />
+            <input type="date" value={formData.reservationDate} onChange={(e) => setFormData({ ...formData, reservationDate: e.target.value })} className="input-field" required />
+            <input type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} className="input-field" required />
+            <input type="number" placeholder="Duration (mins)" value={formData.durationMinutes} onChange={(e) => setFormData({ ...formData, durationMinutes: parseInt(e.target.value) || 90 })} className="input-field" />
+            <input type="number" placeholder="Party Size" value={formData.partySize} onChange={(e) => setFormData({ ...formData, partySize: parseInt(e.target.value) || 2 })} className="input-field" required />
+            <select value={formData.tableId} onChange={(e) => setFormData({ ...formData, tableId: e.target.value })} className="input-field">
+              <option value="">Select Table (Optional)</option>
+              {tables?.data?.map((t: any) => <option key={t.id} value={t.id}>{t.tableName} ({t.capacity} seats)</option>)}
+            </select>
+            <select value={formData.channel} onChange={(e) => setFormData({ ...formData, channel: e.target.value })} className="input-field">
+              <option value="Phone">Phone</option>
+              <option value="WalkIn">Walk-In</option>
+              <option value="Online">Online</option>
+            </select>
+            <textarea placeholder="Notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input-field md:col-span-3" rows={2} />
+            <div className="md:col-span-3 flex gap-2">
+              <button type="submit" className="btn-primary">Save</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="card">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left p-3">Time</th>
+              <th className="text-left p-3">Customer</th>
+              <th className="text-left p-3">Party</th>
+              <th className="text-left p-3">Table</th>
+              <th className="text-left p-3">Status</th>
+              <th className="text-left p-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reservations?.data?.map((res: any) => (
+              <tr key={res.id} className="border-b hover:bg-gray-50">
+                <td className="p-3 flex items-center gap-2"><Clock size={16} className="text-gray-400" /> {res.startTime?.substring(0, 5)}</td>
+                <td className="p-3">{res.customerName} <br /><span className="text-sm text-gray-500">{res.customerPhone}</span></td>
+                <td className="p-3 flex items-center gap-1"><Users size={14} /> {res.partySize}</td>
+                <td className="p-3">{res.tableName || '-'}</td>
+                <td className="p-3">
+                  <select value={res.status} onChange={(e) => statusMutation.mutate({ id: res.id, status: e.target.value })} className={`px-2 py-1 rounded text-xs border-0 ${getStatusColor(res.status)}`}>
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Seated">Seated</option>
+                    <option value="Canceled">Canceled</option>
+                    <option value="NoShow">No Show</option>
+                  </select>
+                </td>
+                <td className="p-3">
+                  <div className="flex gap-2">
+                    <button onClick={() => { setEditingId(res.id); setFormData({ branchId: res.branchId, customerName: res.customerName || '', customerPhone: res.customerPhone || '', reservationDate: res.reservationDate?.split('T')[0] || '', startTime: res.startTime?.substring(0, 5) || '', durationMinutes: res.durationMinutes, partySize: res.partySize, tableId: res.tableId?.toString() || '', channel: res.channel, notes: res.notes || '' }); setShowForm(true) }} className="text-blue-600 hover:text-blue-800"><Edit size={16} /></button>
+                    <button onClick={() => deleteMutation.mutate(res.id)} className="text-red-600 hover:text-red-800"><Trash2 size={16} /></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {reservations?.data?.length === 0 && <p className="text-center text-gray-500 py-8">No reservations for this date</p>}
+      </div>
+    </div>
+  )
+}
