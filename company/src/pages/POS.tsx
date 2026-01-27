@@ -38,6 +38,7 @@ interface Modifier {
   id: number
   name: string
   extraPrice: number
+  isActive: boolean
 }
 
 interface OrderLine {
@@ -75,6 +76,7 @@ interface PaymentMethod {
   id: number
   name: string
   type: string
+  isActive: boolean
 }
 
 interface Branch {

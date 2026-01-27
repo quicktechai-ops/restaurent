@@ -26,7 +26,7 @@ export default function Staff() {
 
   const { data: users, isLoading } = useQuery({ 
     queryKey: ['users', branchFilter], 
-    queryFn: () => usersApi.getAll({ branchId: branchFilter }) 
+    queryFn: () => usersApi.getAll(branchFilter) 
   })
   const { data: roles } = useQuery({ queryKey: ['roles'], queryFn: () => rolesApi.getAll() })
   const { data: branches } = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.getAll() })
