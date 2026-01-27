@@ -629,7 +629,7 @@ namespace Restaurant.API.Migrations
 
                     b.HasIndex("CompanyId", "CustomerCode")
                         .IsUnique()
-                        .HasFilter("[CustomerCode] IS NOT NULL");
+                        .HasFilter("\"CustomerCode\" IS NOT NULL");
 
                     b.ToTable("Customers");
                 });
@@ -1166,7 +1166,7 @@ namespace Restaurant.API.Migrations
 
                     b.HasIndex("CompanyId", "Code")
                         .IsUnique()
-                        .HasFilter("[Code] IS NOT NULL");
+                        .HasFilter("\"Code\" IS NOT NULL");
 
                     b.ToTable("InventoryItems");
                 });

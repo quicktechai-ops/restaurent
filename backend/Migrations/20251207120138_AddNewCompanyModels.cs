@@ -1473,7 +1473,7 @@ namespace Restaurant.API.Migrations
                 table: "Customers",
                 columns: new[] { "CompanyId", "CustomerCode" },
                 unique: true,
-                filter: "[CustomerCode] IS NOT NULL");
+                filter: "\"CustomerCode\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Customers_DefaultBranchId",
@@ -1551,7 +1551,7 @@ namespace Restaurant.API.Migrations
                 table: "InventoryItems",
                 columns: new[] { "CompanyId", "Code" },
                 unique: true,
-                filter: "[Code] IS NOT NULL");
+                filter: "\"Code\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_kitchen_stations_branch_id",
