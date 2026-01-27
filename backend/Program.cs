@@ -92,18 +92,19 @@ builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 var app = builder.Build();
 
-// Verify database connection and ensure schema exists
+// Auto-migrate database on startup
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     try
     {
-        await context.Database.EnsureCreatedAsync();
-        Console.WriteLine("Database schema verified/created successfully");
+        Console.WriteLine("Applying database migrations...");
+        await context.Database.MigrateAsync();
+        Console.WriteLine("Database migrations applied successfully");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Warning: Could not setup database: {ex.Message}");
+        Console.WriteLine($"Warning: Could not apply migrations: {ex.Message}");
     }
 }
 
