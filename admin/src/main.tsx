@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter basename="/admin">
+    <BrowserRouter basename="/restaurentadmin">
       <AuthProvider>
         <App />
       </AuthProvider>
