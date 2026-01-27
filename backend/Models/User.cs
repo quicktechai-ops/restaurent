@@ -35,6 +35,10 @@ public class User
     [MaxLength(100)]
     public string? Email { get; set; }
 
+    [Column("position")]
+    [MaxLength(50)]
+    public string? Position { get; set; }
+
     [Column("default_branch_id")]
     public int? DefaultBranchId { get; set; }
 

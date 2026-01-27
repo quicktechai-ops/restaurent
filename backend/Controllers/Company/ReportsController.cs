@@ -23,16 +23,58 @@ public class ReportsController : ControllerBase
     public async Task<ActionResult> GetSalesReport([FromQuery] DateTime? from, [FromQuery] DateTime? to)
     {
         var companyId = GetCompanyId();
-        // TODO: Implement when Orders are available
-        // For now, return mock data structure
+        var dateFrom = from ?? DateTime.UtcNow.AddDays(-30);
+        var dateTo = to?.AddDays(1) ?? DateTime.UtcNow.AddDays(1);
+
+        var orders = await _context.Orders
+            .Include(o => o.OrderLines)
+                .ThenInclude(ol => ol.MenuItem)
+                    .ThenInclude(mi => mi.Category)
+            .Where(o => o.CompanyId == companyId && o.PaymentStatus == "Paid" && o.CreatedAt >= dateFrom && o.CreatedAt < dateTo)
+            .ToListAsync();
+
+        var totalRevenue = orders.Sum(o => o.GrandTotal);
+        var totalOrders = orders.Count;
+        var averageTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+        var uniqueCustomers = orders.Where(o => o.CustomerId.HasValue).Select(o => o.CustomerId).Distinct().Count();
+
+        // Sales by category
+        var allLines = orders.SelectMany(o => o.OrderLines).ToList();
+        var byCategory = allLines
+            .Where(ol => ol.MenuItem?.Category != null)
+            .GroupBy(ol => ol.MenuItem!.Category!.Name)
+            .Select(g => new
+            {
+                name = g.Key,
+                quantity = g.Sum(ol => ol.Quantity),
+                revenue = g.Sum(ol => ol.LineNet),
+                percentage = totalRevenue > 0 ? (g.Sum(ol => ol.LineNet) / totalRevenue * 100) : 0
+            })
+            .OrderByDescending(c => c.revenue)
+            .ToList();
+
+        // Top selling items
+        var topItems = allLines
+            .Where(ol => ol.MenuItem != null)
+            .GroupBy(ol => ol.MenuItem!.Name)
+            .Select(g => new
+            {
+                name = g.Key,
+                quantity = g.Sum(ol => ol.Quantity),
+                revenue = g.Sum(ol => ol.LineNet)
+            })
+            .OrderByDescending(i => i.quantity)
+            .Take(10)
+            .ToList();
+
         return Ok(new
         {
-            totalRevenue = 0m,
-            totalOrders = 0,
-            averageTicket = 0m,
-            uniqueCustomers = 0,
-            byCategory = new List<object>(),
-            topItems = new List<object>()
+            totalRevenue,
+            totalOrders,
+            averageTicket,
+            uniqueCustomers,
+            byCategory,
+            topItems
         });
     }
 
@@ -72,35 +114,49 @@ public class ReportsController : ControllerBase
     public async Task<ActionResult> GetCustomersReport([FromQuery] DateTime? from, [FromQuery] DateTime? to)
     {
         var companyId = GetCompanyId();
+        var dateFrom = from ?? DateTime.UtcNow.AddDays(-30);
+        var dateTo = to?.AddDays(1) ?? DateTime.UtcNow.AddDays(1);
 
         var totalCustomers = await _context.Customers.CountAsync(c => c.CompanyId == companyId);
         
-        var dateFrom = from ?? DateTime.UtcNow.AddDays(-30);
-        var dateTo = to ?? DateTime.UtcNow;
-
         var newCustomers = await _context.Customers
-            .CountAsync(c => c.CompanyId == companyId && c.CreatedAt >= dateFrom && c.CreatedAt <= dateTo);
+            .CountAsync(c => c.CompanyId == companyId && c.CreatedAt >= dateFrom && c.CreatedAt < dateTo);
 
-        // TODO: Calculate repeat rate and top customers when Orders are available
-        var topCustomers = await _context.Customers
-            .Where(c => c.CompanyId == companyId)
-            .OrderByDescending(c => c.CreatedAt)
-            .Take(10)
-            .Select(c => new
+        // Get customer order stats
+        var customerOrders = await _context.Orders
+            .Where(o => o.CompanyId == companyId && o.CustomerId.HasValue && o.PaymentStatus == "Paid")
+            .GroupBy(o => o.CustomerId)
+            .Select(g => new
             {
-                c.CustomerId,
-                c.Name,
-                OrderCount = 0,
-                TotalSpent = 0m,
-                LastVisit = c.UpdatedAt ?? c.CreatedAt
+                CustomerId = g.Key,
+                OrderCount = g.Count(),
+                TotalSpent = g.Sum(o => o.GrandTotal),
+                LastVisit = g.Max(o => o.CreatedAt)
             })
             .ToListAsync();
+
+        var customersWithMultipleOrders = customerOrders.Count(c => c.OrderCount > 1);
+        var repeatRate = customerOrders.Count > 0 ? (decimal)customersWithMultipleOrders / customerOrders.Count * 100 : 0;
+
+        var topCustomerIds = customerOrders.OrderByDescending(c => c.TotalSpent).Take(10).ToList();
+        var customerNames = await _context.Customers
+            .Where(c => topCustomerIds.Select(t => t.CustomerId).Contains(c.CustomerId))
+            .ToDictionaryAsync(c => c.CustomerId, c => c.Name);
+
+        var topCustomers = topCustomerIds.Select(c => new
+        {
+            id = c.CustomerId,
+            name = customerNames.GetValueOrDefault(c.CustomerId ?? 0, "Unknown"),
+            orderCount = c.OrderCount,
+            totalSpent = c.TotalSpent,
+            lastVisit = c.LastVisit
+        }).ToList();
 
         return Ok(new
         {
             totalCustomers,
             newCustomers,
-            repeatRate = 0m,
+            repeatRate,
             topCustomers
         });
     }

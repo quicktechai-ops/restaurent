@@ -30,19 +30,20 @@ public class RecipesController : ControllerBase
             .Include(r => r.Ingredients)
                 .ThenInclude(i => i.InventoryItem)
             .Where(r => r.CompanyId == companyId)
-            .Select(r => new RecipeListDto
-            {
-                Id = r.RecipeId,
-                MenuItemId = r.MenuItemId,
-                MenuItemName = r.MenuItem!.Name,
-                Yield = (int)r.YieldQuantity,
-                IngredientCount = r.Ingredients.Count,
-                EstimatedCost = 0, // Cost calculation requires inventory transactions
-                IsActive = r.IsActive
-            })
             .ToListAsync();
 
-        return Ok(recipes);
+        var result = recipes.Select(r => new RecipeListDto
+        {
+            Id = r.RecipeId,
+            MenuItemId = r.MenuItemId,
+            MenuItemName = r.MenuItem?.Name ?? "",
+            Yield = (int)r.YieldQuantity,
+            IngredientCount = r.Ingredients.Count,
+            EstimatedCost = r.Ingredients.Sum(i => i.QuantityPerYield * (i.InventoryItem?.Cost ?? 0)),
+            IsActive = r.IsActive
+        }).ToList();
+
+        return Ok(result);
     }
 
     [HttpGet("{id}")]

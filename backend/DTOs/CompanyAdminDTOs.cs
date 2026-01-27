@@ -64,6 +64,7 @@ public class UserListDto
     public string FullName { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? Phone { get; set; }
+    public string? Position { get; set; }
     public int? DefaultBranchId { get; set; }
     public string? DefaultBranchName { get; set; }
     public bool IsActive { get; set; }
@@ -78,6 +79,7 @@ public class CreateUserRequest
     public string FullName { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? Phone { get; set; }
+    public string? Position { get; set; }
     public int? DefaultBranchId { get; set; }
     public List<int> RoleIds { get; set; } = new();
 }
@@ -87,6 +89,7 @@ public class UpdateUserRequest
     public string FullName { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? Phone { get; set; }
+    public string? Position { get; set; }
     public int? DefaultBranchId { get; set; }
     public bool IsActive { get; set; } = true;
     public List<int> RoleIds { get; set; } = new();
@@ -144,6 +147,7 @@ public class CategoryListDto
     public string? ParentCategoryName { get; set; }
     public int SortOrder { get; set; }
     public bool IsActive { get; set; }
+    public string? Image { get; set; }
     public int ItemsCount { get; set; }
 }
 
@@ -154,6 +158,7 @@ public class CreateCategoryRequest
     public int? ParentCategoryId { get; set; }
     public int? BranchId { get; set; }
     public int SortOrder { get; set; } = 0;
+    public string? Image { get; set; }
 }
 
 public class UpdateCategoryRequest : CreateCategoryRequest

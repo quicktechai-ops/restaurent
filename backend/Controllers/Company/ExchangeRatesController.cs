@@ -45,32 +45,37 @@ public class ExchangeRatesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ExchangeRateListDto>> Create([FromBody] CreateExchangeRateRequest request)
     {
-        var companyId = GetCompanyId();
-        var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
-
-        var rate = new ExchangeRate
+        try
         {
-            CompanyId = companyId,
-            BaseCurrencyCode = request.BaseCurrencyCode,
-            ForeignCurrencyCode = request.ForeignCurrencyCode,
-            Rate = request.Rate,
-            ValidFrom = request.ValidFrom,
-            ValidTo = request.ValidTo,
-            CreatedByUserId = userId
-        };
+            var companyId = GetCompanyId();
 
-        _context.ExchangeRates.Add(rate);
-        await _context.SaveChangesAsync();
+            var rate = new ExchangeRate
+            {
+                CompanyId = companyId,
+                BaseCurrencyCode = request.BaseCurrencyCode,
+                ForeignCurrencyCode = request.ForeignCurrencyCode,
+                Rate = request.Rate,
+                ValidFrom = request.ValidFrom,
+                ValidTo = request.ValidTo
+            };
 
-        return Ok(new ExchangeRateListDto
+            _context.ExchangeRates.Add(rate);
+            await _context.SaveChangesAsync();
+
+            return Ok(new ExchangeRateListDto
+            {
+                Id = rate.ExchangeRateId,
+                BaseCurrencyCode = rate.BaseCurrencyCode,
+                ForeignCurrencyCode = rate.ForeignCurrencyCode,
+                Rate = rate.Rate,
+                ValidFrom = rate.ValidFrom,
+                ValidTo = rate.ValidTo
+            });
+        }
+        catch (Exception ex)
         {
-            Id = rate.ExchangeRateId,
-            BaseCurrencyCode = rate.BaseCurrencyCode,
-            ForeignCurrencyCode = rate.ForeignCurrencyCode,
-            Rate = rate.Rate,
-            ValidFrom = rate.ValidFrom,
-            ValidTo = rate.ValidTo
-        });
+            return StatusCode(500, new { message = ex.Message, inner = ex.InnerException?.Message });
+        }
     }
 
     [HttpPut("{id}")]

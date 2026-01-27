@@ -73,7 +73,7 @@ export default function Currencies() {
     setShowForm(true);
   };
 
-  if (isLoading) return <div className="p-6">Loading...</div>;
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="p-6">
@@ -88,7 +88,7 @@ export default function Currencies() {
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-gray-900 rounded-lg shadow p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit Currency' : 'Add Currency'}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -149,9 +149,9 @@ export default function Currencies() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+      <div className="bg-gray-900 rounded-lg shadow overflow-hidden">
+        <table className="table">
+          <thead className="bg-gray-800">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
@@ -192,7 +192,7 @@ export default function Currencies() {
                     <button onClick={() => handleEdit(currency)} className="text-blue-600 hover:text-blue-800">
                       <Edit className="w-4 h-4" />
                     </button>
-                    <button onClick={() => toggleMutation.mutate(currency.currencyCode)} className="text-gray-600 hover:text-gray-800">
+                    <button onClick={() => toggleMutation.mutate(currency.currencyCode)} className="text-gray-600 hover:text-gray-900">
                       {currency.isActive ? <ToggleRight className="w-5 h-5 text-green-600" /> : <ToggleLeft className="w-5 h-5" />}
                     </button>
                   </div>

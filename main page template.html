@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise POS Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent-color: #0078d4;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top right, #1f1f2e 0%, #0f0f13 100%);
+            color: white;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Top Navigation Bar --- */
+        .navbar {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+        .back-btn {
+            display: none; /* Hidden by default */
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding-right: 20px;
+            margin-right: 20px;
+            border-right: 1px solid #333;
+        }
+        .back-btn:hover { color: var(--accent-color); }
+        .nav-title { font-size: 1.2rem; font-weight: 600; }
+
+        /* --- Main Layout Container --- */
+        .view-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* --- View Transition Logic --- */
+        .view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 40px;
+            overflow-y: auto;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+            opacity: 0;
+            transform: translateX(50px);
+            pointer-events: none;
+            display: none; /* remove from flow */
+        }
+
+        .view.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+            display: block;
+        }
+
+        /* --- Grid Layouts --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* --- Card Styles --- */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            aspect-ratio: 1/1; /* Square */
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .card i { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.8; }
+        .card h3 { font-size: 1.1rem; font-weight: 500; margin: 0; }
+        .card span { font-size: 0.8rem; color: #aaa; margin-top: 5px; display: block; }
+        
+        /* Count Badge (e.g., "12 files") */
+        .badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+        }
+
+        /* --- Special Cards --- */
+        .hero-card {
+            grid-column: span 2;
+            grid-row: span 2;
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+        }
+        .hero-card i { font-size: 4rem; }
+        .hero-card h3 { font-size: 2rem; }
+
+        /* Gradients for Categories */
+        .g-inventory { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .g-staff { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .g-admin { background: linear-gradient(135deg, #434343 0%, #000000 100%); border: 1px solid #555; }
+        .g-menu { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .g-customers { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+
+        /* List Items (Sub-menu style) */
+        .sub-grid {
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        }
+        .file-card {
+            aspect-ratio: 2/1; /* Rectangular for files */
+            background: #252525;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <button id="backBtn" class="back-btn" onclick="goHome()">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+        <div class="nav-title" id="pageTitle">Home Dashboard</div>
+    </div>
+
+    <div class="view-container">
+
+        <div id="mainView" class="view active">
+            <div class="grid">
+                
+                <a href="POS.tsx" class="card hero-card">
+                    <i class="fa-solid fa-cash-register"></i>
+                    <div>
+                        <h3>POS Terminal</h3>
+                        <span>Start New Sale</span>
+                    </div>
+                </a>
+
+                <a href="Dashboard.tsx" class="card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <div>
+                        <h3>Analytics</h3>
+                        <span>Dashboard.tsx</span>
+                    </div>
+                </a>
+
+                <div class="card g-inventory" onclick="openCategory('inventoryView', 'Inventory Management')">
+                    <div class="badge">10 Files</div>
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <div>
+                        <h3>Inventory</h3>
+                        <span>Stock, Suppliers, Goods Receipt</span>
+                    </div>
+                </div>
+
+                <div class="card g-menu" onclick="openCategory('menuView', 'Menu Setup')">
+                    <div class="badge">4 Files</div>
+                    <i class="fa-solid fa-utensils"></i>
+                    <div>
+                        <h3>Menu</h3>
+                        <span>Items, Categories, Modifiers</span>
+                    </div>
+                </div>
+
+                <div class="card g-staff" onclick="openCategory('staffView', 'HR & Staff')">
+                    <div class="badge">6 Files</div>
+                    <i class="fa-solid fa-users-gear"></i>
+                    <div>
+                        <h3>Staff</h3>
+                        <span>Employees, Users, Roles</span>
+                    </div>
+                </div>
+
+                <div class="card g-customers" onclick="openCategory('customerView', 'Customers & Loyalty')">
+                    <div class="badge">5 Files</div>
+                    <i class="fa-solid fa-address-book"></i>
+                    <div>
+                        <h3>Customers</h3>
+                        <span>Profiles, Loyalty, Gift Cards</span>
+                    </div>
+                </div>
+
+                <div class="card g-admin" onclick="openCategory('adminView', 'System Configuration')">
+                    <div class="badge">9 Files</div>
+                    <i class="fa-solid fa-gears"></i>
+                    <div>
+                        <h3>Settings</h3>
+                        <span>Printers, Taxes, Branches</span>
+                    </div>
+                </div>
+
+                <a href="Reports.tsx" class="card" style="background:#333">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <div>
+                        <h3>Reports</h3>
+                        <span>Reports.tsx</span>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+
+        <div id="inventoryView" class="view">
+            <h2 style="margin-bottom:20px; font-weight:300;">Inventory Modules</h2>
+            <div class="grid sub-grid">
+                <a href="Inventory.tsx" class="card file-card"><i class="fa-solid fa-box"></i><h3>Inventory</h3></a>
+                <a href="StockCount.tsx" class="card file-card"><i class="fa-solid fa-clipboard-check"></i><h3>Stock Count</h3></a>
+                <a href="StockAdjustment.tsx" class="card file-card"><i class="fa-solid fa-sliders"></i><h3>Stock Adjustment</h3></a>
+                <a href="StockMovements.tsx" class="card file-card"><i class="fa-solid fa-truck-ramp-box"></i><h3>Movements</h3></a>
+                <a href="GoodsReceipt.tsx" class="card file-card"><i class="fa-solid fa-truck"></i><h3>Goods Receipt</h3></a>
+                <a href="Wastage.tsx" class="card file-card"><i class="fa-solid fa-trash-can"></i><h3>Wastage</h3></a>
+                <a href="PurchaseOrders.tsx" class="card file-card"><i class="fa-solid fa-file-contract"></i><h3>Purchase Orders</h3></a>
+                <a href="Suppliers.tsx" class="card file-card"><i class="fa-solid fa-handshake"></i><h3>Suppliers</h3></a>
+                <a href="Recipes.tsx" class="card file-card"><i class="fa-solid fa-scroll"></i><h3>Recipes</h3></a>
+                <a href="InventorySettings.tsx" class="card file-card"><i class="fa-solid fa-cog"></i><h3>Inv. Settings</h3></a>
+            </div>
+        </div>
+
+        <div id="staffView" class="view">
+            <h2 style="margin-bottom:20px; font-weight:300;">Staff Management</h2>
+            <div class="grid sub-grid">
+                <a href="Employees.tsx" class="card file-card"><i class="fa-solid fa-user-tie"></i><h3>Employees</h3></a>
+                <a href="Users.tsx" class="card file-card"><i class="fa-solid fa-user-lock"></i><h3>Users</h3></a>
+                <a href="Roles.tsx" class="card file-card"><i class="fa-solid fa-shield-halved"></i><h3>Roles</h3></a>
+                <a href="Attendance.tsx" class="card file-card"><i class="fa-solid fa-clock"></i><h3>Attendance</h3></a>
+                <a href="CommissionPolicies.tsx" class="card file-card"><i class="fa-solid fa-percent"></i><h3>Commissions</h3></a>
+                <a href="ApprovalRules.tsx" class="card file-card"><i class="fa-solid fa-check-double"></i><h3>Approvals</h3></a>
+            </div>
+        </div>
+
+         <div id="adminView" class="view">
+            <h2 style="margin-bottom:20px; font-weight:300;">System Settings</h2>
+            <div class="grid sub-grid">
+                <a href="Settings.tsx" class="card file-card"><i class="fa-solid fa-sliders"></i><h3>General Settings</h3></a>
+                <a href="Branches.tsx" class="card file-card"><i class="fa-solid fa-store"></i><h3>Branches</h3></a>
+                <a href="Printers.tsx" class="card file-card"><i class="fa-solid fa-print"></i><h3>Printers</h3></a>
+                <a href="ReceiptTemplates.tsx" class="card file-card"><i class="fa-solid fa-receipt"></i><h3>Receipt Templates</h3></a>
+                <a href="PaymentMethods.tsx" class="card file-card"><i class="fa-solid fa-credit-card"></i><h3>Payment Methods</h3></a>
+                <a href="Currencies.tsx" class="card file-card"><i class="fa-solid fa-money-bill"></i><h3>Currencies</h3></a>
+                <a href="ExchangeRates.tsx" class="card file-card"><i class="fa-solid fa-arrow-right-arrow-left"></i><h3>Exchange Rates</h3></a>
+                <a href="AuditLogs.tsx" class="card file-card"><i class="fa-solid fa-list-ol"></i><h3>Audit Logs</h3></a>
+                <a href="DeliveryZones.tsx" class="card file-card"><i class="fa-solid fa-map-location-dot"></i><h3>Delivery Zones</h3></a>
+            </div>
+        </div>
+
+        <div id="menuView" class="view"><div class="grid sub-grid"><a href="MenuItems.tsx" class="card file-card"><h3>Items</h3></a></div></div>
+        <div id="customerView" class="view"><div class="grid sub-grid"><a href="Customers.tsx" class="card file-card"><h3>Customers</h3></a></div></div>
+
+    </div>
+
+    <script>
+        // Simple Navigation Logic
+        function openCategory(viewId, title) {
+            // Hide all views
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            
+            // Show selected view
+            document.getElementById(viewId).classList.add('active');
+            
+            // Update Header
+            document.getElementById('pageTitle').innerText = title;
+            document.getElementById('backBtn').style.display = 'block';
+        }
+
+        function goHome() {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById('mainView').classList.add('active');
+            
+            document.getElementById('pageTitle').innerText = 'Home Dashboard';
+            document.getElementById('backBtn').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

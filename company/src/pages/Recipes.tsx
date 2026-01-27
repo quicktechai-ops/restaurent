@@ -60,6 +60,7 @@ export default function Recipes() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submitting formData:', formData);
     if (editingId) {
       updateMutation.mutate({ id: editingId, data: formData });
     } else {
@@ -67,12 +68,18 @@ export default function Recipes() {
     }
   };
 
-  const handleEdit = (recipe: any) => {
+  const handleEdit = async (recipe: any) => {
+    // Fetch full recipe details including ingredients
+    const fullRecipe = await recipesApi.getById(recipe.id);
     setEditingId(recipe.id);
     setFormData({
-      menuItemId: recipe.menuItemId,
-      yield: recipe.yield,
-      ingredients: recipe.ingredients || []
+      menuItemId: fullRecipe.menuItemId,
+      yield: fullRecipe.yield,
+      ingredients: fullRecipe.ingredients?.map((ing: any) => ({
+        inventoryItemId: ing.inventoryItemId,
+        quantity: ing.quantity,
+        unit: ing.unit
+      })) || []
     });
     setShowForm(true);
   };
@@ -84,13 +91,19 @@ export default function Recipes() {
   };
 
   const addIngredient = () => {
+    console.log('Adding ingredient:', newIngredient, 'inventoryItems:', inventoryItems);
     if (newIngredient.inventoryItemId && newIngredient.quantity > 0) {
       const item = inventoryItems.find((i: any) => i.id === newIngredient.inventoryItemId);
+      console.log('Found item:', item);
+      const newIng = { ...newIngredient, unit: item?.unitOfMeasure || newIngredient.unit };
+      console.log('New ingredient to add:', newIng);
       setFormData({
         ...formData,
-        ingredients: [...formData.ingredients, { ...newIngredient, unit: item?.unit || newIngredient.unit }]
+        ingredients: [...formData.ingredients, newIng]
       });
       setNewIngredient({ inventoryItemId: 0, quantity: 0, unit: '' });
+    } else {
+      console.log('Validation failed - inventoryItemId:', newIngredient.inventoryItemId, 'quantity:', newIngredient.quantity);
     }
   };
 
@@ -111,7 +124,7 @@ export default function Recipes() {
     return item?.name || 'Unknown';
   };
 
-  if (isLoading) return <div className="p-6">Loading...</div>;
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="p-6">
@@ -128,7 +141,7 @@ export default function Recipes() {
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-gray-900 rounded-lg shadow p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit Recipe' : 'Add Recipe'}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -162,7 +175,7 @@ export default function Recipes() {
 
             <div>
               <label className="block text-sm font-medium mb-2">Ingredients</label>
-              <div className="border rounded-lg p-4 bg-gray-50">
+              <div className="border rounded-lg p-4 bg-gray-800">
                 <div className="flex gap-2 mb-4">
                   <select
                     value={newIngredient.inventoryItemId}
@@ -172,7 +185,7 @@ export default function Recipes() {
                     <option value={0}>Select ingredient</option>
                     {inventoryItems.map((item: any) => (
                       <option key={item.id} value={item.id}>
-                        {item.name} ({item.unit})
+                        {item.name} ({item.unitOfMeasure})
                       </option>
                     ))}
                   </select>
@@ -194,7 +207,7 @@ export default function Recipes() {
                 </div>
 
                 {formData.ingredients.length > 0 ? (
-                  <table className="w-full">
+                  <table className="table">
                     <thead>
                       <tr className="text-left text-sm text-gray-500">
                         <th className="pb-2">Ingredient</th>
@@ -240,9 +253,9 @@ export default function Recipes() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+      <div className="bg-gray-900 rounded-lg shadow overflow-hidden">
+        <table className="table">
+          <thead className="bg-gray-800">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Menu Item</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Yield</th>

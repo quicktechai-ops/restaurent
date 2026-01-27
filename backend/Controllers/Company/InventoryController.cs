@@ -24,20 +24,22 @@ public class InventoryController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<InventoryItemListDto>>> GetAll([FromQuery] string? search, [FromQuery] string? category)
     {
-        var companyId = GetCompanyId();
-        var query = _context.InventoryItems
-            .Include(i => i.RecipeIngredients)
-            .Where(i => i.CompanyId == companyId);
+        try
+        {
+            var companyId = GetCompanyId();
+            var query = _context.InventoryItems
+                .Include(i => i.RecipeIngredients)
+                .Where(i => i.CompanyId == companyId);
 
-        if (!string.IsNullOrEmpty(search))
-            query = query.Where(i => i.Name.Contains(search) || (i.Code != null && i.Code.Contains(search)));
+            if (!string.IsNullOrEmpty(search))
+                query = query.Where(i => i.Name.Contains(search) || (i.Code != null && i.Code.Contains(search)));
 
-        if (!string.IsNullOrEmpty(category))
-            query = query.Where(i => i.Category == category);
+            if (!string.IsNullOrEmpty(category))
+                query = query.Where(i => i.Category == category);
 
-        var items = await query
-            .OrderBy(i => i.Name)
-            .Select(i => new InventoryItemListDto
+            var dbItems = await query.OrderBy(i => i.Name).ToListAsync();
+
+            var items = dbItems.Select(i => new InventoryItemListDto
             {
                 Id = i.InventoryItemId,
                 Name = i.Name,
@@ -52,10 +54,14 @@ public class InventoryController : ControllerBase
                 CurrencyCode = i.CurrencyCode,
                 IsActive = i.IsActive,
                 RecipesCount = i.RecipeIngredients.Count
-            })
-            .ToListAsync();
+            }).ToList();
 
-        return Ok(items);
+            return Ok(items);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message, inner = ex.InnerException?.Message });
+        }
     }
 
     [HttpGet("{id}")]

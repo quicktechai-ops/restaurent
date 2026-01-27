@@ -215,7 +215,7 @@ export default function InventorySettings() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Inventory Settings</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Inventory Settings</h1>
         <p className="text-gray-500">Manage categories and units of measure for your inventory items</p>
       </div>
 
@@ -225,8 +225,8 @@ export default function InventorySettings() {
           onClick={() => setActiveTab('categories')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
             activeTab === 'categories' 
-              ? 'bg-white text-primary-600 shadow-sm' 
-              : 'text-gray-600 hover:text-gray-800'
+              ? 'bg-gray-900 text-primary-600 shadow-sm' 
+              : 'text-gray-600 hover:text-gray-900'
           }`}
         >
           <FolderOpen size={18} />
@@ -237,8 +237,8 @@ export default function InventorySettings() {
           onClick={() => setActiveTab('units')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
             activeTab === 'units' 
-              ? 'bg-white text-primary-600 shadow-sm' 
-              : 'text-gray-600 hover:text-gray-800'
+              ? 'bg-gray-900 text-primary-600 shadow-sm' 
+              : 'text-gray-600 hover:text-gray-900'
           }`}
         >
           <Scale size={18} />
@@ -249,8 +249,8 @@ export default function InventorySettings() {
           onClick={() => setActiveTab('conversions')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
             activeTab === 'conversions' 
-              ? 'bg-white text-primary-600 shadow-sm' 
-              : 'text-gray-600 hover:text-gray-800'
+              ? 'bg-gray-900 text-primary-600 shadow-sm' 
+              : 'text-gray-600 hover:text-gray-900'
           }`}
         >
           <ArrowRightLeft size={18} />
@@ -263,7 +263,7 @@ export default function InventorySettings() {
       {activeTab === 'categories' && (
         <div className="card">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">Ingredient Categories</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Ingredient Categories</h2>
             <button onClick={() => openCategoryModal()} className="btn-primary flex items-center gap-2">
               <Plus size={18} /> Add Category
             </button>
@@ -285,7 +285,7 @@ export default function InventorySettings() {
                 <div 
                   key={cat.id} 
                   className={`flex items-center justify-between p-4 rounded-xl border ${
-                    cat.isActive ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100'
+                    cat.isActive ? 'bg-gray-900 border-gray-200' : 'bg-gray-800 border-gray-100'
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -300,7 +300,7 @@ export default function InventorySettings() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className={`font-medium ${cat.isActive ? 'text-gray-800' : 'text-gray-400'}`}>
+                        <h3 className={`font-medium ${cat.isActive ? 'text-gray-900' : 'text-gray-400'}`}>
                           {cat.name}
                         </h3>
                         {cat.parentCategoryName && (
@@ -343,7 +343,7 @@ export default function InventorySettings() {
       {activeTab === 'units' && (
         <div className="card">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">Units of Measure</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Units of Measure</h2>
             <button onClick={() => openUnitModal()} className="btn-primary flex items-center gap-2">
               <Plus size={18} /> Add Unit
             </button>
@@ -365,7 +365,7 @@ export default function InventorySettings() {
                 <div 
                   key={unit.id} 
                   className={`flex items-center justify-between p-4 rounded-xl border ${
-                    unit.isActive ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100'
+                    unit.isActive ? 'bg-gray-900 border-gray-200' : 'bg-gray-800 border-gray-100'
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -379,7 +379,7 @@ export default function InventorySettings() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className={`font-medium ${unit.isActive ? 'text-gray-800' : 'text-gray-400'}`}>
+                        <h3 className={`font-medium ${unit.isActive ? 'text-gray-900' : 'text-gray-400'}`}>
                           {unit.name}
                         </h3>
                         <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-mono">
@@ -420,7 +420,7 @@ export default function InventorySettings() {
       {activeTab === 'conversions' && (
         <div className="card">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">Unit Conversions</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Unit Conversions</h2>
             <button onClick={() => openConversionModal()} className="btn-primary flex items-center gap-2">
               <Plus size={18} /> Add Conversion
             </button>
@@ -443,7 +443,7 @@ export default function InventorySettings() {
                 <div 
                   key={conv.id} 
                   className={`flex items-center justify-between p-4 rounded-xl border ${
-                    conv.isActive ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100'
+                    conv.isActive ? 'bg-gray-900 border-gray-200' : 'bg-gray-800 border-gray-100'
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -481,14 +481,14 @@ export default function InventorySettings() {
       {/* Category Modal */}
       {showCategoryModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={closeCategoryModal}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <div className="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
                   <FolderOpen className="w-5 h-5 text-primary-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-800">{editingCategory ? 'Edit' : 'Add'} Category</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{editingCategory ? 'Edit' : 'Add'} Category</h2>
                   <p className="text-sm text-gray-500">Organize your inventory items</p>
                 </div>
               </div>
@@ -572,14 +572,14 @@ export default function InventorySettings() {
       {/* Unit Modal */}
       {showUnitModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={closeUnitModal}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <div className="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                   <Scale className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-800">{editingUnit ? 'Edit' : 'Add'} Unit</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{editingUnit ? 'Edit' : 'Add'} Unit</h2>
                   <p className="text-sm text-gray-500">Define measurement units</p>
                 </div>
               </div>
@@ -658,14 +658,14 @@ export default function InventorySettings() {
       {/* Conversion Modal */}
       {showConversionModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={closeConversionModal}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <div className="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
                   <ArrowRightLeft className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-800">{editingConversion ? 'Edit' : 'Add'} Conversion</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{editingConversion ? 'Edit' : 'Add'} Conversion</h2>
                   <p className="text-sm text-gray-500">Define unit conversion ratio</p>
                 </div>
               </div>

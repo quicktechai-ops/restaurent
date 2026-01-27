@@ -31,12 +31,12 @@ export default function DeliveryZones() {
     else createMutation.mutate(data)
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div className="text-gray-400">Loading...</div>
 
   return (
-    <div className="p-6">
+    <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Delivery Zones</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Delivery Zones</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
           <Plus size={20} /> Add Zone
         </button>
@@ -46,16 +46,16 @@ export default function DeliveryZones() {
         <div className="card mb-6">
           <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit' : 'Add'} Delivery Zone</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <select value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: parseInt(e.target.value) })} className="input-field" required>
+            <select value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: parseInt(e.target.value) })} className="input" required>
               <option value="">Select Branch *</option>
               {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
-            <input type="text" placeholder="Zone Name *" value={formData.zoneName} onChange={(e) => setFormData({ ...formData, zoneName: e.target.value })} className="input-field" required />
-            <input type="number" step="0.01" placeholder="Base Fee *" value={formData.baseFee} onChange={(e) => setFormData({ ...formData, baseFee: parseFloat(e.target.value) || 0 })} className="input-field" required />
-            <input type="number" step="0.01" placeholder="Min Order Amount" value={formData.minOrderAmount} onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })} className="input-field" />
-            <input type="number" step="0.01" placeholder="Extra Fee per KM" value={formData.extraFeePerKm} onChange={(e) => setFormData({ ...formData, extraFeePerKm: e.target.value })} className="input-field" />
-            <input type="number" step="0.01" placeholder="Max Distance (KM)" value={formData.maxDistanceKm} onChange={(e) => setFormData({ ...formData, maxDistanceKm: e.target.value })} className="input-field" />
-            <textarea placeholder="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input-field md:col-span-2" rows={2} />
+            <input type="text" placeholder="Zone Name *" value={formData.zoneName} onChange={(e) => setFormData({ ...formData, zoneName: e.target.value })} className="input" required />
+            <input type="number" step="0.01" placeholder="Base Fee *" value={formData.baseFee} onChange={(e) => setFormData({ ...formData, baseFee: parseFloat(e.target.value) || 0 })} className="input" required />
+            <input type="number" step="0.01" placeholder="Min Order Amount" value={formData.minOrderAmount} onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })} className="input" />
+            <input type="number" step="0.01" placeholder="Extra Fee per KM" value={formData.extraFeePerKm} onChange={(e) => setFormData({ ...formData, extraFeePerKm: e.target.value })} className="input" />
+            <input type="number" step="0.01" placeholder="Max Distance (KM)" value={formData.maxDistanceKm} onChange={(e) => setFormData({ ...formData, maxDistanceKm: e.target.value })} className="input" />
+            <textarea placeholder="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input md:col-span-2" rows={2} />
             <div className="md:col-span-2 flex gap-2">
               <button type="submit" className="btn-primary">Save</button>
               <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
@@ -65,9 +65,9 @@ export default function DeliveryZones() {
       )}
 
       <div className="card">
-        <table className="w-full">
+        <table className="table">
           <thead>
-            <tr className="border-b">
+            <tr className="border-b border-gray-700">
               <th className="text-left p-3">Zone Name</th>
               <th className="text-left p-3">Branch</th>
               <th className="text-left p-3">Base Fee</th>
@@ -78,7 +78,7 @@ export default function DeliveryZones() {
           </thead>
           <tbody>
             {zones?.data?.map((zone: any) => (
-              <tr key={zone.id} className="border-b hover:bg-gray-50">
+              <tr key={zone.id} className="border-b hover:bg-gray-800/50">
                 <td className="p-3 flex items-center gap-2"><MapPin size={16} className="text-gray-400" /> {zone.zoneName}</td>
                 <td className="p-3">{zone.branchName}</td>
                 <td className="p-3">${zone.baseFee.toFixed(2)}</td>

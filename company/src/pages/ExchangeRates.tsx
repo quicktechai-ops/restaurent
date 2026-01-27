@@ -61,7 +61,10 @@ export default function ExchangeRates() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const data = {
-      ...formData,
+      baseCurrencyCode: formData.baseCurrencyCode,
+      foreignCurrencyCode: formData.targetCurrencyCode,
+      rate: formData.rate,
+      validFrom: formData.validFrom,
       validTo: formData.validTo || null
     };
     if (editingId) {
@@ -75,7 +78,7 @@ export default function ExchangeRates() {
     setEditingId(rate.id);
     setFormData({
       baseCurrencyCode: rate.baseCurrencyCode,
-      targetCurrencyCode: rate.targetCurrencyCode,
+      targetCurrencyCode: rate.foreignCurrencyCode,
       rate: rate.rate,
       validFrom: rate.validFrom?.split('T')[0] || '',
       validTo: rate.validTo?.split('T')[0] || ''
@@ -89,7 +92,7 @@ export default function ExchangeRates() {
     }
   };
 
-  if (isLoading) return <div className="p-6">Loading...</div>;
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="p-6">
@@ -104,7 +107,7 @@ export default function ExchangeRates() {
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-gray-900 rounded-lg shadow p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit Exchange Rate' : 'Add Exchange Rate'}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -112,7 +115,7 @@ export default function ExchangeRates() {
               <select
                 value={formData.baseCurrencyCode}
                 onChange={(e) => setFormData({ ...formData, baseCurrencyCode: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2"
+                className="w-full border border-gray-700 bg-gray-800 text-white rounded-lg px-3 py-2"
                 required
               >
                 <option value="">Select currency</option>
@@ -128,7 +131,7 @@ export default function ExchangeRates() {
               <select
                 value={formData.targetCurrencyCode}
                 onChange={(e) => setFormData({ ...formData, targetCurrencyCode: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2"
+                className="w-full border border-gray-700 bg-gray-800 text-white rounded-lg px-3 py-2"
                 required
               >
                 <option value="">Select currency</option>
@@ -146,7 +149,7 @@ export default function ExchangeRates() {
                 step="0.0001"
                 value={formData.rate}
                 onChange={(e) => setFormData({ ...formData, rate: parseFloat(e.target.value) })}
-                className="w-full border rounded-lg px-3 py-2"
+                className="w-full border border-gray-700 bg-gray-800 text-white rounded-lg px-3 py-2"
                 required
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -159,7 +162,7 @@ export default function ExchangeRates() {
                 type="date"
                 value={formData.validFrom}
                 onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2"
+                className="w-full border border-gray-700 bg-gray-800 text-white rounded-lg px-3 py-2"
                 required
               />
             </div>
@@ -169,14 +172,14 @@ export default function ExchangeRates() {
                 type="date"
                 value={formData.validTo}
                 onChange={(e) => setFormData({ ...formData, validTo: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2"
+                className="w-full border border-gray-700 bg-gray-800 text-white rounded-lg px-3 py-2"
               />
             </div>
             <div className="md:col-span-2 flex gap-4">
               <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
                 {editingId ? 'Update' : 'Create'}
               </button>
-              <button type="button" onClick={resetForm} className="bg-gray-300 px-6 py-2 rounded-lg hover:bg-gray-400">
+              <button type="button" onClick={resetForm} className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-500">
                 Cancel
               </button>
             </div>
@@ -184,9 +187,9 @@ export default function ExchangeRates() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+      <div className="bg-gray-900 rounded-lg shadow overflow-hidden">
+        <table className="table">
+          <thead className="bg-gray-800">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Base</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
@@ -200,7 +203,7 @@ export default function ExchangeRates() {
             {rates.map((rate: any) => (
               <tr key={rate.id}>
                 <td className="px-6 py-4 font-medium">{rate.baseCurrencyCode}</td>
-                <td className="px-6 py-4">{rate.targetCurrencyCode}</td>
+                <td className="px-6 py-4">{rate.foreignCurrencyCode}</td>
                 <td className="px-6 py-4">{rate.rate.toFixed(4)}</td>
                 <td className="px-6 py-4">{new Date(rate.validFrom).toLocaleDateString()}</td>
                 <td className="px-6 py-4">{rate.validTo ? new Date(rate.validTo).toLocaleDateString() : '-'}</td>

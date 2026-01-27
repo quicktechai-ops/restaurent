@@ -203,7 +203,7 @@ export const giftCardsApi = {
 }
 
 export const reservationsApi = {
-  getAll: (params?: { branchId?: number; date?: string; status?: string }) => 
+  getAll: (params?: { branchId?: number; date?: string; startDate?: string; endDate?: string; status?: string }) => 
     api.get('/api/company/reservations', { params }),
   getById: (id: number) => api.get(`/api/company/reservations/${id}`),
   create: (data: any) => api.post('/api/company/reservations', data),
@@ -257,6 +257,16 @@ export const recipesApi = {
   create: (data: any) => api.post('/api/company/recipes', data),
   update: (id: number, data: any) => api.put(`/api/company/recipes/${id}`, data),
   delete: (id: number) => api.delete(`/api/company/recipes/${id}`),
+}
+
+export const uploadApi = {
+  uploadImage: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/api/company/upload/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  }
 }
 
 export default api

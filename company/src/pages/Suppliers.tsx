@@ -25,31 +25,31 @@ export default function Suppliers() {
     else createMutation.mutate(formData)
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Suppliers</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Suppliers</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
           <Plus size={20} /> Add Supplier
         </button>
       </div>
 
       <div className="mb-4">
-        <input type="text" placeholder="Search suppliers..." value={search} onChange={(e) => setSearch(e.target.value)} className="input-field w-full max-w-md" />
+        <input type="text" placeholder="Search suppliers..." value={search} onChange={(e) => setSearch(e.target.value)} className="input w-full max-w-md" />
       </div>
 
       {showForm && (
         <div className="card mb-6">
           <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit' : 'Add'} Supplier</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" placeholder="Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field" required />
-            <input type="text" placeholder="Contact Person" value={formData.contactPerson} onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })} className="input-field" />
-            <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input-field" />
-            <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input-field" />
-            <input type="text" placeholder="Payment Terms" value={formData.paymentTerms} onChange={(e) => setFormData({ ...formData, paymentTerms: e.target.value })} className="input-field" />
-            <input type="text" placeholder="Address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="input-field" />
+            <input type="text" placeholder="Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input" required />
+            <input type="text" placeholder="Contact Person" value={formData.contactPerson} onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })} className="input" />
+            <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input" />
+            <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" />
+            <input type="text" placeholder="Payment Terms" value={formData.paymentTerms} onChange={(e) => setFormData({ ...formData, paymentTerms: e.target.value })} className="input" />
+            <input type="text" placeholder="Address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="input" />
             <div className="md:col-span-2 flex gap-2">
               <button type="submit" className="btn-primary">Save</button>
               <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
@@ -59,9 +59,9 @@ export default function Suppliers() {
       )}
 
       <div className="card">
-        <table className="w-full">
+        <table className="table">
           <thead>
-            <tr className="border-b">
+            <tr className="border-b border-gray-700">
               <th className="text-left p-3">Name</th>
               <th className="text-left p-3">Contact</th>
               <th className="text-left p-3">Phone</th>
@@ -72,7 +72,7 @@ export default function Suppliers() {
           </thead>
           <tbody>
             {suppliers?.data?.map((supplier: any) => (
-              <tr key={supplier.id} className="border-b hover:bg-gray-50">
+              <tr key={supplier.id} className="border-b hover:bg-gray-800/50">
                 <td className="p-3 flex items-center gap-2"><Truck size={16} className="text-gray-400" /> {supplier.name}</td>
                 <td className="p-3">{supplier.contactPerson || '-'}</td>
                 <td className="p-3">{supplier.phone || '-'}</td>

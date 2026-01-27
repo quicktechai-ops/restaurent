@@ -60,21 +60,29 @@ public class LoyaltyTier
     public virtual Company? Company { get; set; }
 }
 
+[Table("loyalty_accounts")]
 public class LoyaltyAccount
 {
     [Key]
+    [Column("loyalty_account_id")]
     public int LoyaltyAccountId { get; set; }
     
+    [Column("customer_id")]
     public int CustomerId { get; set; }
     
-    [Column(TypeName = "decimal(18,2)")]
+    [Column("points_balance", TypeName = "decimal(18,2)")]
     public decimal PointsBalance { get; set; } = 0;
     
+    [Column("loyalty_tier_id")]
     public int? LoyaltyTierId { get; set; }
     
+    [Column("tier_assigned_at")]
     public DateTime? TierAssignedAt { get; set; }
     
+    [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
+    [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
     
     // Navigation properties

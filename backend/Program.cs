@@ -18,6 +18,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Add Services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddHttpClient();
 
 // Add JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -86,20 +87,23 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// Configure to listen on all network interfaces
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
+
 var app = builder.Build();
 
-// Verify database connection on startup
+// Verify database connection and ensure schema exists
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     try
     {
-        await context.Database.CanConnectAsync();
-        Console.WriteLine("Database connection verified successfully");
+        await context.Database.EnsureCreatedAsync();
+        Console.WriteLine("Database schema verified/created successfully");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Warning: Could not connect to database: {ex.Message}");
+        Console.WriteLine($"Warning: Could not setup database: {ex.Message}");
     }
 }
 

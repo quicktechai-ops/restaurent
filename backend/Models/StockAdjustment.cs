@@ -13,6 +13,26 @@ namespace Restaurant.API.Models
         [Column("branch_id")]
         public int? BranchId { get; set; }
 
+        [Column("inventory_item_id")]
+        public int? InventoryItemId { get; set; }
+
+        [Column("adjustment_type")]
+        [StringLength(20)]
+        public string AdjustmentType { get; set; } = "increase";
+
+        [Column("quantity")]
+        public decimal Quantity { get; set; }
+
+        [Column("quantity_before")]
+        public decimal QuantityBefore { get; set; }
+
+        [Column("quantity_after")]
+        public decimal QuantityAfter { get; set; }
+
+        [Column("reason")]
+        [StringLength(100)]
+        public string? Reason { get; set; }
+
         [Column("adjustment_date")]
         public DateTime AdjustmentDate { get; set; } = DateTime.UtcNow;
 
@@ -33,5 +53,8 @@ namespace Restaurant.API.Models
 
         [ForeignKey("UserId")]
         public virtual User? User { get; set; }
+
+        [ForeignKey("InventoryItemId")]
+        public virtual InventoryItem? InventoryItem { get; set; }
     }
 }

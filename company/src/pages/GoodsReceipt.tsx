@@ -68,22 +68,22 @@ export default function GoodsReceipt() {
     })
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><Truck size={28} /> Goods Receipt</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Truck size={28} /> Goods Receipt</h1>
       </div>
 
       {/* Pending POs to Receive */}
       <div className="card mb-6">
-        <h2 className="font-semibold p-4 border-b">Pending Purchase Orders</h2>
+        <h2 className="font-semibold p-4 border-b border-gray-700">Pending Purchase Orders</h2>
         <div className="p-4">
           {pendingPOs?.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {pendingPOs.map((po: any) => (
-                <div key={po.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                <div key={po.id} className="border rounded-lg p-4 hover:bg-gray-800/50">
                   <div className="flex justify-between items-start mb-2">
                     <span className="font-medium">PO-{po.id.toString().padStart(5, '0')}</span>
                     <span className="text-sm text-gray-500">{new Date(po.createdAt).toLocaleDateString()}</span>
@@ -105,15 +105,15 @@ export default function GoodsReceipt() {
       {/* Receipt Form Modal */}
       {showForm && selectedPO && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-            <div className="flex justify-between items-center p-4 border-b">
+          <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-gray-700">
               <h2 className="text-lg font-semibold">Receive PO-{selectedPO.id.toString().padStart(5, '0')} from {selectedPO.supplierName}</h2>
               <button onClick={resetForm} className="text-gray-500 hover:text-gray-700"><X size={20} /></button>
             </div>
             
             <form onSubmit={handleSubmit} className="p-4 max-h-[70vh] overflow-y-auto">
               <table className="w-full mb-4 border rounded-lg overflow-hidden">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-800">
                   <tr>
                     <th className="text-left p-3">Item</th>
                     <th className="text-left p-3">Ordered</th>
@@ -128,15 +128,15 @@ export default function GoodsReceipt() {
                       <td className="p-3">{line.itemName}</td>
                       <td className="p-3">{line.orderedQty} {line.unit}</td>
                       <td className="p-3">
-                        <input type="number" step="0.01" value={line.receivedQty} onChange={(e) => updateReceivedQty(idx, parseFloat(e.target.value) || 0)} className="input-field w-24" />
+                        <input type="number" step="0.01" value={line.receivedQty} onChange={(e) => updateReceivedQty(idx, parseFloat(e.target.value) || 0)} className="input w-24" />
                       </td>
                       <td className="p-3">
-                        <input type="number" step="0.01" value={line.unitCost} onChange={(e) => updateUnitCost(idx, parseFloat(e.target.value) || 0)} className="input-field w-24" />
+                        <input type="number" step="0.01" value={line.unitCost} onChange={(e) => updateUnitCost(idx, parseFloat(e.target.value) || 0)} className="input w-24" />
                       </td>
                       <td className="p-3 font-medium">${(line.receivedQty * line.unitCost).toFixed(2)}</td>
                     </tr>
                   ))}
-                  <tr className="border-t bg-gray-50">
+                  <tr className="border-t bg-gray-800">
                     <td colSpan={4} className="p-3 text-right font-medium">Total:</td>
                     <td className="p-3 font-bold">${lines.reduce((sum, l) => sum + l.receivedQty * l.unitCost, 0).toFixed(2)}</td>
                   </tr>
@@ -145,7 +145,7 @@ export default function GoodsReceipt() {
 
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Notes</label>
-                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="input-field w-full" rows={2} />
+                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="input w-full" rows={2} />
               </div>
 
               <div className="flex gap-2">
@@ -159,9 +159,9 @@ export default function GoodsReceipt() {
 
       {/* Receipt History */}
       <div className="card overflow-hidden">
-        <h2 className="font-semibold p-4 border-b">Receipt History</h2>
-        <table className="w-full">
-          <thead className="bg-gray-50">
+        <h2 className="font-semibold p-4 border-b border-gray-700">Receipt History</h2>
+        <table className="table">
+          <thead className="bg-gray-800">
             <tr>
               <th className="text-left p-3">Receipt #</th>
               <th className="text-left p-3">PO #</th>
@@ -173,7 +173,7 @@ export default function GoodsReceipt() {
           </thead>
           <tbody>
             {receipts?.map((r: any) => (
-              <tr key={r.id} className="border-t hover:bg-gray-50">
+              <tr key={r.id} className="border-t hover:bg-gray-800/50">
                 <td className="p-3 font-medium">GR-{r.id.toString().padStart(5, '0')}</td>
                 <td className="p-3">PO-{r.purchaseOrderId?.toString().padStart(5, '0')}</td>
                 <td className="p-3">{r.supplierName}</td>

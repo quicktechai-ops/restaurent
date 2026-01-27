@@ -24,56 +24,111 @@ public class StockAdjustmentsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult> GetAll()
     {
-        var adjustments = await _context.StockAdjustments
-            .Include(sa => sa.Branch)
-            .Include(sa => sa.User)
-            .OrderByDescending(sa => sa.AdjustmentDate)
-            .Take(500)
-            .Select(sa => new
+        try
+        {
+            var adjustments = await _context.StockAdjustments
+                .Include(sa => sa.Branch)
+                .Include(sa => sa.User)
+                .Include(sa => sa.InventoryItem)
+                .OrderByDescending(sa => sa.AdjustmentDate)
+                .Take(500)
+                .ToListAsync();
+
+            var result = adjustments.Select(sa => new
             {
                 sa.Id,
                 sa.BranchId,
-                BranchName = sa.Branch != null ? sa.Branch.Name : null,
+                BranchName = sa.Branch?.Name,
+                sa.InventoryItemId,
+                ItemName = sa.InventoryItem?.Name ?? "Unknown",
+                Unit = sa.InventoryItem?.UnitOfMeasure ?? "",
+                sa.AdjustmentType,
+                sa.Quantity,
+                sa.QuantityBefore,
+                sa.QuantityAfter,
+                sa.Reason,
                 sa.Status,
                 sa.Notes,
-                AdjustedBy = sa.User != null ? sa.User.FullName : "User",
-                sa.AdjustmentDate
-            })
-            .ToListAsync();
+                AdjustedBy = sa.User?.FullName ?? "System",
+                CreatedAt = sa.AdjustmentDate
+            }).ToList();
 
-        return Ok(adjustments);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message, inner = ex.InnerException?.Message });
+        }
     }
 
     [HttpPost]
     public async Task<ActionResult> Create([FromBody] CreateStockAdjustmentRequest request)
     {
-        var userId = GetUserId();
-
-        // Get the inventory item
-        var inventoryItem = await _context.InventoryItems.FindAsync(request.InventoryItemId);
-        if (inventoryItem == null)
-            return BadRequest(new { message = "Inventory item not found" });
-
-        var adjustment = new StockAdjustment
+        try
         {
-            BranchId = null, // Stock adjustments are at company level
-            Status = "Completed",
-            Notes = $"{request.AdjustmentType}: {request.Quantity} - {request.Reason}. {request.Notes}",
-            UserId = userId,
-            AdjustmentDate = DateTime.UtcNow
-        };
+            // Get the inventory item
+            var inventoryItem = await _context.InventoryItems.FindAsync(request.InventoryItemId);
+            if (inventoryItem == null)
+                return BadRequest(new { message = "Inventory item not found" });
 
-        _context.StockAdjustments.Add(adjustment);
+            var quantityBefore = inventoryItem.Quantity;
+            decimal quantityAfter;
 
-        // Update inventory quantity
-        if (request.AdjustmentType == "increase")
-            inventoryItem.Quantity += request.Quantity;
-        else
-            inventoryItem.Quantity -= request.Quantity;
+            // Calculate new quantity
+            if (request.AdjustmentType == "increase")
+                quantityAfter = quantityBefore + request.Quantity;
+            else if (request.AdjustmentType == "decrease")
+                quantityAfter = quantityBefore - request.Quantity;
+            else // set
+                quantityAfter = request.Quantity;
 
-        await _context.SaveChangesAsync();
+            var adjustment = new StockAdjustment
+            {
+                BranchId = null,
+                InventoryItemId = request.InventoryItemId,
+                AdjustmentType = request.AdjustmentType,
+                Quantity = request.Quantity,
+                QuantityBefore = quantityBefore,
+                QuantityAfter = quantityAfter,
+                Reason = request.Reason,
+                Status = "Completed",
+                Notes = request.Notes,
+                UserId = null,
+                AdjustmentDate = DateTime.UtcNow
+            };
 
-        return Ok(new { adjustment.Id });
+            _context.StockAdjustments.Add(adjustment);
+
+            // Update inventory quantity
+            inventoryItem.Quantity = quantityAfter;
+
+            // Create stock movement record
+            var movementType = request.AdjustmentType == "increase" ? "IN-Adjustment" : "OUT-Adjustment";
+            var movementQty = request.AdjustmentType == "increase" ? request.Quantity : -request.Quantity;
+            
+            var stockMovement = new StockMovement
+            {
+                CompanyId = inventoryItem.CompanyId,
+                BranchId = null,
+                InventoryItemId = request.InventoryItemId,
+                MovementType = movementType,
+                Quantity = movementQty,
+                UnitCost = inventoryItem.Cost,
+                Reference = $"ADJ-{DateTime.UtcNow:yyyyMMdd}",
+                Notes = $"{request.Reason}: {request.Notes}",
+                CreatedBy = 0, // System
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.StockMovements.Add(stockMovement);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { adjustment.Id });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message, inner = ex.InnerException?.Message });
+        }
     }
 }
 

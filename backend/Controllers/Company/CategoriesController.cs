@@ -50,6 +50,7 @@ public class CategoriesController : ControllerBase
                 ParentCategoryName = c.ParentCategory != null ? c.ParentCategory.Name : null,
                 SortOrder = c.SortOrder,
                 IsActive = c.IsActive,
+                Image = c.Image,
                 ItemsCount = _context.MenuItems.Count(m => m.CategoryId == c.CategoryId)
             })
             .ToListAsync();
@@ -78,7 +79,8 @@ public class CategoriesController : ControllerBase
             ParentCategoryId = category.ParentCategoryId,
             ParentCategoryName = category.ParentCategory?.Name,
             SortOrder = category.SortOrder,
-            IsActive = category.IsActive
+            IsActive = category.IsActive,
+            Image = category.Image
         });
     }
 
@@ -96,6 +98,7 @@ public class CategoriesController : ControllerBase
             NameAr = request.NameAr,
             ParentCategoryId = request.ParentCategoryId,
             SortOrder = request.SortOrder,
+            Image = request.Image,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -109,7 +112,8 @@ public class CategoriesController : ControllerBase
             Name = category.Name,
             NameAr = category.NameAr,
             SortOrder = category.SortOrder,
-            IsActive = category.IsActive
+            IsActive = category.IsActive,
+            Image = category.Image
         });
     }
 
@@ -130,6 +134,7 @@ public class CategoriesController : ControllerBase
         category.ParentCategoryId = request.ParentCategoryId;
         category.BranchId = request.BranchId;
         category.SortOrder = request.SortOrder;
+        category.Image = request.Image;
         category.IsActive = request.IsActive;
         category.UpdatedAt = DateTime.UtcNow;
 

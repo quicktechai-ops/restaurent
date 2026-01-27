@@ -41,12 +41,12 @@ export default function Attendance() {
     return `${hours}h ${minutes}m`
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><Clock size={28} /> Attendance</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Clock size={28} /> Attendance</h1>
       </div>
 
       {/* Quick Clock In/Out */}
@@ -81,9 +81,9 @@ export default function Attendance() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Calendar size={18} className="text-gray-500" />
-            <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="input-field" />
+            <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="input" />
           </div>
-          <select value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)} className="input-field">
+          <select value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)} className="input">
             <option value="">All Employees</option>
             {employees?.map((e: any) => <option key={e.id} value={e.id}>{e.fullName}</option>)}
           </select>
@@ -92,8 +92,8 @@ export default function Attendance() {
 
       {/* Attendance Table */}
       <div className="card overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+        <table className="table">
+          <thead className="bg-gray-800">
             <tr>
               <th className="text-left p-3">Employee</th>
               <th className="text-left p-3">Date</th>
@@ -105,7 +105,7 @@ export default function Attendance() {
           </thead>
           <tbody>
             {attendance?.map((record: any) => (
-              <tr key={record.id} className="border-t hover:bg-gray-50">
+              <tr key={record.id} className="border-t hover:bg-gray-800/50">
                 <td className="p-3 flex items-center gap-2"><User size={16} className="text-gray-400" /> {record.employeeName}</td>
                 <td className="p-3">{new Date(record.date).toLocaleDateString()}</td>
                 <td className="p-3">

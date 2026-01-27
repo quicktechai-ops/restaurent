@@ -73,12 +73,12 @@ export default function CommissionPolicies() {
     setShowForm(true)
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><DollarSign size={28} /> Commission Policies</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><DollarSign size={28} /> Commission Policies</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> Add Policy</button>
       </div>
 
@@ -88,11 +88,11 @@ export default function CommissionPolicies() {
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Policy Name *</label>
-              <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field" required />
+              <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input" required />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Commission Type *</label>
-              <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="input-field" required>
+              <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="input" required>
                 <option value="percentage">Percentage of Sales</option>
                 <option value="fixed_per_item">Fixed Amount per Item</option>
                 <option value="fixed_per_order">Fixed Amount per Order</option>
@@ -102,13 +102,13 @@ export default function CommissionPolicies() {
             <div>
               <label className="block text-sm font-medium mb-1">Value *</label>
               <div className="flex items-center gap-2">
-                <input type="number" step="0.01" value={formData.value} onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })} className="input-field" required />
+                <input type="number" step="0.01" value={formData.value} onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })} className="input" required />
                 <span className="text-gray-500">{formData.type === 'percentage' ? '%' : '$'}</span>
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Applies To *</label>
-              <select value={formData.appliesTo} onChange={(e) => setFormData({ ...formData, appliesTo: e.target.value })} className="input-field" required>
+              <select value={formData.appliesTo} onChange={(e) => setFormData({ ...formData, appliesTo: e.target.value })} className="input" required>
                 <option value="all">All Items</option>
                 <option value="category">Specific Category</option>
                 <option value="item">Specific Item</option>
@@ -117,7 +117,7 @@ export default function CommissionPolicies() {
             {formData.appliesTo === 'category' && (
               <div>
                 <label className="block text-sm font-medium mb-1">Category</label>
-                <select value={formData.categoryId} onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })} className="input-field">
+                <select value={formData.categoryId} onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })} className="input">
                   <option value="">Select Category</option>
                   {categories?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -126,7 +126,7 @@ export default function CommissionPolicies() {
             {formData.appliesTo === 'item' && (
               <div>
                 <label className="block text-sm font-medium mb-1">Menu Item</label>
-                <select value={formData.menuItemId} onChange={(e) => setFormData({ ...formData, menuItemId: e.target.value })} className="input-field">
+                <select value={formData.menuItemId} onChange={(e) => setFormData({ ...formData, menuItemId: e.target.value })} className="input">
                   <option value="">Select Item</option>
                   {menuItems?.map((i: any) => <option key={i.id} value={i.id}>{i.name}</option>)}
                 </select>
@@ -134,7 +134,7 @@ export default function CommissionPolicies() {
             )}
             <div>
               <label className="block text-sm font-medium mb-1">Min Sales Amount</label>
-              <input type="number" step="0.01" value={formData.minSalesAmount} onChange={(e) => setFormData({ ...formData, minSalesAmount: parseFloat(e.target.value) || 0 })} className="input-field" />
+              <input type="number" step="0.01" value={formData.minSalesAmount} onChange={(e) => setFormData({ ...formData, minSalesAmount: parseFloat(e.target.value) || 0 })} className="input" />
               <p className="text-xs text-gray-500 mt-1">Commission only applies if total sales exceed this amount</p>
             </div>
             <div className="flex items-center gap-2">
@@ -150,8 +150,8 @@ export default function CommissionPolicies() {
       )}
 
       <div className="card overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+        <table className="table">
+          <thead className="bg-gray-800">
             <tr>
               <th className="text-left p-3">Policy Name</th>
               <th className="text-left p-3">Type</th>
@@ -164,7 +164,7 @@ export default function CommissionPolicies() {
           </thead>
           <tbody>
             {policies?.map((policy: any) => (
-              <tr key={policy.id} className="border-t hover:bg-gray-50">
+              <tr key={policy.id} className="border-t hover:bg-gray-800/50">
                 <td className="p-3 font-medium">{policy.name}</td>
                 <td className="p-3">
                   <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">{policy.type.replace(/_/g, ' ')}</span>

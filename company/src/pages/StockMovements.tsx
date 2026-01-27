@@ -28,12 +28,12 @@ export default function StockMovements() {
     return 'bg-blue-100 text-blue-700'
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><ArrowUpDown size={28} /> Stock Movements</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><ArrowUpDown size={28} /> Stock Movements</h1>
       </div>
 
       {/* Filters */}
@@ -43,11 +43,11 @@ export default function StockMovements() {
           <span className="font-medium">Filters</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <select value={filters.itemId} onChange={(e) => setFilters({ ...filters, itemId: e.target.value })} className="input-field">
+          <select value={filters.itemId} onChange={(e) => setFilters({ ...filters, itemId: e.target.value })} className="input">
             <option value="">All Items</option>
             {inventoryItems?.map((item: any) => <option key={item.id} value={item.id}>{item.name}</option>)}
           </select>
-          <select value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })} className="input-field">
+          <select value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })} className="input">
             <option value="">All Types</option>
             <option value="IN-Purchase">IN - Purchase</option>
             <option value="IN-Adjustment">IN - Adjustment</option>
@@ -57,15 +57,15 @@ export default function StockMovements() {
             <option value="OUT-Adjustment">OUT - Adjustment</option>
             <option value="OUT-Transfer">OUT - Transfer</option>
           </select>
-          <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })} className="input-field" placeholder="From Date" />
-          <input type="date" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })} className="input-field" placeholder="To Date" />
+          <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })} className="input" placeholder="From Date" />
+          <input type="date" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })} className="input" placeholder="To Date" />
         </div>
       </div>
 
       {/* Movements Table */}
       <div className="card overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+        <table className="table">
+          <thead className="bg-gray-800">
             <tr>
               <th className="text-left p-3">Date</th>
               <th className="text-left p-3">Item</th>
@@ -78,7 +78,7 @@ export default function StockMovements() {
           </thead>
           <tbody>
             {movements?.map((m: any) => (
-              <tr key={m.id} className="border-t hover:bg-gray-50">
+              <tr key={m.id} className="border-t hover:bg-gray-800/50">
                 <td className="p-3">{new Date(m.createdAt).toLocaleString()}</td>
                 <td className="p-3 flex items-center gap-2"><Package size={16} className="text-gray-400" /> {m.itemName}</td>
                 <td className="p-3">

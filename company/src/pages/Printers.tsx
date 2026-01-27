@@ -26,19 +26,19 @@ export default function Printers() {
     else createMutation.mutate(formData)
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Printers</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Printers</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
           <Plus size={20} /> Add Printer
         </button>
       </div>
 
       <div className="mb-4">
-        <select value={branchFilter || ''} onChange={(e) => setBranchFilter(e.target.value ? parseInt(e.target.value) : undefined)} className="input-field w-64">
+        <select value={branchFilter || ''} onChange={(e) => setBranchFilter(e.target.value ? parseInt(e.target.value) : undefined)} className="input w-64">
           <option value="">All Branches</option>
           {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
@@ -48,23 +48,23 @@ export default function Printers() {
         <div className="card mb-6">
           <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit' : 'Add'} Printer</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <select value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: parseInt(e.target.value) })} className="input-field" required>
+            <select value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: parseInt(e.target.value) })} className="input" required>
               <option value="">Select Branch *</option>
               {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
-            <input type="text" placeholder="Printer Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field" required />
-            <select value={formData.printerType} onChange={(e) => setFormData({ ...formData, printerType: e.target.value })} className="input-field">
+            <input type="text" placeholder="Printer Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input" required />
+            <select value={formData.printerType} onChange={(e) => setFormData({ ...formData, printerType: e.target.value })} className="input">
               <option value="Receipt">Receipt Printer</option>
               <option value="Kitchen">Kitchen Printer</option>
               <option value="Label">Label Printer</option>
             </select>
-            <select value={formData.connectionType} onChange={(e) => setFormData({ ...formData, connectionType: e.target.value })} className="input-field">
+            <select value={formData.connectionType} onChange={(e) => setFormData({ ...formData, connectionType: e.target.value })} className="input">
               <option value="Network">Network (IP)</option>
               <option value="USB">USB</option>
               <option value="Bluetooth">Bluetooth</option>
             </select>
-            <input type="text" placeholder="Connection String (IP:Port)" value={formData.connectionString} onChange={(e) => setFormData({ ...formData, connectionString: e.target.value })} className="input-field" />
-            <input type="number" placeholder="Paper Width (mm)" value={formData.paperWidth} onChange={(e) => setFormData({ ...formData, paperWidth: parseInt(e.target.value) || 80 })} className="input-field" />
+            <input type="text" placeholder="Connection String (IP:Port)" value={formData.connectionString} onChange={(e) => setFormData({ ...formData, connectionString: e.target.value })} className="input" />
+            <input type="number" placeholder="Paper Width (mm)" value={formData.paperWidth} onChange={(e) => setFormData({ ...formData, paperWidth: parseInt(e.target.value) || 80 })} className="input" />
             <div className="flex items-center gap-2">
               <input type="checkbox" id="isDefault" checked={formData.isDefault} onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })} />
               <label htmlFor="isDefault">Set as Default</label>
@@ -78,9 +78,9 @@ export default function Printers() {
       )}
 
       <div className="card">
-        <table className="w-full">
+        <table className="table">
           <thead>
-            <tr className="border-b">
+            <tr className="border-b border-gray-700">
               <th className="text-left p-3">Name</th>
               <th className="text-left p-3">Branch</th>
               <th className="text-left p-3">Type</th>
@@ -93,7 +93,7 @@ export default function Printers() {
           </thead>
           <tbody>
             {printers?.data?.map((printer: any) => (
-              <tr key={printer.id} className="border-b hover:bg-gray-50">
+              <tr key={printer.id} className="border-b hover:bg-gray-800/50">
                 <td className="p-3 flex items-center gap-2"><Printer size={16} className="text-gray-400" /> {printer.name}</td>
                 <td className="p-3">{printer.branchName}</td>
                 <td className="p-3">{printer.printerType}</td>

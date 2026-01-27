@@ -1,10 +1,11 @@
 import { useParams, Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../lib/api'
 import { ArrowLeft, User, Phone, Mail, MapPin, Star, Gift, ShoppingBag, TrendingUp, Calendar, Award } from 'lucide-react'
 
 export default function CustomerProfile() {
   const { id } = useParams()
+  const queryClient = useQueryClient()
   
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
@@ -31,12 +32,19 @@ export default function CustomerProfile() {
     queryFn: () => api.get(`/api/company/customers/${id}/loyalty`).then(r => r.data)
   })
 
-  if (isLoading) return <div className="p-6">Loading...</div>
-  if (!customer) return <div className="p-6">Customer not found</div>
+  const enrollMutation = useMutation({
+    mutationFn: () => api.post(`/api/company/customers/${id}/loyalty/enroll`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer-loyalty', id] })
+    }
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  if (!customer) return <div>Customer not found</div>
 
   return (
     <div className="p-6">
-      <Link to="/customers" className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4">
+      <Link to="/customers" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4">
         <ArrowLeft size={20} /> Back to Customers
       </Link>
 
@@ -47,7 +55,7 @@ export default function CustomerProfile() {
             <User size={40} className="text-primary-600" />
           </div>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-800">{customer.name}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{customer.name}</h1>
             <p className="text-gray-500">{customer.customerCode || 'No code'}</p>
             <div className="flex gap-6 mt-3 text-sm">
               {customer.phone && <span className="flex items-center gap-1"><Phone size={14} /> {customer.phone}</span>}
@@ -134,7 +142,16 @@ export default function CustomerProfile() {
               </div>
             </div>
           ) : (
-            <p className="text-gray-500 text-center py-4">Not enrolled in loyalty program</p>
+            <div className="text-center py-4">
+              <p className="text-gray-500 mb-3">Not enrolled in loyalty program</p>
+              <button 
+                onClick={() => enrollMutation.mutate()}
+                disabled={enrollMutation.isPending}
+                className="btn-primary"
+              >
+                {enrollMutation.isPending ? 'Enrolling...' : 'Enroll in Loyalty Program'}
+              </button>
+            </div>
           )}
         </div>
 
@@ -172,9 +189,9 @@ export default function CustomerProfile() {
       <div className="card mt-6">
         <h2 className="font-semibold p-4 border-b flex items-center gap-2"><ShoppingBag size={18} /> Order History</h2>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="table">
             <thead>
-              <tr className="border-b bg-gray-50">
+              <tr className="border-b bg-gray-800">
                 <th className="text-left p-3">Order #</th>
                 <th className="text-left p-3">Date</th>
                 <th className="text-left p-3">Type</th>
@@ -185,7 +202,7 @@ export default function CustomerProfile() {
             </thead>
             <tbody>
               {orderHistory?.map((order: any) => (
-                <tr key={order.id} className="border-b hover:bg-gray-50">
+                <tr key={order.id} className="border-b hover:bg-gray-800/50">
                   <td className="p-3 font-medium">#{order.orderNumber}</td>
                   <td className="p-3">{new Date(order.createdAt).toLocaleDateString()}</td>
                   <td className="p-3">{order.orderType}</td>

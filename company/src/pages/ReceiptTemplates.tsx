@@ -72,12 +72,12 @@ export default function ReceiptTemplates() {
     setShowForm(true)
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><FileText size={28} /> Receipt Templates</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><FileText size={28} /> Receipt Templates</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> Add Template</button>
       </div>
 
@@ -88,11 +88,11 @@ export default function ReceiptTemplates() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium mb-1">Template Name *</label>
-                <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field" required />
+                <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input" required />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Type *</label>
-                <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="input-field" required>
+                <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="input" required>
                   <option value="customer">Customer Receipt</option>
                   <option value="kitchen">Kitchen Ticket</option>
                   <option value="label">Food Label</option>
@@ -100,7 +100,7 @@ export default function ReceiptTemplates() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Paper Size</label>
-                <select value={formData.paperSize} onChange={(e) => setFormData({ ...formData, paperSize: e.target.value })} className="input-field">
+                <select value={formData.paperSize} onChange={(e) => setFormData({ ...formData, paperSize: e.target.value })} className="input">
                   <option value="58mm">58mm</option>
                   <option value="80mm">80mm</option>
                   <option value="A4">A4</option>
@@ -108,7 +108,7 @@ export default function ReceiptTemplates() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Language</label>
-                <select value={formData.language} onChange={(e) => setFormData({ ...formData, language: e.target.value })} className="input-field">
+                <select value={formData.language} onChange={(e) => setFormData({ ...formData, language: e.target.value })} className="input">
                   <option value="en">English</option>
                   <option value="ar">Arabic</option>
                   <option value="both">Bilingual (EN + AR)</option>
@@ -132,11 +132,11 @@ export default function ReceiptTemplates() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium mb-1">Footer Text (English)</label>
-                <textarea value={formData.footerText} onChange={(e) => setFormData({ ...formData, footerText: e.target.value })} className="input-field" rows={2} />
+                <textarea value={formData.footerText} onChange={(e) => setFormData({ ...formData, footerText: e.target.value })} className="input" rows={2} />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Footer Text (Arabic)</label>
-                <textarea value={formData.footerTextAr} onChange={(e) => setFormData({ ...formData, footerTextAr: e.target.value })} className="input-field" rows={2} dir="rtl" />
+                <textarea value={formData.footerTextAr} onChange={(e) => setFormData({ ...formData, footerTextAr: e.target.value })} className="input" rows={2} dir="rtl" />
               </div>
             </div>
 
@@ -196,7 +196,7 @@ export default function ReceiptTemplates() {
       {/* Preview Modal */}
       {previewTemplate && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setPreviewTemplate(null)}>
-          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm" onClick={e => e.stopPropagation()}>
+          <div className="bg-gray-900 rounded-xl shadow-xl p-6 max-w-sm" onClick={e => e.stopPropagation()}>
             <h2 className="text-center font-bold mb-2">RECEIPT PREVIEW</h2>
             <div className="border-2 border-dashed border-gray-300 p-4 font-mono text-xs">
               {previewTemplate.showLogo && <div className="text-center mb-2">[LOGO]</div>}

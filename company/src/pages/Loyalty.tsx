@@ -34,11 +34,11 @@ export default function Loyalty() {
   // Initialize settings form when data loads
   const currentSettings = settings?.data?.[0]
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div className="text-gray-400">Loading...</div>
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Loyalty Program</h1>
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Loyalty Program</h1>
 
       {/* Settings Card */}
       <div className="card mb-6">
@@ -46,19 +46,19 @@ export default function Loyalty() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm text-gray-600 mb-1">Points per Amount</label>
-            <input type="number" step="0.01" value={currentSettings?.pointsPerAmount || settingsData.pointsPerAmount} onChange={(e) => setSettingsData({ ...settingsData, pointsPerAmount: parseFloat(e.target.value) || 1 })} className="input-field" />
+            <input type="number" step="0.01" value={currentSettings?.pointsPerAmount || settingsData.pointsPerAmount} onChange={(e) => setSettingsData({ ...settingsData, pointsPerAmount: parseFloat(e.target.value) || 1 })} className="input" />
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">Per Amount Unit ($)</label>
-            <input type="number" step="0.01" value={currentSettings?.amountUnit || settingsData.amountUnit} onChange={(e) => setSettingsData({ ...settingsData, amountUnit: parseFloat(e.target.value) || 10 })} className="input-field" />
+            <input type="number" step="0.01" value={currentSettings?.amountUnit || settingsData.amountUnit} onChange={(e) => setSettingsData({ ...settingsData, amountUnit: parseFloat(e.target.value) || 10 })} className="input" />
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">Point Redeem Value ($)</label>
-            <input type="number" step="0.01" value={currentSettings?.pointsRedeemValue || settingsData.pointsRedeemValue} onChange={(e) => setSettingsData({ ...settingsData, pointsRedeemValue: parseFloat(e.target.value) || 0.1 })} className="input-field" />
+            <input type="number" step="0.01" value={currentSettings?.pointsRedeemValue || settingsData.pointsRedeemValue} onChange={(e) => setSettingsData({ ...settingsData, pointsRedeemValue: parseFloat(e.target.value) || 0.1 })} className="input" />
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">Points Expiry (months)</label>
-            <input type="number" placeholder="Never" value={currentSettings?.pointsExpiryMonths || settingsData.pointsExpiryMonths} onChange={(e) => setSettingsData({ ...settingsData, pointsExpiryMonths: e.target.value })} className="input-field" />
+            <input type="number" placeholder="Never" value={currentSettings?.pointsExpiryMonths || settingsData.pointsExpiryMonths} onChange={(e) => setSettingsData({ ...settingsData, pointsExpiryMonths: e.target.value })} className="input" />
           </div>
           <div className="flex items-center gap-2">
             <input type="checkbox" id="earnOnNet" checked={currentSettings?.earnOnNetBeforeTax ?? settingsData.earnOnNetBeforeTax} onChange={(e) => setSettingsData({ ...settingsData, earnOnNetBeforeTax: e.target.checked })} />
@@ -83,12 +83,12 @@ export default function Loyalty() {
         </div>
 
         {showTierForm && (
-          <form onSubmit={handleTierSubmit} className="border rounded p-4 mb-4 bg-gray-50 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input type="text" placeholder="Tier Name *" value={tierFormData.name} onChange={(e) => setTierFormData({ ...tierFormData, name: e.target.value })} className="input-field" required />
-            <input type="number" step="0.01" placeholder="Min Spent ($)" value={tierFormData.minTotalSpent} onChange={(e) => setTierFormData({ ...tierFormData, minTotalSpent: parseFloat(e.target.value) || 0 })} className="input-field" />
-            <input type="number" step="0.01" placeholder="Discount %" value={tierFormData.tierDiscountPercent} onChange={(e) => setTierFormData({ ...tierFormData, tierDiscountPercent: parseFloat(e.target.value) || 0 })} className="input-field" />
-            <input type="text" placeholder="Benefits" value={tierFormData.benefits} onChange={(e) => setTierFormData({ ...tierFormData, benefits: e.target.value })} className="input-field md:col-span-2" />
-            <input type="number" placeholder="Sort Order" value={tierFormData.sortOrder} onChange={(e) => setTierFormData({ ...tierFormData, sortOrder: parseInt(e.target.value) || 0 })} className="input-field" />
+          <form onSubmit={handleTierSubmit} className="border rounded p-4 mb-4 bg-gray-800 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input type="text" placeholder="Tier Name *" value={tierFormData.name} onChange={(e) => setTierFormData({ ...tierFormData, name: e.target.value })} className="input" required />
+            <input type="number" step="0.01" placeholder="Min Spent ($)" value={tierFormData.minTotalSpent} onChange={(e) => setTierFormData({ ...tierFormData, minTotalSpent: parseFloat(e.target.value) || 0 })} className="input" />
+            <input type="number" step="0.01" placeholder="Discount %" value={tierFormData.tierDiscountPercent} onChange={(e) => setTierFormData({ ...tierFormData, tierDiscountPercent: parseFloat(e.target.value) || 0 })} className="input" />
+            <input type="text" placeholder="Benefits" value={tierFormData.benefits} onChange={(e) => setTierFormData({ ...tierFormData, benefits: e.target.value })} className="input md:col-span-2" />
+            <input type="number" placeholder="Sort Order" value={tierFormData.sortOrder} onChange={(e) => setTierFormData({ ...tierFormData, sortOrder: parseInt(e.target.value) || 0 })} className="input" />
             <div className="md:col-span-3 flex gap-2">
               <button type="submit" className="btn-primary">Save Tier</button>
               <button type="button" onClick={resetTierForm} className="btn-secondary">Cancel</button>

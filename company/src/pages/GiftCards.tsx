@@ -30,26 +30,26 @@ export default function GiftCards() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active': return 'bg-green-100 text-green-800'
-      case 'UsedUp': return 'bg-gray-100 text-gray-800'
+      case 'UsedUp': return 'bg-gray-100 text-gray-900'
       case 'Blocked': return 'bg-red-100 text-red-800'
       case 'Expired': return 'bg-yellow-100 text-yellow-800'
-      default: return 'bg-gray-100 text-gray-800'
+      default: return 'bg-gray-100 text-gray-900'
     }
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div className="text-gray-400">Loading...</div>
 
   return (
-    <div className="p-6">
+    <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Gift Cards</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Gift Cards</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
           <Plus size={20} /> Issue Gift Card
         </button>
       </div>
 
       <div className="mb-4">
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input-field w-48">
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input w-48">
           <option value="">All Status</option>
           <option value="Active">Active</option>
           <option value="UsedUp">Used Up</option>
@@ -62,17 +62,17 @@ export default function GiftCards() {
         <div className="card mb-6">
           <h2 className="text-lg font-semibold mb-4">Issue New Gift Card</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <select value={formData.branchIssuedId} onChange={(e) => setFormData({ ...formData, branchIssuedId: parseInt(e.target.value) })} className="input-field" required>
+            <select value={formData.branchIssuedId} onChange={(e) => setFormData({ ...formData, branchIssuedId: parseInt(e.target.value) })} className="input" required>
               <option value="">Select Branch *</option>
               {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
-            <input type="number" step="0.01" placeholder="Initial Value *" value={formData.initialValue || ''} onChange={(e) => setFormData({ ...formData, initialValue: parseFloat(e.target.value) || 0 })} className="input-field" required />
-            <select value={formData.currencyCode} onChange={(e) => setFormData({ ...formData, currencyCode: e.target.value })} className="input-field">
+            <input type="number" step="0.01" placeholder="Initial Value *" value={formData.initialValue || ''} onChange={(e) => setFormData({ ...formData, initialValue: parseFloat(e.target.value) || 0 })} className="input" required />
+            <select value={formData.currencyCode} onChange={(e) => setFormData({ ...formData, currencyCode: e.target.value })} className="input">
               <option value="USD">USD</option>
               <option value="EUR">EUR</option>
               <option value="LBP">LBP</option>
             </select>
-            <input type="date" placeholder="Expiry Date" value={formData.expiryDate} onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })} className="input-field" />
+            <input type="date" placeholder="Expiry Date" value={formData.expiryDate} onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })} className="input" />
             <div className="md:col-span-2 flex gap-2">
               <button type="submit" className="btn-primary">Issue Card</button>
               <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
@@ -82,9 +82,9 @@ export default function GiftCards() {
       )}
 
       <div className="card">
-        <table className="w-full">
+        <table className="table">
           <thead>
-            <tr className="border-b">
+            <tr className="border-b border-gray-700">
               <th className="text-left p-3">Card Number</th>
               <th className="text-left p-3">Branch</th>
               <th className="text-left p-3">Initial</th>
@@ -96,7 +96,7 @@ export default function GiftCards() {
           </thead>
           <tbody>
             {giftCards?.data?.map((card: any) => (
-              <tr key={card.id} className="border-b hover:bg-gray-50">
+              <tr key={card.id} className="border-b hover:bg-gray-800/50">
                 <td className="p-3 flex items-center gap-2"><Gift size={16} className="text-purple-500" /> {card.giftCardNumber}</td>
                 <td className="p-3">{card.branchIssuedName}</td>
                 <td className="p-3">{card.currencyCode} {card.initialValue.toFixed(2)}</td>

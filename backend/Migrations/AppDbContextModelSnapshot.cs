@@ -22,6 +22,113 @@ namespace Restaurant.API.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Restaurant.API.Models.ApprovalRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("approval_rule_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AllowPriceChange")
+                        .HasColumnType("boolean")
+                        .HasColumnName("allow_price_change");
+
+                    b.Property<bool>("CanVoidPaidInvoice")
+                        .HasColumnType("boolean")
+                        .HasColumnName("can_void_paid_invoice");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer")
+                        .HasColumnName("company_id");
+
+                    b.Property<decimal>("MaxDiscountPercent")
+                        .HasColumnType("numeric")
+                        .HasColumnName("max_discount_percent_without_approval");
+
+                    b.Property<bool>("RequireManagerApprovalForVoid")
+                        .HasColumnType("boolean")
+                        .HasColumnName("require_manager_approval_for_void");
+
+                    b.Property<bool>("RequireManagerPinForPriceChange")
+                        .HasColumnType("boolean")
+                        .HasColumnName("require_manager_pin_for_price_change");
+
+                    b.Property<int?>("RoleId")
+                        .HasColumnType("integer")
+                        .HasColumnName("role_id");
+
+                    b.Property<string>("RuleType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("rule_type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("approval_rules");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.Attendance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BranchId")
+                        .HasColumnType("integer")
+                        .HasColumnName("branch_id");
+
+                    b.Property<DateTime>("ClockIn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("clock_in");
+
+                    b.Property<DateTime?>("ClockOut")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("clock_out");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("employee_id");
+
+                    b.Property<decimal?>("HoursWorked")
+                        .HasColumnType("numeric")
+                        .HasColumnName("hours_worked");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("notes");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("attendance");
+                });
+
             modelBuilder.Entity("Restaurant.API.Models.AuditLog", b =>
                 {
                     b.Property<int>("AuditLogId")
@@ -51,10 +158,6 @@ namespace Restaurant.API.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone");
 
@@ -69,7 +172,7 @@ namespace Restaurant.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("audit_log", (string)null);
                 });
 
             modelBuilder.Entity("Restaurant.API.Models.Branch", b =>
@@ -590,51 +693,49 @@ namespace Restaurant.API.Migrations
                 {
                     b.Property<int>("DeliveryZoneId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("delivery_zone_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DeliveryZoneId"));
 
                     b.Property<decimal>("BaseFee")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("base_fee");
 
                     b.Property<int>("BranchId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("integer")
+                        .HasColumnName("branch_id");
 
                     b.Property<string>("Description")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("description");
 
                     b.Property<decimal?>("ExtraFeePerKm")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("extra_fee_per_km");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<decimal?>("MaxDistanceKm")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("max_distance_km");
 
                     b.Property<decimal?>("MinOrderAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("min_order_amount");
 
                     b.Property<string>("ZoneName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("zone_name");
 
                     b.HasKey("DeliveryZoneId");
 
                     b.HasIndex("BranchId");
-
-                    b.HasIndex("CompanyId");
 
                     b.ToTable("DeliveryZones");
                 });
@@ -759,12 +860,6 @@ namespace Restaurant.API.Migrations
                     b.Property<int>("CompanyId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("CurrencyCode")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -798,8 +893,6 @@ namespace Restaurant.API.Migrations
                     b.HasKey("GiftCardId");
 
                     b.HasIndex("BranchIssuedId");
-
-                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("CustomerId");
 
@@ -861,6 +954,150 @@ namespace Restaurant.API.Migrations
                     b.ToTable("GiftCardTransactions");
                 });
 
+            modelBuilder.Entity("Restaurant.API.Models.GoodsReceipt", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("goods_receipt_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BranchId")
+                        .HasColumnType("integer")
+                        .HasColumnName("branch_id");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("currency_code");
+
+                    b.Property<DateTime>("GRNDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("grn_date");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasColumnType("numeric")
+                        .HasColumnName("grand_total");
+
+                    b.Property<int?>("PurchaseOrderId")
+                        .HasColumnType("integer")
+                        .HasColumnName("purchase_order_id");
+
+                    b.Property<string>("ReceiptNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("grn_number");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("integer")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("tax_amount");
+
+                    b.Property<decimal>("TotalBeforeTax")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_before_tax");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("goods_receipts");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.GoodsReceiptLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("GoodsReceiptId")
+                        .HasColumnType("integer")
+                        .HasColumnName("goods_receipt_id");
+
+                    b.Property<int>("InventoryItemId")
+                        .HasColumnType("integer")
+                        .HasColumnName("inventory_item_id");
+
+                    b.Property<decimal>("ReceivedQuantity")
+                        .HasColumnType("numeric")
+                        .HasColumnName("received_quantity");
+
+                    b.Property<decimal>("TotalCost")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_cost");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasColumnType("numeric")
+                        .HasColumnName("unit_cost");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GoodsReceiptId");
+
+                    b.HasIndex("InventoryItemId");
+
+                    b.ToTable("goods_receipt_lines");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.InventoryCategory", b =>
+                {
+                    b.Property<int>("CategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CategoryId"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int?>("ParentCategoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("CategoryId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("ParentCategoryId");
+
+                    b.ToTable("InventoryCategories");
+                });
+
             modelBuilder.Entity("Restaurant.API.Models.InventoryItem", b =>
                 {
                     b.Property<int>("InventoryItemId")
@@ -880,6 +1117,10 @@ namespace Restaurant.API.Migrations
                     b.Property<int>("CompanyId")
                         .HasColumnType("integer");
 
+                    b.Property<decimal>("Cost")
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("cost");
+
                     b.Property<string>("CostMethod")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -887,6 +1128,11 @@ namespace Restaurant.API.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency_code");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -898,6 +1144,10 @@ namespace Restaurant.API.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("quantity");
 
                     b.Property<decimal>("ReorderQty")
                         .HasColumnType("decimal(18,4)");
@@ -911,6 +1161,8 @@ namespace Restaurant.API.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("InventoryItemId");
+
+                    b.HasIndex("CurrencyCode");
 
                     b.HasIndex("CompanyId", "Code")
                         .IsUnique()
@@ -1042,13 +1294,7 @@ namespace Restaurant.API.Migrations
                     b.Property<int>("CompanyId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<bool>("EarnOnNetBeforeTax")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<int?>("PointsExpiryMonths")
@@ -1059,9 +1305,6 @@ namespace Restaurant.API.Migrations
 
                     b.Property<decimal>("PointsRedeemValue")
                         .HasColumnType("decimal(18,4)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("LoyaltySettingsId");
 
@@ -1080,15 +1323,8 @@ namespace Restaurant.API.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LoyaltyTierId"));
 
-                    b.Property<string>("Benefits")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<int>("CompanyId")
                         .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -1104,14 +1340,8 @@ namespace Restaurant.API.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
                     b.Property<decimal>("TierDiscountPercent")
                         .HasColumnType("decimal(5,2)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("LoyaltyTierId");
 
@@ -1441,6 +1671,560 @@ namespace Restaurant.API.Migrations
                     b.ToTable("modifiers");
                 });
 
+            modelBuilder.Entity("Restaurant.API.Models.Order", b =>
+                {
+                    b.Property<int>("OrderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("order_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("OrderId"));
+
+                    b.Property<int?>("ApprovedVoidByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("approved_void_by_user_id");
+
+                    b.Property<decimal>("BalanceDue")
+                        .HasColumnType("numeric")
+                        .HasColumnName("balance_due");
+
+                    b.Property<decimal>("BillDiscountAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("bill_discount_amount");
+
+                    b.Property<decimal>("BillDiscountPercent")
+                        .HasColumnType("numeric")
+                        .HasColumnName("bill_discount_percent");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer")
+                        .HasColumnName("branch_id");
+
+                    b.Property<int?>("CashierUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("cashier_user_id");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency_code");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<decimal>("DeliveryFee")
+                        .HasColumnType("numeric")
+                        .HasColumnName("delivery_fee");
+
+                    b.Property<decimal>("ExchangeRateToBase")
+                        .HasColumnType("numeric")
+                        .HasColumnName("exchange_rate_to_base");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasColumnType("numeric")
+                        .HasColumnName("grand_total");
+
+                    b.Property<decimal>("LoyaltyDiscountAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("loyalty_discount_amount");
+
+                    b.Property<decimal?>("LoyaltyPointsEarned")
+                        .HasColumnType("numeric")
+                        .HasColumnName("loyalty_points_earned");
+
+                    b.Property<decimal?>("LoyaltyPointsRedeemed")
+                        .HasColumnType("numeric")
+                        .HasColumnName("loyalty_points_redeemed");
+
+                    b.Property<int?>("MergedFromOrderId")
+                        .HasColumnType("integer")
+                        .HasColumnName("merged_from_order_id");
+
+                    b.Property<decimal?>("NetAmountForLoyalty")
+                        .HasColumnType("numeric")
+                        .HasColumnName("net_amount_for_loyalty");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("order_number");
+
+                    b.Property<string>("OrderStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("order_status");
+
+                    b.Property<string>("OrderType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("order_type");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid_at");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("payment_status");
+
+                    b.Property<decimal>("ServiceChargeAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("service_charge_amount");
+
+                    b.Property<decimal>("ServiceChargePercent")
+                        .HasColumnType("numeric")
+                        .HasColumnName("service_charge_percent");
+
+                    b.Property<int?>("ShiftId")
+                        .HasColumnType("integer")
+                        .HasColumnName("shift_id");
+
+                    b.Property<int?>("SplitFromOrderId")
+                        .HasColumnType("integer")
+                        .HasColumnName("split_from_order_id");
+
+                    b.Property<decimal>("SubTotal")
+                        .HasColumnType("numeric")
+                        .HasColumnName("sub_total");
+
+                    b.Property<int?>("TableId")
+                        .HasColumnType("integer")
+                        .HasColumnName("table_id");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("tax_amount");
+
+                    b.Property<decimal>("TaxPercent")
+                        .HasColumnType("numeric")
+                        .HasColumnName("tax_percent");
+
+                    b.Property<decimal>("TipsAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("tips_amount");
+
+                    b.Property<decimal>("TotalLineDiscount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_line_discount");
+
+                    b.Property<decimal>("TotalPaid")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_paid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("VoidByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("void_by_user_id");
+
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("void_reason");
+
+                    b.Property<DateTime?>("VoidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_at");
+
+                    b.Property<int?>("WaiterUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("waiter_user_id");
+
+                    b.HasKey("OrderId");
+
+                    b.HasIndex("ApprovedVoidByUserId");
+
+                    b.HasIndex("CashierUserId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ShiftId");
+
+                    b.HasIndex("TableId");
+
+                    b.HasIndex("VoidByUserId");
+
+                    b.HasIndex("WaiterUserId");
+
+                    b.HasIndex("BranchId", "OrderNumber")
+                        .IsUnique();
+
+                    b.ToTable("orders");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.OrderDeliveryDetails", b =>
+                {
+                    b.Property<int>("OrderDeliveryDetailsId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("order_delivery_details_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("OrderDeliveryDetailsId"));
+
+                    b.Property<string>("AddressLine")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("address_line");
+
+                    b.Property<string>("Area")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("area");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("city");
+
+                    b.Property<int?>("CustomerAddressId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_address_id");
+
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delivered_at");
+
+                    b.Property<decimal>("DeliveryFeeCalculated")
+                        .HasColumnType("numeric")
+                        .HasColumnName("delivery_fee_calculated");
+
+                    b.Property<string>("DeliveryNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("delivery_notes");
+
+                    b.Property<int?>("DeliveryZoneId")
+                        .HasColumnType("integer")
+                        .HasColumnName("delivery_zone_id");
+
+                    b.Property<decimal?>("DistanceKm")
+                        .HasColumnType("numeric")
+                        .HasColumnName("distance_km");
+
+                    b.Property<string>("DriverName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("driver_name");
+
+                    b.Property<string>("DriverPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("driver_phone");
+
+                    b.Property<DateTime?>("EstimatedDeliveryTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("estimated_delivery_time");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer")
+                        .HasColumnName("order_id");
+
+                    b.Property<DateTime?>("OutForDeliveryAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("out_for_delivery_at");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("phone");
+
+                    b.HasKey("OrderDeliveryDetailsId");
+
+                    b.HasIndex("CustomerAddressId");
+
+                    b.HasIndex("DeliveryZoneId");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.ToTable("order_delivery_details");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.OrderLine", b =>
+                {
+                    b.Property<int>("OrderLineId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("order_line_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("OrderLineId"));
+
+                    b.Property<decimal>("BaseUnitPrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("base_unit_price");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("discount_amount");
+
+                    b.Property<decimal>("DiscountPercent")
+                        .HasColumnType("numeric")
+                        .HasColumnName("discount_percent");
+
+                    b.Property<decimal>("EffectiveUnitPrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("effective_unit_price");
+
+                    b.Property<int?>("KitchenStationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("kitchen_station_id");
+
+                    b.Property<string>("KitchenStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("kitchen_status");
+
+                    b.Property<decimal>("LineGross")
+                        .HasColumnType("numeric")
+                        .HasColumnName("line_gross");
+
+                    b.Property<decimal>("LineNet")
+                        .HasColumnType("numeric")
+                        .HasColumnName("line_net");
+
+                    b.Property<int>("MenuItemId")
+                        .HasColumnType("integer")
+                        .HasColumnName("menu_item_id");
+
+                    b.Property<int?>("MenuItemSizeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("menu_item_size_id");
+
+                    b.Property<decimal>("ModifiersExtraPrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("modifiers_extra_price");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("notes");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer")
+                        .HasColumnName("order_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric")
+                        .HasColumnName("quantity");
+
+                    b.Property<DateTime?>("ReadyAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ready_at");
+
+                    b.Property<DateTime?>("SentToKitchenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_to_kitchen_at");
+
+                    b.Property<DateTime?>("ServedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("served_at");
+
+                    b.HasKey("OrderLineId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("KitchenStationId");
+
+                    b.HasIndex("MenuItemId");
+
+                    b.HasIndex("MenuItemSizeId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("order_lines");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.OrderLineModifier", b =>
+                {
+                    b.Property<int>("OrderLineModifierId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("order_line_modifier_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("OrderLineModifierId"));
+
+                    b.Property<decimal>("ExtraPrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("extra_price");
+
+                    b.Property<int>("ModifierId")
+                        .HasColumnType("integer")
+                        .HasColumnName("modifier_id");
+
+                    b.Property<int>("OrderLineId")
+                        .HasColumnType("integer")
+                        .HasColumnName("order_line_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric")
+                        .HasColumnName("quantity");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_price");
+
+                    b.HasKey("OrderLineModifierId");
+
+                    b.HasIndex("ModifierId");
+
+                    b.HasIndex("OrderLineId");
+
+                    b.ToTable("order_line_modifiers");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.OrderPayment", b =>
+                {
+                    b.Property<int>("OrderPaymentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("order_payment_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("OrderPaymentId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount");
+
+                    b.Property<decimal>("AmountInOrderCurrency")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount_in_order_currency");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency_code");
+
+                    b.Property<decimal>("ExchangeRateToOrderCurrency")
+                        .HasColumnType("numeric")
+                        .HasColumnName("exchange_rate_to_order_currency");
+
+                    b.Property<int?>("GiftCardId")
+                        .HasColumnType("integer")
+                        .HasColumnName("gift_card_id");
+
+                    b.Property<decimal?>("LoyaltyPointsUsed")
+                        .HasColumnType("numeric")
+                        .HasColumnName("loyalty_points_used");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("notes");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer")
+                        .HasColumnName("order_id");
+
+                    b.Property<int>("PaymentMethodId")
+                        .HasColumnType("integer")
+                        .HasColumnName("payment_method_id");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("reference");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("OrderPaymentId");
+
+                    b.HasIndex("GiftCardId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("PaymentMethodId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("order_payments");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.OrderStatusHistory", b =>
+                {
+                    b.Property<int>("OrderStatusHistoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("order_status_history_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("OrderStatusHistoryId"));
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("NewStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("new_status");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("OldStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("old_status");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer")
+                        .HasColumnName("order_id");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("OrderStatusHistoryId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("order_status_history");
+                });
+
             modelBuilder.Entity("Restaurant.API.Models.PaymentMethod", b =>
                 {
                     b.Property<int>("PaymentMethodId")
@@ -1529,9 +2313,6 @@ namespace Restaurant.API.Migrations
                     b.Property<int>("BranchId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("ConnectionString")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -1540,9 +2321,6 @@ namespace Restaurant.API.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -1563,16 +2341,108 @@ namespace Restaurant.API.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.HasKey("PrinterId");
 
                     b.HasIndex("BranchId");
 
-                    b.HasIndex("CompanyId");
-
                     b.ToTable("Printers");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.PurchaseOrder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("purchase_order_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BranchId")
+                        .HasColumnType("integer")
+                        .HasColumnName("branch_id");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("currency_code");
+
+                    b.Property<DateTime?>("ExpectedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expected_delivery_date");
+
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("po_number");
+
+                    b.Property<DateTime?>("PODate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("po_date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("integer")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_estimated_amount");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("purchase_orders");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.PurchaseOrderLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("InventoryItemId")
+                        .HasColumnType("integer")
+                        .HasColumnName("inventory_item_id");
+
+                    b.Property<int>("PurchaseOrderId")
+                        .HasColumnType("integer")
+                        .HasColumnName("purchase_order_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric")
+                        .HasColumnName("quantity");
+
+                    b.Property<decimal>("ReceivedQuantity")
+                        .HasColumnType("numeric")
+                        .HasColumnName("received_quantity");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_price");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("unit_price");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InventoryItemId");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.ToTable("purchase_order_lines");
                 });
 
             modelBuilder.Entity("Restaurant.API.Models.ReceiptTemplate", b =>
@@ -1710,70 +2580,77 @@ namespace Restaurant.API.Migrations
                 {
                     b.Property<int>("ReservationId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("reservation_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ReservationId"));
 
                     b.Property<int>("BranchId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("branch_id");
 
                     b.Property<string>("Channel")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("integer");
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("channel");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("created_by_user_id");
 
                     b.Property<int?>("CustomerId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
 
                     b.Property<string>("CustomerName")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("customer_name");
 
                     b.Property<string>("CustomerPhone")
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("customer_phone");
 
                     b.Property<int>("DurationMinutes")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_minutes");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("notes");
 
                     b.Property<int>("PartySize")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("party_size");
 
                     b.Property<DateTime>("ReservationDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reservation_date");
 
                     b.Property<TimeSpan>("StartTime")
-                        .HasColumnType("interval");
+                        .HasColumnType("interval")
+                        .HasColumnName("start_time");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
 
                     b.Property<int?>("TableId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("integer")
+                        .HasColumnName("table_id");
 
                     b.HasKey("ReservationId");
 
                     b.HasIndex("BranchId");
-
-                    b.HasIndex("CompanyId");
 
                     b.HasIndex("CreatedByUserId");
 
@@ -1968,6 +2845,264 @@ namespace Restaurant.API.Migrations
                     b.ToTable("role_permissions");
                 });
 
+            modelBuilder.Entity("Restaurant.API.Models.Shift", b =>
+                {
+                    b.Property<int>("ShiftId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("shift_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ShiftId"));
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer")
+                        .HasColumnName("branch_id");
+
+                    b.Property<decimal?>("CashDifference")
+                        .HasColumnType("numeric")
+                        .HasColumnName("cash_difference");
+
+                    b.Property<int>("CashierUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("cashier_user_id");
+
+                    b.Property<DateTime?>("CloseTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("close_time");
+
+                    b.Property<decimal?>("ClosingCash")
+                        .HasColumnType("numeric")
+                        .HasColumnName("closing_cash");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal?>("ExpectedCash")
+                        .HasColumnType("numeric")
+                        .HasColumnName("expected_cash");
+
+                    b.Property<DateTime?>("ExpectedCloseTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expected_close_time");
+
+                    b.Property<string>("ForceCloseReason")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("force_close_reason");
+
+                    b.Property<DateTime?>("ForceClosedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("force_closed_at");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("notes");
+
+                    b.Property<DateTime>("OpenTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("open_time");
+
+                    b.Property<decimal>("OpeningCash")
+                        .HasColumnType("numeric")
+                        .HasColumnName("opening_cash");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.HasKey("ShiftId");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CashierUserId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("shifts");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.StockAdjustment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("stock_adjustment_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AdjustmentDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("adjustment_date");
+
+                    b.Property<int?>("BranchId")
+                        .HasColumnType("integer")
+                        .HasColumnName("branch_id");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("stock_adjustments");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.StockCount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("stock_count_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Area")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("area");
+
+                    b.Property<int?>("BranchId")
+                        .HasColumnType("integer")
+                        .HasColumnName("branch_id");
+
+                    b.Property<DateTime>("CountDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("count_date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("stock_counts");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.StockCountLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("CountedQuantity")
+                        .HasColumnType("numeric")
+                        .HasColumnName("counted_quantity");
+
+                    b.Property<int>("InventoryItemId")
+                        .HasColumnType("integer")
+                        .HasColumnName("inventory_item_id");
+
+                    b.Property<int>("StockCountId")
+                        .HasColumnType("integer")
+                        .HasColumnName("stock_count_id");
+
+                    b.Property<decimal>("SystemQuantity")
+                        .HasColumnType("numeric")
+                        .HasColumnName("system_quantity");
+
+                    b.Property<decimal>("Variance")
+                        .HasColumnType("numeric")
+                        .HasColumnName("variance");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InventoryItemId");
+
+                    b.HasIndex("StockCountId");
+
+                    b.ToTable("stock_count_lines");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.StockMovement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BranchId")
+                        .HasColumnType("integer")
+                        .HasColumnName("branch_id");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_by");
+
+                    b.Property<int>("InventoryItemId")
+                        .HasColumnType("integer")
+                        .HasColumnName("inventory_item_id");
+
+                    b.Property<string>("MovementType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("movement_type");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("notes");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("reference");
+
+                    b.Property<decimal?>("UnitCost")
+                        .HasColumnType("numeric")
+                        .HasColumnName("unit_cost");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("InventoryItemId");
+
+                    b.ToTable("stock_movements");
+                });
+
             modelBuilder.Entity("Restaurant.API.Models.SubscriptionPlan", b =>
                 {
                     b.Property<int>("PlanId")
@@ -2125,9 +3260,6 @@ namespace Restaurant.API.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Email")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -2147,9 +3279,6 @@ namespace Restaurant.API.Migrations
                     b.Property<string>("Phone")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("SupplierId");
 
@@ -2204,7 +3333,89 @@ namespace Restaurant.API.Migrations
                     b.HasIndex("CompanyId", "BranchId", "SettingKey")
                         .IsUnique();
 
-                    b.ToTable("SystemSettings");
+                    b.ToTable("system_settings", (string)null);
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.UnitConversion", b =>
+                {
+                    b.Property<int>("ConversionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ConversionId"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("ConversionFactor")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FromUnitCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ToUnitCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("ConversionId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("UnitConversions");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.UnitOfMeasure", b =>
+                {
+                    b.Property<int>("UnitId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UnitId"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Symbol")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("UnitGroup")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("UnitId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("UnitsOfMeasure");
                 });
 
             modelBuilder.Entity("Restaurant.API.Models.User", b =>
@@ -2323,6 +3534,103 @@ namespace Restaurant.API.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("user_roles");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.Wastage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BranchId")
+                        .HasColumnType("integer")
+                        .HasColumnName("branch_id");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer")
+                        .HasColumnName("company_id");
+
+                    b.Property<decimal>("CostImpact")
+                        .HasColumnType("numeric")
+                        .HasColumnName("cost_impact");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("InventoryItemId")
+                        .HasColumnType("integer")
+                        .HasColumnName("inventory_item_id");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("notes");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("reason");
+
+                    b.Property<int>("RecordedBy")
+                        .HasColumnType("integer")
+                        .HasColumnName("recorded_by");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasColumnType("numeric")
+                        .HasColumnName("unit_cost");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("InventoryItemId");
+
+                    b.ToTable("wastages");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.ApprovalRule", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId");
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.Attendance", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("Restaurant.API.Models.AuditLog", b =>
@@ -2497,15 +3805,7 @@ namespace Restaurant.API.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Restaurant.API.Models.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Branch");
-
-                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("Restaurant.API.Models.Employee", b =>
@@ -2564,10 +3864,6 @@ namespace Restaurant.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Restaurant.API.Models.User", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId");
-
                     b.HasOne("Restaurant.API.Models.Customer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId");
@@ -2575,8 +3871,6 @@ namespace Restaurant.API.Migrations
                     b.Navigation("BranchIssued");
 
                     b.Navigation("Company");
-
-                    b.Navigation("CreatedByUser");
 
                     b.Navigation("Customer");
                 });
@@ -2598,6 +3892,65 @@ namespace Restaurant.API.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Restaurant.API.Models.GoodsReceipt", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId");
+
+                    b.HasOne("Restaurant.API.Models.PurchaseOrder", "PurchaseOrder")
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderId");
+
+                    b.HasOne("Restaurant.API.Models.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("PurchaseOrder");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.GoodsReceiptLine", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.GoodsReceipt", "GoodsReceipt")
+                        .WithMany("Lines")
+                        .HasForeignKey("GoodsReceiptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.InventoryItem", "InventoryItem")
+                        .WithMany()
+                        .HasForeignKey("InventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GoodsReceipt");
+
+                    b.Navigation("InventoryItem");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.InventoryCategory", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.InventoryCategory", "ParentCategory")
+                        .WithMany("SubCategories")
+                        .HasForeignKey("ParentCategoryId");
+
+                    b.Navigation("Company");
+
+                    b.Navigation("ParentCategory");
+                });
+
             modelBuilder.Entity("Restaurant.API.Models.InventoryItem", b =>
                 {
                     b.HasOne("Restaurant.API.Models.Company", "Company")
@@ -2606,7 +3959,13 @@ namespace Restaurant.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Restaurant.API.Models.Currency", "Currency")
+                        .WithMany()
+                        .HasForeignKey("CurrencyCode");
+
                     b.Navigation("Company");
+
+                    b.Navigation("Currency");
                 });
 
             modelBuilder.Entity("Restaurant.API.Models.KitchenStation", b =>
@@ -2780,6 +4139,210 @@ namespace Restaurant.API.Migrations
                     b.Navigation("Company");
                 });
 
+            modelBuilder.Entity("Restaurant.API.Models.Order", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.User", "ApprovedVoidByUser")
+                        .WithMany()
+                        .HasForeignKey("ApprovedVoidByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Restaurant.API.Models.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.User", "CashierUser")
+                        .WithMany()
+                        .HasForeignKey("CashierUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Restaurant.API.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Restaurant.API.Models.Shift", "Shift")
+                        .WithMany("Orders")
+                        .HasForeignKey("ShiftId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Restaurant.API.Models.RestaurantTable", "Table")
+                        .WithMany()
+                        .HasForeignKey("TableId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Restaurant.API.Models.User", "VoidByUser")
+                        .WithMany()
+                        .HasForeignKey("VoidByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Restaurant.API.Models.User", "WaiterUser")
+                        .WithMany()
+                        .HasForeignKey("WaiterUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ApprovedVoidByUser");
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("CashierUser");
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Shift");
+
+                    b.Navigation("Table");
+
+                    b.Navigation("VoidByUser");
+
+                    b.Navigation("WaiterUser");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.OrderDeliveryDetails", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.CustomerAddress", "CustomerAddress")
+                        .WithMany()
+                        .HasForeignKey("CustomerAddressId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Restaurant.API.Models.DeliveryZone", "DeliveryZone")
+                        .WithMany()
+                        .HasForeignKey("DeliveryZoneId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Restaurant.API.Models.Order", "Order")
+                        .WithOne("DeliveryDetails")
+                        .HasForeignKey("Restaurant.API.Models.OrderDeliveryDetails", "OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CustomerAddress");
+
+                    b.Navigation("DeliveryZone");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.OrderLine", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Restaurant.API.Models.KitchenStation", "KitchenStation")
+                        .WithMany()
+                        .HasForeignKey("KitchenStationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Restaurant.API.Models.MenuItem", "MenuItem")
+                        .WithMany()
+                        .HasForeignKey("MenuItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.MenuItemSize", "MenuItemSize")
+                        .WithMany()
+                        .HasForeignKey("MenuItemSizeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Restaurant.API.Models.Order", "Order")
+                        .WithMany("OrderLines")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("KitchenStation");
+
+                    b.Navigation("MenuItem");
+
+                    b.Navigation("MenuItemSize");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.OrderLineModifier", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.Modifier", "Modifier")
+                        .WithMany()
+                        .HasForeignKey("ModifierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.OrderLine", "OrderLine")
+                        .WithMany("OrderLineModifiers")
+                        .HasForeignKey("OrderLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Modifier");
+
+                    b.Navigation("OrderLine");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.OrderPayment", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.GiftCard", "GiftCard")
+                        .WithMany()
+                        .HasForeignKey("GiftCardId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Restaurant.API.Models.Order", "Order")
+                        .WithMany("OrderPayments")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.PaymentMethod", "PaymentMethod")
+                        .WithMany()
+                        .HasForeignKey("PaymentMethodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("GiftCard");
+
+                    b.Navigation("Order");
+
+                    b.Navigation("PaymentMethod");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.OrderStatusHistory", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.Order", "Order")
+                        .WithMany("StatusHistory")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Order");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Restaurant.API.Models.PaymentMethod", b =>
                 {
                     b.HasOne("Restaurant.API.Models.Company", "Company")
@@ -2796,18 +4359,46 @@ namespace Restaurant.API.Migrations
                     b.HasOne("Restaurant.API.Models.Branch", "Branch")
                         .WithMany()
                         .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Restaurant.API.Models.Company", "Company")
+                    b.Navigation("Branch");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.PurchaseOrder", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.Branch", "Branch")
                         .WithMany()
-                        .HasForeignKey("CompanyId")
+                        .HasForeignKey("BranchId");
+
+                    b.HasOne("Restaurant.API.Models.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Branch");
 
-                    b.Navigation("Company");
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.PurchaseOrderLine", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.InventoryItem", "InventoryItem")
+                        .WithMany()
+                        .HasForeignKey("InventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.PurchaseOrder", "PurchaseOrder")
+                        .WithMany("Lines")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InventoryItem");
+
+                    b.Navigation("PurchaseOrder");
                 });
 
             modelBuilder.Entity("Restaurant.API.Models.ReceiptTemplate", b =>
@@ -2879,12 +4470,6 @@ namespace Restaurant.API.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Restaurant.API.Models.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Restaurant.API.Models.User", "CreatedByUser")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId");
@@ -2898,8 +4483,6 @@ namespace Restaurant.API.Migrations
                         .HasForeignKey("TableId");
 
                     b.Navigation("Branch");
-
-                    b.Navigation("Company");
 
                     b.Navigation("CreatedByUser");
 
@@ -2977,6 +4560,86 @@ namespace Restaurant.API.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("Restaurant.API.Models.Shift", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.User", "CashierUser")
+                        .WithMany()
+                        .HasForeignKey("CashierUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("CashierUser");
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.StockAdjustment", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId");
+
+                    b.HasOne("Restaurant.API.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.StockCountLine", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.InventoryItem", "InventoryItem")
+                        .WithMany()
+                        .HasForeignKey("InventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.StockCount", "StockCount")
+                        .WithMany("Lines")
+                        .HasForeignKey("StockCountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InventoryItem");
+
+                    b.Navigation("StockCount");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.StockMovement", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.InventoryItem", "InventoryItem")
+                        .WithMany()
+                        .HasForeignKey("InventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+
+                    b.Navigation("InventoryItem");
+                });
+
             modelBuilder.Entity("Restaurant.API.Models.Supplier", b =>
                 {
                     b.HasOne("Restaurant.API.Models.Company", "Company")
@@ -3009,6 +4672,28 @@ namespace Restaurant.API.Migrations
                     b.Navigation("Company");
 
                     b.Navigation("UpdatedByUser");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.UnitConversion", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.UnitOfMeasure", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("Restaurant.API.Models.User", b =>
@@ -3054,6 +4739,25 @@ namespace Restaurant.API.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Restaurant.API.Models.Wastage", b =>
+                {
+                    b.HasOne("Restaurant.API.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Restaurant.API.Models.InventoryItem", "InventoryItem")
+                        .WithMany()
+                        .HasForeignKey("InventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+
+                    b.Navigation("InventoryItem");
+                });
+
             modelBuilder.Entity("Restaurant.API.Models.Category", b =>
                 {
                     b.Navigation("MenuItems");
@@ -3078,6 +4782,16 @@ namespace Restaurant.API.Migrations
                     b.Navigation("Transactions");
                 });
 
+            modelBuilder.Entity("Restaurant.API.Models.GoodsReceipt", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.InventoryCategory", b =>
+                {
+                    b.Navigation("SubCategories");
+                });
+
             modelBuilder.Entity("Restaurant.API.Models.InventoryItem", b =>
                 {
                     b.Navigation("RecipeIngredients");
@@ -3100,9 +4814,30 @@ namespace Restaurant.API.Migrations
                     b.Navigation("MenuItemModifiers");
                 });
 
+            modelBuilder.Entity("Restaurant.API.Models.Order", b =>
+                {
+                    b.Navigation("DeliveryDetails");
+
+                    b.Navigation("OrderLines");
+
+                    b.Navigation("OrderPayments");
+
+                    b.Navigation("StatusHistory");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.OrderLine", b =>
+                {
+                    b.Navigation("OrderLineModifiers");
+                });
+
             modelBuilder.Entity("Restaurant.API.Models.Permission", b =>
                 {
                     b.Navigation("RolePermissions");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.PurchaseOrder", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Restaurant.API.Models.Recipe", b =>
@@ -3120,6 +4855,16 @@ namespace Restaurant.API.Migrations
                     b.Navigation("RolePermissions");
 
                     b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.Shift", b =>
+                {
+                    b.Navigation("Orders");
+                });
+
+            modelBuilder.Entity("Restaurant.API.Models.StockCount", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Restaurant.API.Models.SubscriptionPlan", b =>

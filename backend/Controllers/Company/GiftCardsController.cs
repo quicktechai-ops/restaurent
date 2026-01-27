@@ -109,60 +109,74 @@ public class GiftCardsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<GiftCardListDto>> Create([FromBody] CreateGiftCardRequest request)
     {
-        var companyId = GetCompanyId();
-        var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
-
-        var cardNumber = request.GiftCardNumber;
-        if (string.IsNullOrEmpty(cardNumber))
+        try
         {
-            cardNumber = GenerateGiftCardNumber();
+            var companyId = GetCompanyId();
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var userExists = await _context.Users.AnyAsync(u => u.UserId == userId);
+
+            var cardNumber = request.GiftCardNumber;
+            if (string.IsNullOrEmpty(cardNumber))
+            {
+                cardNumber = GenerateGiftCardNumber();
+            }
+
+            // Check uniqueness
+            var exists = await _context.GiftCards.AnyAsync(g => g.CompanyId == companyId && g.GiftCardNumber == cardNumber);
+            if (exists) return BadRequest(new { message = "Gift card number already exists" });
+
+            // Get first branch if not specified
+            var branchId = request.BranchIssuedId;
+            if (branchId == 0)
+            {
+                var firstBranch = await _context.Branches.FirstOrDefaultAsync(b => b.CompanyId == companyId);
+                branchId = firstBranch?.BranchId ?? 0;
+            }
+
+            var card = new GiftCard
+            {
+                CompanyId = companyId,
+                GiftCardNumber = cardNumber,
+                BranchIssuedId = branchId,
+                CurrencyCode = request.CurrencyCode ?? "USD",
+                InitialValue = request.InitialValue,
+                CurrentBalance = request.InitialValue,
+                ExpiryDate = request.ExpiryDate,
+                CustomerId = request.CustomerId
+            };
+
+            _context.GiftCards.Add(card);
+            await _context.SaveChangesAsync();
+
+            // Create initial load transaction
+            var transaction = new GiftCardTransaction
+            {
+                GiftCardId = card.GiftCardId,
+                Type = "Load",
+                Amount = request.InitialValue,
+                CurrencyCode = request.CurrencyCode ?? "USD",
+                BalanceBefore = 0,
+                BalanceAfter = request.InitialValue,
+                UserId = userExists ? userId : null,
+                Notes = "Initial load"
+            };
+
+            _context.GiftCardTransactions.Add(transaction);
+            await _context.SaveChangesAsync();
+
+            return Ok(new GiftCardListDto
+            {
+                Id = card.GiftCardId,
+                GiftCardNumber = card.GiftCardNumber,
+                InitialValue = card.InitialValue,
+                CurrentBalance = card.CurrentBalance,
+                Status = card.Status
+            });
         }
-
-        // Check uniqueness
-        var exists = await _context.GiftCards.AnyAsync(g => g.CompanyId == companyId && g.GiftCardNumber == cardNumber);
-        if (exists) return BadRequest(new { message = "Gift card number already exists" });
-
-        var card = new GiftCard
+        catch (Exception ex)
         {
-            CompanyId = companyId,
-            GiftCardNumber = cardNumber,
-            BranchIssuedId = request.BranchIssuedId,
-            CurrencyCode = request.CurrencyCode,
-            InitialValue = request.InitialValue,
-            CurrentBalance = request.InitialValue,
-            ExpiryDate = request.ExpiryDate,
-            CustomerId = request.CustomerId
-        };
-
-        _context.GiftCards.Add(card);
-
-        // Create initial load transaction
-        var transaction = new GiftCardTransaction
-        {
-            GiftCardId = card.GiftCardId,
-            Type = "Load",
-            Amount = request.InitialValue,
-            CurrencyCode = request.CurrencyCode,
-            BalanceBefore = 0,
-            BalanceAfter = request.InitialValue,
-            UserId = userId,
-            Notes = "Initial load"
-        };
-
-        await _context.SaveChangesAsync();
-
-        transaction.GiftCardId = card.GiftCardId;
-        _context.GiftCardTransactions.Add(transaction);
-        await _context.SaveChangesAsync();
-
-        return Ok(new GiftCardListDto
-        {
-            Id = card.GiftCardId,
-            GiftCardNumber = card.GiftCardNumber,
-            InitialValue = card.InitialValue,
-            CurrentBalance = card.CurrentBalance,
-            Status = card.Status
-        });
+            return StatusCode(500, new { message = ex.Message, inner = ex.InnerException?.Message });
+        }
     }
 
     [HttpGet("{id}/transactions")]

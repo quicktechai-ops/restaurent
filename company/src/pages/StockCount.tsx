@@ -62,12 +62,12 @@ export default function StockCount() {
   const totalVariance = lines.reduce((sum, l) => sum + Math.abs(l.variance), 0)
   const itemsWithVariance = lines.filter(l => l.variance !== 0).length
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><ClipboardList size={28} /> Stock Count</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><ClipboardList size={28} /> Stock Count</h1>
         <button onClick={startNewCount} className="btn-primary flex items-center gap-2"><Plus size={20} /> New Stock Count</button>
       </div>
 
@@ -84,12 +84,12 @@ export default function StockCount() {
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">Count Name</label>
-              <input type="text" value={countName} onChange={(e) => setCountName(e.target.value)} className="input-field w-full max-w-md" placeholder={`Stock Count ${new Date().toLocaleDateString()}`} />
+              <input type="text" value={countName} onChange={(e) => setCountName(e.target.value)} className="input w-full max-w-md" placeholder={`Stock Count ${new Date().toLocaleDateString()}`} />
             </div>
 
             <div className="border rounded-lg overflow-hidden max-h-[60vh] overflow-y-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 sticky top-0">
+              <table className="table">
+                <thead className="bg-gray-800 sticky top-0">
                   <tr>
                     <th className="text-left p-3">Item</th>
                     <th className="text-left p-3">Unit</th>
@@ -105,7 +105,7 @@ export default function StockCount() {
                       <td className="p-3 text-gray-500">{line.unit}</td>
                       <td className="p-3">{line.systemQty}</td>
                       <td className="p-3">
-                        <input type="number" step="0.01" value={line.countedQty} onChange={(e) => updateCountedQty(idx, parseFloat(e.target.value) || 0)} className="input-field w-24" />
+                        <input type="number" step="0.01" value={line.countedQty} onChange={(e) => updateCountedQty(idx, parseFloat(e.target.value) || 0)} className="input w-24" />
                       </td>
                       <td className="p-3">
                         {line.variance !== 0 ? (
@@ -133,9 +133,9 @@ export default function StockCount() {
 
       {/* Count History */}
       <div className="card overflow-hidden">
-        <h2 className="font-semibold p-4 border-b">Count History</h2>
-        <table className="w-full">
-          <thead className="bg-gray-50">
+        <h2 className="font-semibold p-4 border-b border-gray-700">Count History</h2>
+        <table className="table">
+          <thead className="bg-gray-800">
             <tr>
               <th className="text-left p-3">Date</th>
               <th className="text-left p-3">Name</th>
@@ -147,7 +147,7 @@ export default function StockCount() {
           </thead>
           <tbody>
             {counts?.map((count: any) => (
-              <tr key={count.id} className="border-t hover:bg-gray-50">
+              <tr key={count.id} className="border-t hover:bg-gray-800/50">
                 <td className="p-3">{new Date(count.createdAt).toLocaleString()}</td>
                 <td className="p-3 font-medium">{count.name}</td>
                 <td className="p-3">{count.itemCount} items</td>

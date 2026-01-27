@@ -146,7 +146,6 @@ public class CurrenciesController : ControllerBase
     public async Task<ActionResult<ExchangeRateListDto>> CreateExchangeRate([FromBody] CreateExchangeRateRequest request)
     {
         var companyId = GetCompanyId();
-        var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
 
         var rate = new ExchangeRate
         {
@@ -155,8 +154,7 @@ public class CurrenciesController : ControllerBase
             ForeignCurrencyCode = request.ForeignCurrencyCode,
             Rate = request.Rate,
             ValidFrom = request.ValidFrom,
-            ValidTo = request.ValidTo,
-            CreatedByUserId = userId
+            ValidTo = request.ValidTo
         };
 
         _context.ExchangeRates.Add(rate);

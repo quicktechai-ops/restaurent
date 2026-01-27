@@ -89,12 +89,12 @@ export default function ApprovalRules() {
     }
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><Shield size={28} /> Approval Rules</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Shield size={28} /> Approval Rules</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> Add Rule</button>
       </div>
 
@@ -110,7 +110,7 @@ export default function ApprovalRules() {
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Rule Type *</label>
-              <select value={formData.ruleType} onChange={(e) => setFormData({ ...formData, ruleType: e.target.value })} className="input-field" required>
+              <select value={formData.ruleType} onChange={(e) => setFormData({ ...formData, ruleType: e.target.value })} className="input" required>
                 <option value="max_discount">Maximum Discount Without Approval</option>
                 <option value="price_change">Price Change in Order</option>
                 <option value="void_paid">Void Paid Invoice</option>
@@ -121,7 +121,7 @@ export default function ApprovalRules() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Apply to Role</label>
-              <select value={formData.roleId} onChange={(e) => setFormData({ ...formData, roleId: e.target.value })} className="input-field">
+              <select value={formData.roleId} onChange={(e) => setFormData({ ...formData, roleId: e.target.value })} className="input">
                 <option value="">All Roles</option>
                 {roles?.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
@@ -129,7 +129,7 @@ export default function ApprovalRules() {
             {formData.ruleType === 'max_discount' && (
               <div>
                 <label className="block text-sm font-medium mb-1">Threshold (%) *</label>
-                <input type="number" step="0.1" min="0" max="100" value={formData.threshold} onChange={(e) => setFormData({ ...formData, threshold: parseFloat(e.target.value) || 0 })} className="input-field" required />
+                <input type="number" step="0.1" min="0" max="100" value={formData.threshold} onChange={(e) => setFormData({ ...formData, threshold: parseFloat(e.target.value) || 0 })} className="input" required />
                 <p className="text-xs text-gray-500 mt-1">Discounts above this % require approval</p>
               </div>
             )}
@@ -156,8 +156,8 @@ export default function ApprovalRules() {
       )}
 
       <div className="card overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+        <table className="table">
+          <thead className="bg-gray-800">
             <tr>
               <th className="text-left p-3">Rule Type</th>
               <th className="text-left p-3">Role</th>
@@ -170,7 +170,7 @@ export default function ApprovalRules() {
           </thead>
           <tbody>
             {rules?.map((rule: any) => (
-              <tr key={rule.id} className="border-t hover:bg-gray-50">
+              <tr key={rule.id} className="border-t hover:bg-gray-800/50">
                 <td className="p-3">
                   <div className="flex items-center gap-2">
                     <Lock size={16} className="text-gray-400" />

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { customersApi } from '../lib/api'
 import api from '../lib/api'
-import { Plus, Edit, Trash2, User, MapPin, X, Eye } from 'lucide-react'
+import { Plus, Edit, Trash2, User, MapPin, X, Eye, Search } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function Customers() {
@@ -69,31 +69,34 @@ export default function Customers() {
     setShowForm(true)
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div className="p-6 text-gray-400">Loading...</div>
 
   return (
-    <div className="p-6">
+    <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Customers</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
           <Plus size={20} /> Add Customer
         </button>
       </div>
 
-      <div className="mb-4">
-        <input type="text" placeholder="Search customers..." value={search} onChange={(e) => setSearch(e.target.value)}
-          className="input-field w-full max-w-md" />
+      <div className="card p-4 mb-6">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <input type="text" placeholder="Search customers..." value={search} onChange={(e) => setSearch(e.target.value)}
+            className="input pl-10 w-full" />
+        </div>
       </div>
 
       {showForm && (
-        <div className="card mb-6">
+        <div className="card p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit' : 'Add'} Customer</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" placeholder="Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field" required />
-            <input type="text" placeholder="Customer Code" value={formData.customerCode} onChange={(e) => setFormData({ ...formData, customerCode: e.target.value })} className="input-field" />
-            <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input-field" />
-            <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input-field" />
-            <textarea placeholder="Notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input-field md:col-span-2" rows={2} />
+            <div><label className="label">Name *</label><input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input" required /></div>
+            <div><label className="label">Customer Code</label><input type="text" value={formData.customerCode} onChange={(e) => setFormData({ ...formData, customerCode: e.target.value })} className="input" /></div>
+            <div><label className="label">Phone</label><input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input" /></div>
+            <div><label className="label">Email</label><input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" /></div>
+            <div className="md:col-span-2"><label className="label">Notes</label><textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input" rows={2} /></div>
             <div className="md:col-span-2 flex gap-2">
               <button type="submit" className="btn-primary">Save</button>
               <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
@@ -102,41 +105,41 @@ export default function Customers() {
         </div>
       )}
 
-      <div className="card">
-        <table className="w-full">
+      <div className="card overflow-hidden">
+        <table className="table">
           <thead>
-            <tr className="border-b">
-              <th className="text-left p-3">Name</th>
-              <th className="text-left p-3">Code</th>
-              <th className="text-left p-3">Phone</th>
-              <th className="text-left p-3">Email</th>
-              <th className="text-left p-3">Addresses</th>
-              <th className="text-left p-3">Status</th>
-              <th className="text-left p-3">Actions</th>
+            <tr>
+              <th>Name</th>
+              <th>Code</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Addresses</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {customers?.data?.map((customer: any) => (
-              <tr key={customer.id} className="border-b hover:bg-gray-50">
-                <td className="p-3 flex items-center gap-2"><User size={16} className="text-gray-400" /> {customer.name}</td>
-                <td className="p-3">{customer.customerCode || '-'}</td>
-                <td className="p-3">{customer.phone || '-'}</td>
-                <td className="p-3">{customer.email || '-'}</td>
-                <td className="p-3">
+              <tr key={customer.id}>
+                <td className="font-medium flex items-center gap-2"><User size={16} className="text-primary-600" /> {customer.name}</td>
+                <td>{customer.customerCode || '-'}</td>
+                <td>{customer.phone || '-'}</td>
+                <td>{customer.email || '-'}</td>
+                <td>
                   <button onClick={() => openAddressModal(customer.id)} className="text-primary-600 hover:text-primary-800 flex items-center gap-1">
                     <MapPin size={14} /> {customer.addressesCount || 0}
                   </button>
                 </td>
-                <td className="p-3">
-                  <span className={`px-2 py-1 rounded text-xs ${customer.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                <td>
+                  <span className={`px-2 py-1 rounded-full text-xs ${customer.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                     {customer.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </td>
-                <td className="p-3">
+                <td>
                   <div className="flex gap-2">
                     <Link to={`/customers/${customer.id}`} className="text-green-600 hover:text-green-800"><Eye size={16} /></Link>
                     <button onClick={() => handleEdit(customer)} className="text-blue-600 hover:text-blue-800"><Edit size={16} /></button>
-                    <button onClick={() => deleteMutation.mutate(customer.id)} className="text-red-600 hover:text-red-800"><Trash2 size={16} /></button>
+                    <button onClick={() => confirm('Delete?') && deleteMutation.mutate(customer.id)} className="text-red-600 hover:text-red-800"><Trash2 size={16} /></button>
                   </div>
                 </td>
               </tr>
@@ -149,29 +152,29 @@ export default function Customers() {
       {/* Address Modal */}
       {showAddressModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-            <div className="flex justify-between items-center p-4 border-b">
+          <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-gray-700">
               <h2 className="text-lg font-semibold">Customer Addresses</h2>
               <button onClick={closeAddressModal} className="text-gray-500 hover:text-gray-700"><X size={20} /></button>
             </div>
             
             <div className="p-4 max-h-[60vh] overflow-y-auto">
               {/* Add Address Form */}
-              <form onSubmit={handleAddressSubmit} className="bg-gray-50 rounded-lg p-4 mb-4">
+              <form onSubmit={handleAddressSubmit} className="bg-gray-800 rounded-lg p-4 mb-4">
                 <h3 className="font-medium mb-3">Add New Address</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <input type="text" placeholder="Label (Home, Work...)" value={addressForm.label} onChange={(e) => setAddressForm({ ...addressForm, label: e.target.value })} className="input-field" required />
-                  <select value={addressForm.deliveryZoneId} onChange={(e) => setAddressForm({ ...addressForm, deliveryZoneId: e.target.value })} className="input-field">
+                  <input type="text" placeholder="Label (Home, Work...)" value={addressForm.label} onChange={(e) => setAddressForm({ ...addressForm, label: e.target.value })} className="input" required />
+                  <select value={addressForm.deliveryZoneId} onChange={(e) => setAddressForm({ ...addressForm, deliveryZoneId: e.target.value })} className="input">
                     <option value="">Select Delivery Zone</option>
                     {deliveryZones?.map((zone: any) => (
                       <option key={zone.id} value={zone.id}>{zone.zoneName}</option>
                     ))}
                   </select>
-                  <input type="text" placeholder="Address Line 1 *" value={addressForm.addressLine1} onChange={(e) => setAddressForm({ ...addressForm, addressLine1: e.target.value })} className="input-field col-span-2" required />
-                  <input type="text" placeholder="Address Line 2" value={addressForm.addressLine2} onChange={(e) => setAddressForm({ ...addressForm, addressLine2: e.target.value })} className="input-field col-span-2" />
-                  <input type="text" placeholder="City" value={addressForm.city} onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })} className="input-field" />
-                  <input type="text" placeholder="Area/Neighborhood" value={addressForm.area} onChange={(e) => setAddressForm({ ...addressForm, area: e.target.value })} className="input-field" />
-                  <textarea placeholder="Delivery Notes" value={addressForm.notes} onChange={(e) => setAddressForm({ ...addressForm, notes: e.target.value })} className="input-field col-span-2" rows={2} />
+                  <input type="text" placeholder="Address Line 1 *" value={addressForm.addressLine1} onChange={(e) => setAddressForm({ ...addressForm, addressLine1: e.target.value })} className="input col-span-2" required />
+                  <input type="text" placeholder="Address Line 2" value={addressForm.addressLine2} onChange={(e) => setAddressForm({ ...addressForm, addressLine2: e.target.value })} className="input col-span-2" />
+                  <input type="text" placeholder="City" value={addressForm.city} onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })} className="input" />
+                  <input type="text" placeholder="Area/Neighborhood" value={addressForm.area} onChange={(e) => setAddressForm({ ...addressForm, area: e.target.value })} className="input" />
+                  <textarea placeholder="Delivery Notes" value={addressForm.notes} onChange={(e) => setAddressForm({ ...addressForm, notes: e.target.value })} className="input col-span-2" rows={2} />
                 </div>
                 <button type="submit" className="btn-primary mt-3">Add Address</button>
               </form>

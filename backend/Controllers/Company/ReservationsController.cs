@@ -25,6 +25,8 @@ public class ReservationsController : ControllerBase
     public async Task<ActionResult<List<ReservationListDto>>> GetAll(
         [FromQuery] int? branchId, 
         [FromQuery] DateTime? date,
+        [FromQuery] DateTime? startDate,
+        [FromQuery] DateTime? endDate,
         [FromQuery] string? status)
     {
         var companyId = GetCompanyId();
@@ -38,8 +40,15 @@ public class ReservationsController : ControllerBase
         if (branchId.HasValue)
             query = query.Where(r => r.BranchId == branchId.Value);
 
-        if (date.HasValue)
+        // Support date range filtering
+        if (startDate.HasValue && endDate.HasValue)
+        {
+            query = query.Where(r => r.ReservationDate.Date >= startDate.Value.Date && r.ReservationDate.Date <= endDate.Value.Date);
+        }
+        else if (date.HasValue)
+        {
             query = query.Where(r => r.ReservationDate.Date == date.Value.Date);
+        }
 
         if (!string.IsNullOrEmpty(status))
             query = query.Where(r => r.Status == status);
@@ -111,51 +120,67 @@ public class ReservationsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ReservationListDto>> Create([FromBody] CreateReservationRequest request)
     {
-        var companyId = GetCompanyId();
-        var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
-
-        var reservation = new Reservation
+        try
         {
-            BranchId = request.BranchId,
-            CustomerId = request.CustomerId,
-            CustomerName = request.CustomerName,
-            CustomerPhone = request.CustomerPhone,
-            ReservationDate = request.ReservationDate,
-            StartTime = request.StartTime,
-            DurationMinutes = request.DurationMinutes,
-            PartySize = request.PartySize,
-            TableId = request.TableId,
-            Channel = request.Channel,
-            Notes = request.Notes,
-            CreatedByUserId = userId
-        };
+            var companyId = GetCompanyId();
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var userExists = await _context.Users.AnyAsync(u => u.UserId == userId);
 
-        _context.Reservations.Add(reservation);
-        await _context.SaveChangesAsync();
-
-        // Create deposit if required
-        if (request.RequireDeposit && request.DepositAmount.HasValue)
-        {
-            var deposit = new ReservationDeposit
+            // Get first branch if not specified
+            var branchId = request.BranchId;
+            if (branchId == 0)
             {
-                ReservationId = reservation.ReservationId,
-                Amount = request.DepositAmount.Value,
-                CurrencyCode = request.DepositCurrencyCode,
-                Status = "Pending"
-            };
-            _context.ReservationDeposits.Add(deposit);
-            await _context.SaveChangesAsync();
-        }
+                var firstBranch = await _context.Branches.FirstOrDefaultAsync(b => b.CompanyId == companyId);
+                branchId = firstBranch?.BranchId ?? 0;
+            }
 
-        return Ok(new ReservationListDto
+            var reservation = new Reservation
+            {
+                BranchId = branchId,
+                CustomerId = request.CustomerId,
+                CustomerName = request.CustomerName,
+                CustomerPhone = request.CustomerPhone,
+                ReservationDate = request.ReservationDate,
+                StartTime = request.StartTime,
+                DurationMinutes = request.DurationMinutes > 0 ? request.DurationMinutes : 90,
+                PartySize = request.PartySize,
+                TableId = request.TableId,
+                Channel = request.Channel ?? "Phone",
+                Notes = request.Notes,
+                CreatedByUserId = userExists ? userId : null
+            };
+
+            _context.Reservations.Add(reservation);
+            await _context.SaveChangesAsync();
+
+            // Create deposit if required
+            if (request.RequireDeposit && request.DepositAmount.HasValue)
+            {
+                var deposit = new ReservationDeposit
+                {
+                    ReservationId = reservation.ReservationId,
+                    Amount = request.DepositAmount.Value,
+                    CurrencyCode = request.DepositCurrencyCode ?? "USD",
+                    Status = "Pending"
+                };
+                _context.ReservationDeposits.Add(deposit);
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(new ReservationListDto
+            {
+                Id = reservation.ReservationId,
+                BranchId = reservation.BranchId,
+                ReservationDate = reservation.ReservationDate,
+                StartTime = reservation.StartTime,
+                PartySize = reservation.PartySize,
+                Status = reservation.Status
+            });
+        }
+        catch (Exception ex)
         {
-            Id = reservation.ReservationId,
-            BranchId = reservation.BranchId,
-            ReservationDate = reservation.ReservationDate,
-            StartTime = reservation.StartTime,
-            PartySize = reservation.PartySize,
-            Status = reservation.Status
-        });
+            return StatusCode(500, new { message = ex.Message, inner = ex.InnerException?.Message });
+        }
     }
 
     [HttpPut("{id}")]

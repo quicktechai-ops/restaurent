@@ -10,6 +10,8 @@ export default function Inventory() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [search, setSearch] = useState('')
   const [formData, setFormData] = useState({ name: '', code: '', unitOfMeasure: '', category: '', minLevel: 0, reorderQty: 0, costMethod: 'Average', quantity: 0, cost: 0, currencyCode: '' })
+  const [showCategoryForm, setShowCategoryForm] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
 
   const { data: items, isLoading } = useQuery({ queryKey: ['inventory', search], queryFn: () => inventoryApi.getAll({ search: search || undefined }) })
   const { data: categories } = useQuery({ queryKey: ['inventory-categories'], queryFn: () => api.get('/api/company/inventory-settings/categories').then(r => r.data) })
@@ -20,6 +22,14 @@ export default function Inventory() {
   const updateMutation = useMutation({ mutationFn: ({ id, data }: { id: number; data: any }) => inventoryApi.update(id, data), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['inventory'] }); resetForm() } })
   const deleteMutation = useMutation({ mutationFn: inventoryApi.delete, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventory'] }) })
   const toggleMutation = useMutation({ mutationFn: inventoryApi.toggle, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventory'] }) })
+  const createCategoryMutation = useMutation({ 
+    mutationFn: (name: string) => api.post('/api/company/inventory-settings/categories', { name, isActive: true }), 
+    onSuccess: () => { 
+      queryClient.invalidateQueries({ queryKey: ['inventory-categories'] })
+      setShowCategoryForm(false)
+      setNewCategoryName('')
+    } 
+  })
 
   const resetForm = () => { setShowForm(false); setEditingId(null); setFormData({ name: '', code: '', unitOfMeasure: '', category: '', minLevel: 0, reorderQty: 0, costMethod: 'Average', quantity: 0, cost: 0, currencyCode: '' }) }
 
@@ -46,13 +56,13 @@ export default function Inventory() {
     setShowForm(true)
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Inventory Items</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Inventory Items</h1>
           <p className="text-sm text-gray-500">Manage your ingredients and stock items</p>
         </div>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
@@ -61,24 +71,24 @@ export default function Inventory() {
       </div>
 
       <div className="mb-4">
-        <input type="text" placeholder="Search items..." value={search} onChange={(e) => setSearch(e.target.value)} className="input-field w-full max-w-md" />
+        <input type="text" placeholder="Search items..." value={search} onChange={(e) => setSearch(e.target.value)} className="input w-full max-w-md" />
       </div>
 
       {/* Modal Overlay */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={resetForm}>
           <div 
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all animate-in fade-in zoom-in duration-200"
+            className="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all animate-in fade-in zoom-in duration-200"
             onClick={e => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
                   <Package className="w-5 h-5 text-primary-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-800">{editingId ? 'Edit' : 'Add New'} Inventory Item</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{editingId ? 'Edit' : 'Add New'} Inventory Item</h2>
                   <p className="text-sm text-gray-500">{editingId ? 'Update item details' : 'Add a new ingredient to your inventory'}</p>
                 </div>
               </div>
@@ -151,16 +161,58 @@ export default function Inventory() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <FolderOpen size={14} className="inline mr-2" />Category
                   </label>
-                  <select 
-                    value={formData.category} 
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })} 
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  >
-                    <option value="">Select category...</option>
-                    {categories?.filter((c: any) => c.isActive).map((cat: any) => (
-                      <option key={cat.id} value={cat.name}>{cat.name}</option>
-                    ))}
-                  </select>
+                  {showCategoryForm ? (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="New category name..."
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                        className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newCategoryName.trim()) {
+                            createCategoryMutation.mutate(newCategoryName.trim())
+                          }
+                        }}
+                        disabled={createCategoryMutation.isPending}
+                        className="px-3 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+                      >
+                        {createCategoryMutation.isPending ? '...' : '✓'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowCategoryForm(false); setNewCategoryName('') }}
+                        className="px-3 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <select 
+                        value={formData.category} 
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })} 
+                        className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                      >
+                        <option value="">Select category...</option>
+                        {categories?.filter((c: any) => c.isActive).map((cat: any) => (
+                          <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowCategoryForm(true)}
+                        className="px-3 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors"
+                        title="Add new category"
+                      >
+                        <Plus size={20} />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Cost Method Field */}
@@ -288,30 +340,32 @@ export default function Inventory() {
       )}
 
       <div className="card">
-        <table className="w-full">
+        <table className="table">
           <thead>
-            <tr className="border-b">
+            <tr className="border-b border-gray-700">
               <th className="text-left p-3">Name</th>
               <th className="text-left p-3">Code</th>
               <th className="text-left p-3">Unit</th>
               <th className="text-left p-3">Category</th>
-              <th className="text-left p-3">Min Level</th>
-              <th className="text-left p-3">Reorder Qty</th>
-              <th className="text-left p-3">Cost Method</th>
+              <th className="text-right p-3">Qty</th>
+              <th className="text-right p-3">Cost</th>
+              <th className="text-right p-3">Min Level</th>
+              <th className="text-right p-3">Reorder</th>
               <th className="text-left p-3">Status</th>
               <th className="text-left p-3">Actions</th>
             </tr>
           </thead>
           <tbody>
             {items?.data?.map((item: any) => (
-              <tr key={item.id} className="border-b hover:bg-gray-50">
+              <tr key={item.id} className={`border-b hover:bg-gray-800/50 ${item.quantity <= item.minLevel ? 'bg-red-50' : ''}`}>
                 <td className="p-3 flex items-center gap-2"><Package size={16} className="text-gray-400" /> {item.name}</td>
                 <td className="p-3">{item.code || '-'}</td>
                 <td className="p-3">{item.unitOfMeasure}</td>
                 <td className="p-3">{item.category || '-'}</td>
-                <td className="p-3">{item.minLevel}</td>
-                <td className="p-3">{item.reorderQty}</td>
-                <td className="p-3">{item.costMethod}</td>
+                <td className={`p-3 text-right font-medium ${item.quantity <= item.minLevel ? 'text-red-600' : ''}`}>{item.quantity ?? 0}</td>
+                <td className="p-3 text-right">{item.cost ? `$${item.cost.toFixed(2)}` : '-'}</td>
+                <td className="p-3 text-right">{item.minLevel}</td>
+                <td className="p-3 text-right">{item.reorderQty}</td>
                 <td className="p-3">
                   <button onClick={() => toggleMutation.mutate(item.id)} className={`px-2 py-1 rounded text-xs ${item.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                     {item.isActive ? 'Active' : 'Inactive'}

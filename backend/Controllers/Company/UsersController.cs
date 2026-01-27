@@ -50,6 +50,7 @@ public class UsersController : ControllerBase
                 FullName = u.FullName,
                 Email = u.Email,
                 Phone = u.Phone,
+                Position = u.Position,
                 DefaultBranchId = u.DefaultBranchId,
                 DefaultBranchName = u.DefaultBranch != null ? u.DefaultBranch.Name : null,
                 IsActive = u.IsActive,
@@ -89,6 +90,7 @@ public class UsersController : ControllerBase
             FullName = user.FullName,
             Email = user.Email,
             Phone = user.Phone,
+            Position = user.Position,
             DefaultBranchId = user.DefaultBranchId,
             DefaultBranchName = user.DefaultBranch?.Name,
             IsActive = user.IsActive,
@@ -124,6 +126,7 @@ public class UsersController : ControllerBase
             FullName = request.FullName,
             Email = request.Email,
             Phone = request.Phone,
+            Position = request.Position,
             DefaultBranchId = request.DefaultBranchId,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -168,6 +171,7 @@ public class UsersController : ControllerBase
         user.FullName = request.FullName;
         user.Email = request.Email;
         user.Phone = request.Phone;
+        user.Position = request.Position;
         user.DefaultBranchId = request.DefaultBranchId;
         user.IsActive = request.IsActive;
         user.UpdatedAt = DateTime.UtcNow;

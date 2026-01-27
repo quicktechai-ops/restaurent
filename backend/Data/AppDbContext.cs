@@ -105,6 +105,15 @@ public class AppDbContext : DbContext
     public DbSet<SystemSetting> SystemSettings { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
 
+    // POS & Orders
+    public DbSet<Shift> Shifts { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderLine> OrderLines { get; set; }
+    public DbSet<OrderLineModifier> OrderLineModifiers { get; set; }
+    public DbSet<OrderPayment> OrderPayments { get; set; }
+    public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
+    public DbSet<OrderDeliveryDetails> OrderDeliveryDetails { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -309,7 +318,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Customer>()
             .HasIndex(c => new { c.CompanyId, c.CustomerCode })
             .IsUnique()
-            .HasFilter("[CustomerCode] IS NOT NULL");
+            .HasFilter("customer_code IS NOT NULL");
 
         // CustomerAddress -> Customer
         modelBuilder.Entity<CustomerAddress>()
@@ -342,7 +351,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<InventoryItem>()
             .HasIndex(i => new { i.CompanyId, i.Code })
             .IsUnique()
-            .HasFilter("[Code] IS NOT NULL");
+            .HasFilter("code IS NOT NULL");
 
         // Recipe -> Company & MenuItem
         modelBuilder.Entity<Recipe>()
@@ -509,5 +518,186 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(a => a.CompanyId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // ========== POS & ORDERS ==========
+
+        // Shift -> Company & Branch & User
+        modelBuilder.Entity<Shift>()
+            .HasOne(s => s.Company)
+            .WithMany()
+            .HasForeignKey(s => s.CompanyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Shift>()
+            .HasOne(s => s.Branch)
+            .WithMany()
+            .HasForeignKey(s => s.BranchId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Shift>()
+            .HasOne(s => s.CashierUser)
+            .WithMany()
+            .HasForeignKey(s => s.CashierUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Order -> Company & Branch & Shift & Table & Users & Customer
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.Company)
+            .WithMany()
+            .HasForeignKey(o => o.CompanyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.Branch)
+            .WithMany()
+            .HasForeignKey(o => o.BranchId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.Shift)
+            .WithMany(s => s.Orders)
+            .HasForeignKey(o => o.ShiftId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.Table)
+            .WithMany()
+            .HasForeignKey(o => o.TableId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.WaiterUser)
+            .WithMany()
+            .HasForeignKey(o => o.WaiterUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.CashierUser)
+            .WithMany()
+            .HasForeignKey(o => o.CashierUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.Customer)
+            .WithMany()
+            .HasForeignKey(o => o.CustomerId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.VoidByUser)
+            .WithMany()
+            .HasForeignKey(o => o.VoidByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.ApprovedVoidByUser)
+            .WithMany()
+            .HasForeignKey(o => o.ApprovedVoidByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Order>()
+            .HasIndex(o => new { o.BranchId, o.OrderNumber })
+            .IsUnique();
+
+        // OrderLine -> Order & MenuItem & Size & KitchenStation
+        modelBuilder.Entity<OrderLine>()
+            .HasOne(ol => ol.Order)
+            .WithMany(o => o.OrderLines)
+            .HasForeignKey(ol => ol.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<OrderLine>()
+            .HasOne(ol => ol.MenuItem)
+            .WithMany()
+            .HasForeignKey(ol => ol.MenuItemId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<OrderLine>()
+            .HasOne(ol => ol.MenuItemSize)
+            .WithMany()
+            .HasForeignKey(ol => ol.MenuItemSizeId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<OrderLine>()
+            .HasOne(ol => ol.KitchenStation)
+            .WithMany()
+            .HasForeignKey(ol => ol.KitchenStationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<OrderLine>()
+            .HasOne(ol => ol.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(ol => ol.CreatedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // OrderLineModifier -> OrderLine & Modifier
+        modelBuilder.Entity<OrderLineModifier>()
+            .HasOne(olm => olm.OrderLine)
+            .WithMany(ol => ol.OrderLineModifiers)
+            .HasForeignKey(olm => olm.OrderLineId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<OrderLineModifier>()
+            .HasOne(olm => olm.Modifier)
+            .WithMany()
+            .HasForeignKey(olm => olm.ModifierId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // OrderPayment -> Order & PaymentMethod & GiftCard & User
+        modelBuilder.Entity<OrderPayment>()
+            .HasOne(op => op.Order)
+            .WithMany(o => o.OrderPayments)
+            .HasForeignKey(op => op.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<OrderPayment>()
+            .HasOne(op => op.PaymentMethod)
+            .WithMany()
+            .HasForeignKey(op => op.PaymentMethodId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<OrderPayment>()
+            .HasOne(op => op.GiftCard)
+            .WithMany()
+            .HasForeignKey(op => op.GiftCardId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<OrderPayment>()
+            .HasOne(op => op.User)
+            .WithMany()
+            .HasForeignKey(op => op.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // OrderStatusHistory -> Order & User
+        modelBuilder.Entity<OrderStatusHistory>()
+            .HasOne(osh => osh.Order)
+            .WithMany(o => o.StatusHistory)
+            .HasForeignKey(osh => osh.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<OrderStatusHistory>()
+            .HasOne(osh => osh.User)
+            .WithMany()
+            .HasForeignKey(osh => osh.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // OrderDeliveryDetails -> Order & CustomerAddress & DeliveryZone
+        modelBuilder.Entity<OrderDeliveryDetails>()
+            .HasOne(odd => odd.Order)
+            .WithOne(o => o.DeliveryDetails)
+            .HasForeignKey<OrderDeliveryDetails>(odd => odd.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<OrderDeliveryDetails>()
+            .HasOne(odd => odd.CustomerAddress)
+            .WithMany()
+            .HasForeignKey(odd => odd.CustomerAddressId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<OrderDeliveryDetails>()
+            .HasOne(odd => odd.DeliveryZone)
+            .WithMany()
+            .HasForeignKey(odd => odd.DeliveryZoneId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

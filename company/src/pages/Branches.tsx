@@ -142,7 +142,7 @@ export default function Branches() {
                   </td>
                   <td className="flex gap-2">
                     <button onClick={() => handleEdit(branch)} className="text-blue-600 hover:text-blue-800"><Edit size={18} /></button>
-                    <button onClick={() => toggleMutation.mutate(branch.id)} className="text-gray-600 hover:text-gray-800">
+                    <button onClick={() => toggleMutation.mutate(branch.id)} className="text-gray-600 hover:text-gray-900">
                       {branch.isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                     </button>
                     <button onClick={() => confirm('Delete?') && deleteMutation.mutate(branch.id)} className="text-red-600 hover:text-red-800"><Trash2 size={18} /></button>

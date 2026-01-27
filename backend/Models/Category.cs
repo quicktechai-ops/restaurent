@@ -34,6 +34,10 @@ public class Category
     [Column("is_active")]
     public bool IsActive { get; set; } = true;
 
+    [Column("image")]
+    [MaxLength(500)]
+    public string? Image { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

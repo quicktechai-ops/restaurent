@@ -7,7 +7,7 @@ export default function Users() {
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [formData, setFormData] = useState({ username: '', password: '', fullName: '', email: '', phone: '', defaultBranchId: null as number | null, roleIds: [] as number[] })
+  const [formData, setFormData] = useState({ username: '', password: '', fullName: '', email: '', phone: '', position: '', defaultBranchId: null as number | null, roleIds: [] as number[] })
 
   const { data: users, isLoading } = useQuery({ queryKey: ['users'], queryFn: () => usersApi.getAll() })
   const { data: roles } = useQuery({ queryKey: ['roles'], queryFn: () => rolesApi.getAll() })
@@ -19,7 +19,7 @@ export default function Users() {
   const toggleMutation = useMutation({ mutationFn: usersApi.toggle, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }) })
   const resetPasswordMutation = useMutation({ mutationFn: ({ id, password }: { id: number; password: string }) => usersApi.resetPassword(id, password) })
 
-  const resetForm = () => { setShowForm(false); setEditingId(null); setFormData({ username: '', password: '', fullName: '', email: '', phone: '', defaultBranchId: null, roleIds: [] }) }
+  const resetForm = () => { setShowForm(false); setEditingId(null); setFormData({ username: '', password: '', fullName: '', email: '', phone: '', position: '', defaultBranchId: null, roleIds: [] }) }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,7 +35,7 @@ export default function Users() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+        <h1 className="text-2xl font-bold text-gray-900">System Access</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> Add User</button>
       </div>
 
@@ -48,21 +48,17 @@ export default function Users() {
             <div><label className="label">Full Name *</label><input className="input" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} required /></div>
             <div><label className="label">Email</label><input type="email" className="input" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
             <div><label className="label">Phone</label><input className="input" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} /></div>
+            <div><label className="label">Role *</label>
+              <select className="input" value={formData.position} onChange={e => setFormData({...formData, position: e.target.value})} required>
+                <option value="">-- Select Role --</option>
+                {roles?.data?.map((r: any) => <option key={r.id} value={r.name}>{r.name}</option>)}
+              </select>
+            </div>
             <div><label className="label">Default Branch</label>
               <select className="input" value={formData.defaultBranchId || ''} onChange={e => setFormData({...formData, defaultBranchId: e.target.value ? parseInt(e.target.value) : null})}>
                 <option value="">-- Select --</option>
                 {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
-            </div>
-            <div className="md:col-span-2"><label className="label">Roles</label>
-              <div className="flex flex-wrap gap-2">
-                {roles?.data?.map((r: any) => (
-                  <label key={r.id} className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                    <input type="checkbox" checked={formData.roleIds.includes(r.id)} onChange={e => setFormData({...formData, roleIds: e.target.checked ? [...formData.roleIds, r.id] : formData.roleIds.filter(id => id !== r.id)})} />
-                    {r.name}
-                  </label>
-                ))}
-              </div>
             </div>
             <div className="md:col-span-2 flex gap-3">
               <button type="submit" className="btn-primary">{editingId ? 'Update' : 'Create'}</button>
@@ -75,19 +71,19 @@ export default function Users() {
       <div className="card overflow-hidden">
         {isLoading ? <div className="p-8 text-center">Loading...</div> : (
           <table className="table">
-            <thead><tr><th>Username</th><th>Name</th><th>Branch</th><th>Roles</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Branch</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
               {users?.data?.map((user: any) => (
                 <tr key={user.id}>
                   <td className="font-medium flex items-center gap-2"><UsersIcon size={18} className="text-primary-600" />{user.username}</td>
                   <td>{user.fullName}</td>
+                  <td>{user.position || '-'}</td>
                   <td>{user.defaultBranchName || '-'}</td>
-                  <td>{user.roles?.join(', ') || '-'}</td>
                   <td><span className={`px-2 py-1 rounded-full text-xs ${user.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{user.isActive ? 'Active' : 'Inactive'}</span></td>
                   <td className="flex gap-2">
-                    <button onClick={() => { setEditingId(user.id); setFormData({ username: user.username, password: '', fullName: user.fullName, email: user.email || '', phone: user.phone || '', defaultBranchId: user.defaultBranchId, roleIds: [] }); setShowForm(true) }} className="text-blue-600 hover:text-blue-800"><Edit size={18} /></button>
+                    <button onClick={() => { setEditingId(user.id); setFormData({ username: user.username, password: '', fullName: user.fullName, email: user.email || '', phone: user.phone || '', position: user.position || '', defaultBranchId: user.defaultBranchId, roleIds: [] }); setShowForm(true) }} className="text-blue-600 hover:text-blue-800"><Edit size={18} /></button>
                     <button onClick={() => handleResetPassword(user.id)} className="text-yellow-600 hover:text-yellow-800"><Key size={18} /></button>
-                    <button onClick={() => toggleMutation.mutate(user.id)} className="text-gray-600 hover:text-gray-800">{user.isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}</button>
+                    <button onClick={() => toggleMutation.mutate(user.id)} className="text-gray-600 hover:text-gray-900">{user.isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}</button>
                     <button onClick={() => confirm('Delete?') && deleteMutation.mutate(user.id)} className="text-red-600 hover:text-red-800"><Trash2 size={18} /></button>
                   </td>
                 </tr>

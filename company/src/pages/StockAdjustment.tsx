@@ -32,12 +32,12 @@ export default function StockAdjustment() {
 
   const selectedItem = inventoryItems?.find((i: any) => i.id === parseInt(formData.inventoryItemId))
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><Settings size={28} /> Stock Adjustment</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Settings size={28} /> Stock Adjustment</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> New Adjustment</button>
       </div>
 
@@ -47,7 +47,7 @@ export default function StockAdjustment() {
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Item *</label>
-              <select value={formData.inventoryItemId} onChange={(e) => setFormData({ ...formData, inventoryItemId: e.target.value })} className="input-field" required>
+              <select value={formData.inventoryItemId} onChange={(e) => setFormData({ ...formData, inventoryItemId: e.target.value })} className="input" required>
                 <option value="">Select Item</option>
                 {inventoryItems?.map((item: any) => (
                   <option key={item.id} value={item.id}>{item.name} - Current: {item.quantity} {item.unitOfMeasure}</option>
@@ -56,7 +56,7 @@ export default function StockAdjustment() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Adjustment Type *</label>
-              <select value={formData.adjustmentType} onChange={(e) => setFormData({ ...formData, adjustmentType: e.target.value })} className="input-field" required>
+              <select value={formData.adjustmentType} onChange={(e) => setFormData({ ...formData, adjustmentType: e.target.value })} className="input" required>
                 <option value="increase">Increase (Add Stock)</option>
                 <option value="decrease">Decrease (Remove Stock)</option>
                 <option value="set">Set to Exact Value</option>
@@ -65,13 +65,13 @@ export default function StockAdjustment() {
             <div>
               <label className="block text-sm font-medium mb-1">Quantity *</label>
               <div className="flex items-center gap-2">
-                <input type="number" step="0.01" min="0" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: parseFloat(e.target.value) || 0 })} className="input-field" required />
+                <input type="number" step="0.01" min="0" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: parseFloat(e.target.value) || 0 })} className="input" required />
                 <span className="text-gray-500">{selectedItem?.unitOfMeasure || 'units'}</span>
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Reason *</label>
-              <select value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} className="input-field" required>
+              <select value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} className="input" required>
                 <option value="">Select Reason</option>
                 <option value="Physical Count">Physical Count Correction</option>
                 <option value="Found Stock">Found Stock</option>
@@ -83,7 +83,7 @@ export default function StockAdjustment() {
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1">Notes</label>
-              <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input-field" rows={2} />
+              <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input" rows={2} />
             </div>
             <div className="md:col-span-2 flex gap-2">
               <button type="submit" className="btn-primary">Create Adjustment</button>
@@ -94,8 +94,8 @@ export default function StockAdjustment() {
       )}
 
       <div className="card overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+        <table className="table">
+          <thead className="bg-gray-800">
             <tr>
               <th className="text-left p-3">Date</th>
               <th className="text-left p-3">Item</th>
@@ -109,7 +109,7 @@ export default function StockAdjustment() {
           </thead>
           <tbody>
             {adjustments?.map((adj: any) => (
-              <tr key={adj.id} className="border-t hover:bg-gray-50">
+              <tr key={adj.id} className="border-t hover:bg-gray-800/50">
                 <td className="p-3">{new Date(adj.createdAt).toLocaleString()}</td>
                 <td className="p-3">{adj.itemName}</td>
                 <td className="p-3">

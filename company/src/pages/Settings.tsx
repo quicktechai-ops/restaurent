@@ -39,10 +39,10 @@ export default function Settings() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Settings</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
 
       {/* Tabs */}
-      <div className="flex gap-4 mb-6 border-b">
+      <div className="flex gap-4 mb-6 border-b border-gray-700">
         <button onClick={() => setActiveTab('general')} className={`pb-2 px-4 ${activeTab === 'general' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}>
           General Settings
         </button>
@@ -56,16 +56,16 @@ export default function Settings() {
           <h2 className="text-lg font-semibold mb-4">General Settings</h2>
           <div className="space-y-4">
             {commonSettings.map((setting) => (
-              <div key={setting.key} className="flex items-center justify-between py-2 border-b">
+              <div key={setting.key} className="flex items-center justify-between py-2 border-b border-gray-700">
                 <label className="font-medium">{setting.label}</label>
                 {setting.type === 'boolean' ? (
                   <input type="checkbox" checked={getSetting(setting.key) === 'true'} onChange={(e) => handleSettingChange(setting.key, e.target.checked.toString(), 'Boolean')} className="w-5 h-5" />
                 ) : setting.type === 'select' ? (
-                  <select value={getSetting(setting.key)} onChange={(e) => handleSettingChange(setting.key, e.target.value)} className="input-field w-40">
+                  <select value={getSetting(setting.key)} onChange={(e) => handleSettingChange(setting.key, e.target.value)} className="input w-40">
                     {setting.options?.map((opt) => <option key={opt} value={opt}>{opt.toUpperCase()}</option>)}
                   </select>
                 ) : (
-                  <input type="number" value={getSetting(setting.key)} onChange={(e) => handleSettingChange(setting.key, e.target.value, 'Integer')} className="input-field w-40" />
+                  <input type="number" value={getSetting(setting.key)} onChange={(e) => handleSettingChange(setting.key, e.target.value, 'Integer')} className="input w-40" />
                 )}
               </div>
             ))}
@@ -83,16 +83,16 @@ export default function Settings() {
           </div>
 
           {showTemplateForm && (
-            <form onSubmit={handleTemplateSubmit} className="border rounded p-4 mb-4 bg-gray-50 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" placeholder="Template Name *" value={templateFormData.name} onChange={(e) => setTemplateFormData({ ...templateFormData, name: e.target.value })} className="input-field" required />
-              <select value={templateFormData.templateType} onChange={(e) => setTemplateFormData({ ...templateFormData, templateType: e.target.value })} className="input-field">
+            <form onSubmit={handleTemplateSubmit} className="border rounded p-4 mb-4 bg-gray-800 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="text" placeholder="Template Name *" value={templateFormData.name} onChange={(e) => setTemplateFormData({ ...templateFormData, name: e.target.value })} className="input" required />
+              <select value={templateFormData.templateType} onChange={(e) => setTemplateFormData({ ...templateFormData, templateType: e.target.value })} className="input">
                 <option value="CustomerReceipt">Customer Receipt</option>
                 <option value="KitchenTicket">Kitchen Ticket</option>
                 <option value="DailyReport">Daily Report</option>
               </select>
-              <textarea placeholder="Header Text" value={templateFormData.headerText} onChange={(e) => setTemplateFormData({ ...templateFormData, headerText: e.target.value })} className="input-field" rows={2} />
-              <textarea placeholder="Footer Text" value={templateFormData.footerText} onChange={(e) => setTemplateFormData({ ...templateFormData, footerText: e.target.value })} className="input-field" rows={2} />
-              <select value={templateFormData.language} onChange={(e) => setTemplateFormData({ ...templateFormData, language: e.target.value })} className="input-field">
+              <textarea placeholder="Header Text" value={templateFormData.headerText} onChange={(e) => setTemplateFormData({ ...templateFormData, headerText: e.target.value })} className="input" rows={2} />
+              <textarea placeholder="Footer Text" value={templateFormData.footerText} onChange={(e) => setTemplateFormData({ ...templateFormData, footerText: e.target.value })} className="input" rows={2} />
+              <select value={templateFormData.language} onChange={(e) => setTemplateFormData({ ...templateFormData, language: e.target.value })} className="input">
                 <option value="en">English</option>
                 <option value="ar">Arabic</option>
                 <option value="both">Both</option>

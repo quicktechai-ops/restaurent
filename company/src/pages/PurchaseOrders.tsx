@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../lib/api'
+import { suppliersApi } from '../lib/api'
 import { Plus, Trash2, ShoppingCart, X, Check, FileText } from 'lucide-react'
 
 interface POLine { inventoryItemId: number; itemName: string; quantity: number; unitPrice: number; unit: string }
@@ -12,6 +13,8 @@ export default function PurchaseOrders() {
   const [formData, setFormData] = useState({ supplierId: '', expectedDate: '', notes: '' })
   const [lines, setLines] = useState<POLine[]>([])
   const [newLine, setNewLine] = useState({ inventoryItemId: '', quantity: 1, unitPrice: 0 })
+  const [showSupplierForm, setShowSupplierForm] = useState(false)
+  const [newSupplierName, setNewSupplierName] = useState('')
 
   const { data: orders = [], isLoading } = useQuery({ queryKey: ['purchase-orders'], queryFn: () => api.get('/api/company/purchase-orders').then(r => Array.isArray(r.data) ? r.data : []) })
   const { data: suppliers = [] } = useQuery({ queryKey: ['suppliers'], queryFn: () => api.get('/api/company/suppliers').then(r => Array.isArray(r.data) ? r.data : []) })
@@ -28,6 +31,10 @@ export default function PurchaseOrders() {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.delete(`/api/company/purchase-orders/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['purchase-orders'] })
+  })
+  const createSupplierMutation = useMutation({
+    mutationFn: (name: string) => suppliersApi.create({ name }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['suppliers'] }); setShowSupplierForm(false); setNewSupplierName('') }
   })
 
   const resetForm = () => { setShowForm(false); setEditingId(null); setFormData({ supplierId: '', expectedDate: '', notes: '' }); setLines([]) }
@@ -59,12 +66,12 @@ export default function PurchaseOrders() {
     }
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><ShoppingCart size={28} /> Purchase Orders</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><ShoppingCart size={28} /> Purchase Orders</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> New PO</button>
       </div>
 
@@ -75,39 +82,50 @@ export default function PurchaseOrders() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Supplier *</label>
-                <select value={formData.supplierId} onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })} className="input-field" required>
-                  <option value="">Select Supplier</option>
-                  {suppliers?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
+                {showSupplierForm ? (
+                  <div className="flex gap-2">
+                    <input type="text" placeholder="New supplier name..." value={newSupplierName} onChange={e => setNewSupplierName(e.target.value)} className="input flex-1" autoFocus />
+                    <button type="button" onClick={() => newSupplierName.trim() && createSupplierMutation.mutate(newSupplierName.trim())} disabled={createSupplierMutation.isPending} className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">{createSupplierMutation.isPending ? '...' : '✓'}</button>
+                    <button type="button" onClick={() => { setShowSupplierForm(false); setNewSupplierName('') }} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">✕</button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <select value={formData.supplierId} onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })} className="input flex-1" required>
+                      <option value="">Select Supplier</option>
+                      {suppliers?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                    <button type="button" onClick={() => setShowSupplierForm(true)} className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700" title="Add new supplier"><Plus size={20} /></button>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Expected Date</label>
-                <input type="date" value={formData.expectedDate} onChange={(e) => setFormData({ ...formData, expectedDate: e.target.value })} className="input-field" />
+                <input type="date" value={formData.expectedDate} onChange={(e) => setFormData({ ...formData, expectedDate: e.target.value })} className="input" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Notes</label>
-                <input type="text" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input-field" />
+                <input type="text" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input" />
               </div>
             </div>
 
             {/* Add Line */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+            <div className="bg-gray-800 rounded-lg p-4 mb-4">
               <h3 className="font-medium mb-3">Add Items</h3>
               <div className="flex gap-3 items-end">
                 <div className="flex-1">
                   <label className="block text-sm mb-1">Item</label>
-                  <select value={newLine.inventoryItemId} onChange={(e) => setNewLine({ ...newLine, inventoryItemId: e.target.value })} className="input-field">
+                  <select value={newLine.inventoryItemId} onChange={(e) => setNewLine({ ...newLine, inventoryItemId: e.target.value })} className="input">
                     <option value="">Select Item</option>
                     {inventoryItems?.map((i: any) => <option key={i.id} value={i.id}>{i.name} ({i.unitOfMeasure})</option>)}
                   </select>
                 </div>
                 <div className="w-32">
                   <label className="block text-sm mb-1">Qty</label>
-                  <input type="number" step="0.01" value={newLine.quantity} onChange={(e) => setNewLine({ ...newLine, quantity: parseFloat(e.target.value) || 0 })} className="input-field" />
+                  <input type="number" step="0.01" value={newLine.quantity} onChange={(e) => setNewLine({ ...newLine, quantity: parseFloat(e.target.value) || 0 })} className="input" />
                 </div>
                 <div className="w-32">
                   <label className="block text-sm mb-1">Unit Price</label>
-                  <input type="number" step="0.01" value={newLine.unitPrice} onChange={(e) => setNewLine({ ...newLine, unitPrice: parseFloat(e.target.value) || 0 })} className="input-field" />
+                  <input type="number" step="0.01" value={newLine.unitPrice} onChange={(e) => setNewLine({ ...newLine, unitPrice: parseFloat(e.target.value) || 0 })} className="input" />
                 </div>
                 <button type="button" onClick={addLine} className="btn-primary"><Plus size={20} /></button>
               </div>
@@ -116,7 +134,7 @@ export default function PurchaseOrders() {
             {/* Lines Table */}
             {lines.length > 0 && (
               <table className="w-full mb-4 border rounded-lg overflow-hidden">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-800">
                   <tr>
                     <th className="text-left p-3">Item</th>
                     <th className="text-left p-3">Qty</th>
@@ -135,7 +153,7 @@ export default function PurchaseOrders() {
                       <td className="p-3"><button type="button" onClick={() => removeLine(idx)} className="text-red-600"><X size={16} /></button></td>
                     </tr>
                   ))}
-                  <tr className="border-t bg-gray-50">
+                  <tr className="border-t bg-gray-800">
                     <td colSpan={3} className="p-3 text-right font-medium">Total:</td>
                     <td className="p-3 font-bold">${lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0).toFixed(2)}</td>
                     <td></td>
@@ -153,8 +171,8 @@ export default function PurchaseOrders() {
       )}
 
       <div className="card overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+        <table className="table">
+          <thead className="bg-gray-800">
             <tr>
               <th className="text-left p-3">PO #</th>
               <th className="text-left p-3">Supplier</th>
@@ -168,7 +186,7 @@ export default function PurchaseOrders() {
           </thead>
           <tbody>
             {orders?.map((order: any) => (
-              <tr key={order.id} className="border-t hover:bg-gray-50">
+              <tr key={order.id} className="border-t hover:bg-gray-800/50">
                 <td className="p-3 font-medium">PO-{order.id.toString().padStart(5, '0')}</td>
                 <td className="p-3">{order.supplierName}</td>
                 <td className="p-3">{new Date(order.createdAt).toLocaleDateString()}</td>

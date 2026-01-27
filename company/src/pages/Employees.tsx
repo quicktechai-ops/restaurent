@@ -28,19 +28,19 @@ export default function Employees() {
     else createMutation.mutate(data)
   }
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Employees</h1>
+        <h1 className="text-2xl font-bold text-gray-900">HR / Payroll</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
           <Plus size={20} /> Add Employee
         </button>
       </div>
 
       <div className="mb-4">
-        <select value={branchFilter || ''} onChange={(e) => setBranchFilter(e.target.value ? parseInt(e.target.value) : undefined)} className="input-field w-64">
+        <select value={branchFilter || ''} onChange={(e) => setBranchFilter(e.target.value ? parseInt(e.target.value) : undefined)} className="input w-64">
           <option value="">All Branches</option>
           {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
@@ -50,17 +50,17 @@ export default function Employees() {
         <div className="card mb-6">
           <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit' : 'Add'} Employee</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <select value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: parseInt(e.target.value) })} className="input-field" required>
+            <select value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: parseInt(e.target.value) })} className="input" required>
               <option value="">Select Branch *</option>
               {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
-            <input type="text" placeholder="Full Name *" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} className="input-field" required />
-            <input type="text" placeholder="Position *" value={formData.position} onChange={(e) => setFormData({ ...formData, position: e.target.value })} className="input-field" required />
-            <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input-field" />
-            <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input-field" />
-            <input type="number" step="0.01" placeholder="Base Salary" value={formData.baseSalary} onChange={(e) => setFormData({ ...formData, baseSalary: e.target.value })} className="input-field" />
-            <input type="date" placeholder="Hire Date" value={formData.hireDate} onChange={(e) => setFormData({ ...formData, hireDate: e.target.value })} className="input-field" />
-            <select value={formData.userId} onChange={(e) => setFormData({ ...formData, userId: e.target.value })} className="input-field">
+            <input type="text" placeholder="Full Name *" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} className="input" required />
+            <input type="text" placeholder="Position *" value={formData.position} onChange={(e) => setFormData({ ...formData, position: e.target.value })} className="input" required />
+            <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input" />
+            <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" />
+            <input type="number" step="0.01" placeholder="Base Salary" value={formData.baseSalary} onChange={(e) => setFormData({ ...formData, baseSalary: e.target.value })} className="input" />
+            <input type="date" placeholder="Hire Date" value={formData.hireDate} onChange={(e) => setFormData({ ...formData, hireDate: e.target.value })} className="input" />
+            <select value={formData.userId} onChange={(e) => setFormData({ ...formData, userId: e.target.value })} className="input">
               <option value="">Link to User (Optional)</option>
               {users?.data?.map((u: any) => <option key={u.id} value={u.id}>{u.fullName}</option>)}
             </select>
@@ -73,9 +73,9 @@ export default function Employees() {
       )}
 
       <div className="card">
-        <table className="w-full">
+        <table className="table">
           <thead>
-            <tr className="border-b">
+            <tr className="border-b border-gray-700">
               <th className="text-left p-3">Name</th>
               <th className="text-left p-3">Position</th>
               <th className="text-left p-3">Branch</th>
@@ -87,7 +87,7 @@ export default function Employees() {
           </thead>
           <tbody>
             {employees?.data?.map((emp: any) => (
-              <tr key={emp.id} className="border-b hover:bg-gray-50">
+              <tr key={emp.id} className="border-b hover:bg-gray-800/50">
                 <td className="p-3 flex items-center gap-2"><UserCheck size={16} className="text-gray-400" /> {emp.fullName}</td>
                 <td className="p-3">{emp.position}</td>
                 <td className="p-3">{emp.branchName}</td>

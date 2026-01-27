@@ -32,12 +32,12 @@ export default function Wastage() {
 
   const selectedItem = inventoryItems?.find((i: any) => i.id === parseInt(formData.inventoryItemId))
 
-  if (isLoading) return <div className="p-6">Loading...</div>
+  if (isLoading) return <div>Loading...</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><AlertTriangle size={28} /> Wastage Recording</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><AlertTriangle size={28} /> Wastage Recording</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> Record Wastage</button>
       </div>
 
@@ -47,7 +47,7 @@ export default function Wastage() {
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Item *</label>
-              <select value={formData.inventoryItemId} onChange={(e) => setFormData({ ...formData, inventoryItemId: e.target.value })} className="input-field" required>
+              <select value={formData.inventoryItemId} onChange={(e) => setFormData({ ...formData, inventoryItemId: e.target.value })} className="input" required>
                 <option value="">Select Item</option>
                 {inventoryItems?.map((item: any) => <option key={item.id} value={item.id}>{item.name} ({item.unitOfMeasure})</option>)}
               </select>
@@ -55,13 +55,13 @@ export default function Wastage() {
             <div>
               <label className="block text-sm font-medium mb-1">Quantity *</label>
               <div className="flex items-center gap-2">
-                <input type="number" step="0.01" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: parseFloat(e.target.value) || 0 })} className="input-field" required />
+                <input type="number" step="0.01" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: parseFloat(e.target.value) || 0 })} className="input" required />
                 <span className="text-gray-500">{selectedItem?.unitOfMeasure || 'units'}</span>
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Reason *</label>
-              <select value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} className="input-field" required>
+              <select value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} className="input" required>
                 <option value="">Select Reason</option>
                 <option value="Expired">Expired</option>
                 <option value="Damaged">Damaged</option>
@@ -74,7 +74,7 @@ export default function Wastage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Notes</label>
-              <input type="text" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input-field" />
+              <input type="text" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input" />
             </div>
             <div className="md:col-span-2 flex gap-2">
               <button type="submit" className="btn-primary">Record Wastage</button>
@@ -85,8 +85,8 @@ export default function Wastage() {
       )}
 
       <div className="card overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+        <table className="table">
+          <thead className="bg-gray-800">
             <tr>
               <th className="text-left p-3">Date</th>
               <th className="text-left p-3">Item</th>
@@ -99,7 +99,7 @@ export default function Wastage() {
           </thead>
           <tbody>
             {wastages?.map((w: any) => (
-              <tr key={w.id} className="border-t hover:bg-gray-50">
+              <tr key={w.id} className="border-t hover:bg-gray-800/50">
                 <td className="p-3">{new Date(w.createdAt).toLocaleString()}</td>
                 <td className="p-3 flex items-center gap-2"><Trash2 size={16} className="text-red-400" /> {w.itemName}</td>
                 <td className="p-3 text-red-600 font-medium">-{w.quantity} {w.unit}</td>

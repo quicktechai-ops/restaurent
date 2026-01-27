@@ -24,13 +24,7 @@ public class ExchangeRate
     public DateTime ValidFrom { get; set; } = DateTime.UtcNow;
     public DateTime? ValidTo { get; set; }
     
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public int? CreatedByUserId { get; set; }
-    
     // Navigation properties
     [ForeignKey("CompanyId")]
     public virtual Company? Company { get; set; }
-    
-    [ForeignKey("CreatedByUserId")]
-    public virtual User? CreatedByUser { get; set; }
 }

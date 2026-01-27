@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Enterprise Fluent POS (Demo)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-dark: #0c0c0e;
+      --panel-bg: #1c1c22;
+      --glass: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --accent: #0078d4;
+      --success: #2ecc71;
+      --danger: #e74c3c;
+      --warning: #f39c12;
+      --text-main: #ffffff;
+      --text-muted: #a0a0a0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-dark);
+      background-image: radial-gradient(circle at top left, #1a1a2e 0%, #0c0c0e 100%);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      height: 60px;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(15px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 25px;
+      border-bottom: 1px solid var(--glass-border);
+      flex-shrink: 0;
+      z-index: 100;
+      gap: 16px;
+    }
+    .header-left { display:flex; align-items:center; gap:12px; min-width: 0; }
+    .header-right { display:flex; gap:16px; align-items:center; font-size: 0.85rem; color: var(--text-muted); flex-wrap: wrap; justify-content: flex-end; }
+
+    .branch-select {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      padding: 8px 10px;
+      border-radius: 10px;
+      outline: none;
+      max-width: 260px;
+    }
+    .branch-select option { background: #111118; color: #fff; }
+
+    .pos-wrapper { display: flex; flex: 1; overflow: hidden; flex-direction: row; }
+
+    .menu-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 20px 20px;
+      overflow: hidden;
+      min-width: 0;
+      gap: 12px;
+    }
+
+    /* Top controls row (order type, table, customer) */
+    .top-controls {
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+    .tabs {
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-main);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      transition: 0.2s;
+      user-select: none;
+    }
+    .tab-btn:hover { border-color: rgba(255,255,255,0.22); transform: translateY(-1px); }
+    .tab-btn.active { border-color: var(--accent); background: rgba(0,120,212,0.18); }
+    .tab-btn.takeaway.active { border-color: var(--warning); background: rgba(243,156,18,0.18); }
+    .tab-btn.delivery.active { border-color: var(--success); background: rgba(46,204,113,0.18); }
+
+    .inline-select {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      padding: 10px 12px;
+      border-radius: 12px;
+      outline: none;
+      min-width: 220px;
+    }
+    .inline-select option { background: #111118; color: #fff; }
+
+    .btn-outline {
+      border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-main);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      transition: 0.2s;
+      user-select: none;
+      margin-left: auto;
+    }
+    .btn-outline:hover { border-color: rgba(255,255,255,0.22); transform: translateY(-1px); }
+
+    /* Search */
+    .search-container { position: relative; }
+    .search-container i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+    .search-input {
+      width: 100%;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      padding: 12px 12px 12px 45px;
+      border-radius: 10px;
+      color: white;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    /* Category Tiles */
+    .category-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 12px;
+    }
+    .cat-tile {
+      position: relative;
+      aspect-ratio: 1/1;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      background: #222;
+      transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+    }
+    .cat-tile img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; pointer-events: none; }
+    .cat-tile span {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      z-index: 2;
+      right: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cat-tile.active { border-color: var(--accent); transform: scale(0.95); }
+    .cat-tile.active img { opacity: 0.9; }
+
+    /* Scroll area for items */
+    .items-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    /* Items Grid */
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 18px;
+    }
+    .item-card {
+      background: var(--panel-bg);
+      border-radius: 15px;
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      transition: 0.2s;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+    .item-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .item-img-container { width: 100%; aspect-ratio: 16/10; background: #2a2a30; overflow: hidden; }
+    .item-img-container img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
+    .item-card:active img { transform: scale(1.05); }
+    .item-details { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
+    .item-details h4 { font-size: 1rem; margin-bottom: 2px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-code { font-size: 0.75rem; color: var(--text-muted); display: block; }
+    .item-price { color: var(--success); font-weight: 900; font-size: 1.15rem; display:flex; align-items:center; justify-content: space-between; gap: 10px; }
+    .pill { font-size: 0.72rem; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--glass-border); color: var(--text-muted); background: rgba(255,255,255,0.03); }
+
+    /* Receipt Sidebar */
+    .receipt-sidebar {
+      width: 420px;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(25px);
+      border-left: 1px solid var(--glass-border);
+      display: flex;
+      flex-direction: column;
+      padding: 18px 20px 20px;
+      flex-shrink: 0;
+      overflow: hidden;
+      gap: 12px;
+    }
+    .receipt-header { border-bottom: 1px solid var(--glass-border); padding-bottom: 12px; display:flex; align-items:center; justify-content: space-between; gap: 10px; }
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 900;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+    .badge.dine { border-color: rgba(0,120,212,0.5); background: rgba(0,120,212,0.15); }
+    .badge.take { border-color: rgba(243,156,18,0.5); background: rgba(243,156,18,0.15); }
+    .badge.del  { border-color: rgba(46,204,113,0.5); background: rgba(46,204,113,0.15); }
+
+    .order-meta { font-size: 0.82rem; color: var(--text-muted); display:flex; flex-direction: column; gap: 4px; padding-bottom: 6px; }
+    .order-list { flex: 1; overflow-y: auto; padding-right: 5px; }
+
+    .order-empty {
+      border: 1px dashed rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.03);
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .order-empty i { font-size: 34px; opacity: 0.7; margin-bottom: 8px; }
+
+    .order-item-row {
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .qty-badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 900; margin-right: 10px; }
+    .line-title { font-size: 0.95rem; font-weight: 800; }
+    .line-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .line-mods { font-size: 0.72rem; color: rgba(0,120,212,0.9); margin-top: 4px; }
+    .line-notes { font-size: 0.72rem; color: rgba(255,255,255,0.55); margin-top: 4px; font-style: italic; }
+    .line-actions { display:flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+    .trash { color: var(--danger); font-size: 0.85rem; cursor:pointer; }
+    .qty-controls { display:flex; align-items:center; gap: 8px; }
+    .qty-btn {
+      width: 28px; height: 28px;
+      border-radius: 999px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-main);
+      cursor: pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition: 0.15s;
+    }
+    .qty-btn:hover { border-color: rgba(255,255,255,0.22); transform: translateY(-1px); }
+    .qty-num { width: 26px; text-align: center; font-weight: 900; }
+
+    .line-pricebox {
+      text-align: right;
+      cursor: pointer;
+      border-radius: 10px;
+      padding: 6px 8px;
+      margin: -6px -8px;
+      transition: 0.15s;
+    }
+    .line-pricebox:hover { background: rgba(255,255,255,0.04); }
+    .line-net { font-weight: 900; }
+    .line-calc { font-size: 0.75rem; color: var(--text-muted); }
+    .line-disc { font-size: 0.75rem; color: var(--success); margin-top: 2px; }
+
+    /* Totals */
+    .totals-panel { border-top: 2px solid var(--glass-border); padding-top: 12px; }
+    .total-row { display: flex; justify-content: space-between; margin-bottom: 6px; color: var(--text-muted); font-size: 0.9rem; align-items: center; gap: 10px; }
+    .total-row strong { color: var(--text-main); }
+    .grand-total { font-size: 1.7rem; font-weight: 900; color: white; margin: 12px 0 10px; display: flex; justify-content: space-between; align-items: baseline; }
+    .input-mini {
+      width: 76px;
+      text-align: right;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      border-radius: 10px;
+      padding: 8px 10px;
+      outline: none;
+      font-weight: 900;
+    }
+
+    .btn-pay {
+      width: 100%;
+      padding: 18px 18px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: #000;
+      font-size: 1.1rem;
+      font-weight: 1000;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      user-select: none;
+    }
+    .btn-pay:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-clear {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(231,76,60,0.35);
+      background: rgba(231,76,60,0.08);
+      color: #ffb3ac;
+      font-weight: 900;
+      cursor: pointer;
+      user-select: none;
+    }
+    .btn-clear:hover { background: rgba(231,76,60,0.12); }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 18px;
+    }
+    .modal {
+      width: 100%;
+      max-width: 560px;
+      background: rgba(15,15,18,0.92);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.45);
+      overflow: hidden;
+    }
+    .modal.small { max-width: 420px; }
+    .modal-header {
+      padding: 14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .modal-title {
+      font-weight: 1000;
+      font-size: 1.05rem;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+    }
+    .modal-close {
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-main);
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .modal-body {
+      padding: 14px 16px 16px;
+      max-height: 60vh;
+      overflow: auto;
+      display:flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .modal-footer {
+      padding: 14px 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display:flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .btn {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-main);
+      font-weight: 900;
+      cursor: pointer;
+      user-select: none;
+    }
+    .btn.primary { border-color: rgba(0,120,212,0.6); background: rgba(0,120,212,0.18); }
+    .btn.success { border-color: rgba(46,204,113,0.6); background: rgba(46,204,113,0.18); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .section-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 900; letter-spacing: 0.6px; text-transform: uppercase; }
+    .sizes-grid { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .size-btn {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-main);
+      border-radius: 12px;
+      padding: 10px 10px;
+      cursor: pointer;
+      text-align: left;
+      transition: 0.15s;
+      user-select: none;
+    }
+    .size-btn:hover { border-color: rgba(255,255,255,0.25); transform: translateY(-1px); }
+    .size-btn.active { border-color: var(--accent); background: rgba(0,120,212,0.14); }
+    .size-name { font-weight: 1000; }
+    .size-price { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+
+    .mods-list { display:flex; flex-direction: column; gap: 8px; }
+    .mod-row {
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 10px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+    }
+    .mod-left { display:flex; flex-direction: column; gap: 2px; }
+    .mod-name { font-weight: 1000; }
+    .mod-extra { font-size: 0.85rem; color: var(--text-muted); }
+    .mod-right { display:flex; align-items:center; gap: 8px; }
+    .mini-btn {
+      width: 28px; height: 28px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-main);
+      cursor: pointer;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .mini-btn.plus { border-color: rgba(0,120,212,0.5); background: rgba(0,120,212,0.15); }
+    .mini-btn.danger { border-color: rgba(231,76,60,0.5); background: rgba(231,76,60,0.12); }
+    .mini-num { width: 22px; text-align: center; font-weight: 1000; }
+
+    textarea, input[type="number"] {
+      font-family: inherit;
+    }
+    .notes {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 12px;
+      padding: 10px 12px;
+      color: var(--text-main);
+      outline: none;
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .payment-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .pay-method {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.03);
+      border-radius: 14px;
+      padding: 14px;
+      color: var(--text-main);
+      cursor: pointer;
+      font-weight: 1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      transition: 0.15s;
+      user-select: none;
+    }
+    .pay-method:hover { border-color: rgba(255,255,255,0.25); transform: translateY(-1px); }
+    .spinner {
+      width: 26px; height: 26px;
+      border-radius: 999px;
+      border: 3px solid rgba(255,255,255,0.15);
+      border-top-color: var(--accent);
+      animation: spin 0.9s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Tablet responsive */
+    @media (max-width: 1024px) {
+      .pos-wrapper { flex-direction: column; }
+      .receipt-sidebar { width: 100%; height: 38vh; border-left: none; border-top: 1px solid var(--glass-border); }
+      .menu-section { height: 62vh; padding: 12px 15px 14px; }
+      .item-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+      .grand-total { font-size: 1.45rem; }
+      .btn-outline { margin-left: 0; width: 100%; justify-content: center; }
+      .top-controls { width: 100%; }
+      header { padding: 0 14px; height: auto; min-height: 60px; padding-top: 10px; padding-bottom: 10px; }
+      .header-right { width: 100%; justify-content: space-between; }
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <i class="fa fa-th-large" style="color:var(--accent); font-size: 1.4rem;"></i>
+    <h2 style="font-weight: 400; font-size: 1.05rem; letter-spacing: 1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+      RETAIL POS <span style="color:var(--accent); font-weight: 900;">PRO</span>
+      <span style="color:var(--text-muted); font-size: 0.85rem; font-weight: 700;">&nbsp;• Demo</span>
+    </h2>
+  </div>
+
+  <div class="header-right">
+    <select id="branchSelect" class="branch-select" title="Branch (VAT + Service)">
+      <!-- populated -->
+    </select>
+    <span><i class="fa fa-map-marker-alt"></i> <span id="branchNameInline">Main Branch</span></span>
+    <span id="vatSvcInline">VAT: 0% | Service: 0%</span>
+    <span id="live-clock">12:00 PM</span>
+  </div>
+</header>
+
+<div class="pos-wrapper">
+  <main class="menu-section">
+
+    <div class="top-controls">
+      <div class="tabs" role="tablist" aria-label="Order type">
+        <button class="tab-btn active" data-ordertype="DineIn">
+          <i class="fa fa-utensils"></i> Dine In
+        </button>
+        <button class="tab-btn takeaway" data-ordertype="Takeaway">
+          <i class="fa fa-box"></i> Takeaway
+        </button>
+        <button class="tab-btn delivery" data-ordertype="Delivery">
+          <i class="fa fa-truck"></i> Delivery
+        </button>
+      </div>
+
+      <select id="tableSelect" class="inline-select" style="display:none;">
+        <!-- populated -->
+      </select>
+
+      <button id="customerBtn" class="btn-outline">
+        <i class="fa fa-user"></i> <span id="customerBtnText">Add Customer</span>
+      </button>
+    </div>
+
+    <div class="search-container">
+      <i class="fa fa-search"></i>
+      <input id="searchInput" type="text" class="search-input" placeholder="Search item name or code (e.g., B-102)...">
+    </div>
+
+    <div id="categoryRow" class="category-row">
+      <!-- categories -->
+    </div>
+
+    <div class="items-scroll">
+      <div id="itemGrid" class="item-grid">
+        <!-- items -->
+      </div>
+      <div id="noItems" style="display:none; text-align:center; padding: 30px 10px; color: var(--text-muted);">
+        No items found
+      </div>
+    </div>
+  </main>
+
+  <aside class="receipt-sidebar">
+    <div class="receipt-header">
+      <h3 style="font-weight: 700; font-size: 1.05rem; color: var(--accent); display:flex; gap:10px; align-items:center;">
+        <i class="fa fa-shopping-basket"></i> CURRENT ORDER
+      </h3>
+      <span id="orderTypeBadge" class="badge dine">DineIn</span>
+    </div>
+
+    <div class="order-meta">
+      <div id="metaTable" style="display:none;"></div>
+      <div id="metaCustomer" style="display:none;"></div>
+    </div>
+
+    <div id="orderList" class="order-list">
+      <!-- order lines -->
+    </div>
+
+    <div class="totals-panel">
+      <div class="total-row">
+        <span>Subtotal</span>
+        <span id="subtotalVal">$0.00</span>
+      </div>
+
+      <div id="lineDiscRow" class="total-row" style="display:none; color: var(--success);">
+        <span>Line Discounts</span>
+        <span id="lineDiscVal">-$0.00</span>
+      </div>
+
+      <div class="total-row" style="align-items:center;">
+        <span style="display:flex; align-items:center; gap:8px;">
+          <i class="fa fa-percent"></i> Bill Discount
+        </span>
+        <span style="display:flex; align-items:center; gap:8px;">
+          <input id="billDiscountInput" class="input-mini" type="number" min="0" max="100" value="0">
+          <span style="font-weight:900;">%</span>
+        </span>
+      </div>
+
+      <div id="billDiscAmountRow" class="total-row" style="display:none; color: var(--success);">
+        <span></span>
+        <span id="billDiscAmountVal">-$0.00</span>
+      </div>
+
+      <div id="svcRow" class="total-row" style="display:none;">
+        <span>Service (<span id="svcPct">0</span>%)</span>
+        <span id="svcVal">$0.00</span>
+      </div>
+
+      <div id="vatRow" class="total-row" style="display:none;">
+        <span>VAT (<span id="vatPct">0</span>%)</span>
+        <span id="vatVal">$0.00</span>
+      </div>
+
+      <div class="grand-total">
+        <span>TOTAL</span>
+        <span id="grandTotalVal" style="color:var(--success)">$0.00</span>
+      </div>
+
+      <button id="payBtn" class="btn-pay" disabled>
+        <span>PAY</span>
+        <span style="display:flex; align-items:center; gap:10px;">
+          <span id="payBtnAmount">$0.00</span>
+          <i class="fa fa-chevron-right"></i>
+        </span>
+      </button>
+
+      <div style="margin-top: 10px;">
+        <button id="clearBtn" class="btn-clear">Clear Order</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- Modifier / Item Modal -->
+<div id="itemModalBackdrop" class="modal-backdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="itemModalTitle">
+        <i class="fa fa-burger" style="color:var(--accent);"></i>
+        <span id="itemModalName">Item</span>
+      </div>
+      <button class="modal-close" data-close="itemModalBackdrop" aria-label="Close">
+        <i class="fa fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="sizesSection" style="display:none;">
+        <div class="section-title">Size</div>
+        <div id="sizesGrid" class="sizes-grid"></div>
+      </div>
+
+      <div>
+        <div class="section-title">Quantity</div>
+        <div style="display:flex; align-items:center; gap: 12px; margin-top: 8px;">
+          <button id="itemQtyMinus" class="qty-btn" aria-label="Decrease"><i class="fa fa-minus"></i></button>
+          <div id="itemQtyNum" style="font-size: 1.3rem; font-weight: 1000; width: 44px; text-align:center;">1</div>
+          <button id="itemQtyPlus" class="qty-btn" aria-label="Increase"><i class="fa fa-plus"></i></button>
+        </div>
+      </div>
+
+      <div id="modsSection" style="display:none;">
+        <div class="section-title">Add-ons</div>
+        <div id="modsList" class="mods-list"></div>
+      </div>
+
+      <div>
+        <div class="section-title">Special Instructions</div>
+        <textarea id="itemNotes" class="notes" placeholder="Any special requests..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close="itemModalBackdrop">Cancel</button>
+      <button id="addToOrderBtn" class="btn primary">Add to Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Modal -->
+<div id="customerModalBackdrop" class="modal-backdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="customerModalTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="customerModalTitle">
+        <i class="fa fa-user" style="color:var(--accent);"></i> Select Customer
+      </div>
+      <button class="modal-close" data-close="customerModalBackdrop" aria-label="Close">
+        <i class="fa fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body" id="customerList">
+      <!-- customers -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close="customerModalBackdrop">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Line Discount Modal -->
+<div id="lineDiscModalBackdrop" class="modal-backdrop" aria-hidden="true">
+  <div class="modal small" role="dialog" aria-modal="true" aria-labelledby="lineDiscTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="lineDiscTitle">
+        <i class="fa fa-tag" style="color:var(--success);"></i> Line Discount
+      </div>
+      <button class="modal-close" data-close="lineDiscModalBackdrop" aria-label="Close">
+        <i class="fa fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="section-title">Discount Percentage</div>
+      <div style="display:flex; align-items:center; gap: 10px;">
+        <input id="lineDiscInput" class="input-mini" type="number" min="0" max="100" value="0" style="width: 120px;">
+        <div style="font-weight: 1000;">%</div>
+      </div>
+      <div style="color: var(--text-muted); font-size: 0.85rem;">
+        Tip: click the price box on a line to open this.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close="lineDiscModalBackdrop">Cancel</button>
+      <button id="applyLineDiscBtn" class="btn success">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="payModalBackdrop" class="modal-backdrop" aria-hidden="true">
+  <div class="modal small" role="dialog" aria-modal="true" aria-labelledby="payModalTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="payModalTitle">
+        <i class="fa fa-credit-card" style="color:var(--success);"></i> Payment
+      </div>
+      <button class="modal-close" data-close="payModalBackdrop" aria-label="Close">
+        <i class="fa fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align:center;">
+        <div style="font-size: 0.85rem; color: var(--text-muted);">Total Amount</div>
+        <div id="payTotalBig" style="font-size: 2.2rem; font-weight: 1000; color: var(--accent); margin-top: 6px;">$0.00</div>
+      </div>
+
+      <div id="processingBox" style="display:none; text-align:center; padding: 10px 0;">
+        <div class="spinner"></div>
+        <div style="margin-top: 10px; color: var(--text-muted); font-size: 0.9rem;">Processing payment...</div>
+      </div>
+
+      <div id="paymentGrid" class="payment-grid">
+        <!-- methods -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close="payModalBackdrop">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* =========================
+     Demo Data (replace later)
+     ========================= */
+  const demo = {
+    branches: [
+      { id: 1, name: "Main Branch", vatPercent: 15, serviceChargePercent: 10 },
+      { id: 2, name: "Waterfront", vatPercent: 11, serviceChargePercent: 12 }
+    ],
+    categories: [
+      { id: 10, name: "Burgers", image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=200" },
+      { id: 11, name: "Pizza", image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200" },
+      { id: 12, name: "Desserts", image: "https://source.unsplash.com/400x400/?dessert", fallbackBg: "#9b59b6" },
+      { id: 13, name: "Drinks", image: "https://source.unsplash.com/400x400/?drink,beverage", fallbackBg: "#1abc9c" },
+      { id: 14, name: "Salads", image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200" }
+    ],
+    menuItems: [
+      { id: 100, name: "Classic Beef Burger", code: "B-102", categoryId: 10, defaultPrice: 12.50, allowSizes: true,
+        image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400",
+        sizes: [
+          { id: 1001, sizeName: "Single", price: 12.50 },
+          { id: 1002, sizeName: "Double", price: 15.90 },
+          { id: 1003, sizeName: "Combo",  price: 18.25 }
+        ]
+      },
+      { id: 101, name: "Pepperoni Feast", code: "P-205", categoryId: 11, defaultPrice: 18.90, allowSizes: true,
+        image: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400",
+        sizes: [
+          { id: 1011, sizeName: "Small",  price: 12.90 },
+          { id: 1012, sizeName: "Medium", price: 18.90 },
+          { id: 1013, sizeName: "Large",  price: 23.50 }
+        ]
+      },
+      { id: 102, name: "Glazed Donut", code: "D-50", categoryId: 12, defaultPrice: 3.50, allowSizes: false,
+        image: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400"
+      },
+      { id: 103, name: "Caffè Latte", code: "C-12", categoryId: 13, defaultPrice: 4.20, allowSizes: true,
+        image: "https://images.unsplash.com/photo-1541167760496-162955ed8a9f?w=400",
+        sizes: [
+          { id: 1031, sizeName: "Small",  price: 3.50 },
+          { id: 1032, sizeName: "Medium", price: 4.20 },
+          { id: 1033, sizeName: "Large",  price: 4.90 }
+        ]
+      },
+      { id: 104, name: "Caesar Salad", code: "S-8", categoryId: 14, defaultPrice: 8.75, allowSizes: false,
+        image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"
+      }
+    ],
+    modifiers: [
+      { id: 200, name: "Extra Cheese", extraPrice: 1.25 },
+      { id: 201, name: "No Onion", extraPrice: 0.00 },
+      { id: 202, name: "Add Bacon", extraPrice: 2.50 },
+      { id: 203, name: "Extra Sauce", extraPrice: 0.75 }
+    ],
+    tables: [
+      { id: 1, tableName: "T01", zone: "Main", capacity: 4 },
+      { id: 2, tableName: "T02", zone: "Main", capacity: 2 },
+      { id: 3, tableName: "T10", zone: "Terrace", capacity: 6 }
+    ],
+    customers: [
+      { id: 1, name: "Walk-in", phone: "" },
+      { id: 2, name: "Maya Haddad", phone: "+961 70 000 111" },
+      { id: 3, name: "Karim Nassar", phone: "+961 71 222 333" },
+      { id: 4, name: "Lina Farah", phone: "+961 76 444 555" }
+    ],
+    paymentMethods: [
+      { id: 1, name: "Cash", type: "Cash" },
+      { id: 2, name: "Card", type: "Card" },
+      { id: 3, name: "Gift Voucher", type: "Card" },
+      { id: 4, name: "Mobile Pay", type: "Card" }
+    ]
+  };
+
+  /* =========================
+     State (mirrors TSX)
+     ========================= */
+  const state = {
+    selectedBranchId: demo.branches[0].id,
+    selectedCategoryId: demo.categories[0].id,
+    orderType: "DineIn", // DineIn | Takeaway | Delivery
+    selectedTableId: null,
+    selectedCustomer: null,
+    searchTerm: "",
+    billDiscount: 0,
+    orderLines: [],
+    // item modal
+    showItemModal: false,
+    selectedItem: null,
+    selectedSizeId: null,
+    selectedModifiers: [], // {modifierId, quantity}
+    itemQty: 1,
+    itemNotes: "",
+    // line discount modal
+    selectedLineIdForDiscount: null,
+    lineDiscountInput: 0,
+    // payment
+    processing: false
+  };
+
+  /* =========================
+     Helpers (TSX-ish)
+     ========================= */
+  const $ = (id) => document.getElementById(id);
+  const money = (n) => `$${(Math.round((n + Number.EPSILON) * 100) / 100).toFixed(2)}`;
+  const clampPct = (n) => Math.max(0, Math.min(100, isFinite(n) ? n : 0));
+  const uid = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+  function getBranch() {
+    return demo.branches.find(b => b.id === state.selectedBranchId) || demo.branches[0];
+  }
+  function getTableName(id) {
+    const t = demo.tables.find(x => x.id === id);
+    return t ? `${t.tableName} (${t.zone})` : "";
+  }
+
+  function computeTotals() {
+    const subtotal = state.orderLines.reduce((sum, l) => sum + l.lineTotal, 0);
+    const totalLineDiscount = state.orderLines.reduce((sum, l) => sum + l.discountAmount, 0);
+    const netAfterLineDiscount = subtotal - totalLineDiscount;
+
+    const billDiscountAmount = netAfterLineDiscount * (state.billDiscount / 100);
+    const netAfterBillDiscount = netAfterLineDiscount - billDiscountAmount;
+
+    const branch = getBranch();
+    const serviceCharge = netAfterBillDiscount * (branch.serviceChargePercent / 100);
+    const tax = netAfterBillDiscount * (branch.vatPercent / 100);
+    const grandTotal = netAfterBillDiscount + serviceCharge + tax;
+
+    return {
+      subtotal, totalLineDiscount, netAfterLineDiscount,
+      billDiscountAmount, netAfterBillDiscount,
+      serviceCharge, tax, grandTotal
+    };
+  }
+
+  function filteredItems() {
+    return demo.menuItems.filter(item => {
+      const matchesCategory = state.selectedCategoryId ? item.categoryId === state.selectedCategoryId : true;
+      const term = state.searchTerm.trim().toLowerCase();
+      const matchesSearch = term
+        ? (item.name.toLowerCase().includes(term) || (item.code || "").toLowerCase().includes(term))
+        : true;
+      return matchesCategory && matchesSearch;
+    });
+  }
+
+  /* =========================
+     Render
+     ========================= */
+  function renderHeader() {
+    const branch = getBranch();
+    $("branchNameInline").textContent = branch.name;
+    $("vatSvcInline").textContent = `VAT: ${branch.vatPercent}% | Service: ${branch.serviceChargePercent}%`;
+  }
+
+  function renderBranchSelect() {
+    const sel = $("branchSelect");
+    sel.innerHTML = demo.branches.map(b =>
+      `<option value="${b.id}">${b.name} (VAT ${b.vatPercent}% • SVC ${b.serviceChargePercent}%)</option>`
+    ).join("");
+    sel.value = String(state.selectedBranchId);
+  }
+
+  function renderOrderTypeControls() {
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      const type = btn.getAttribute("data-ordertype");
+      btn.classList.toggle("active", type === state.orderType);
+    });
+
+    // Table selector only for DineIn
+    const tableSel = $("tableSelect");
+    if (state.orderType === "DineIn") {
+      tableSel.style.display = "";
+      tableSel.innerHTML =
+        `<option value="">Select Table</option>` +
+        demo.tables.map(t => `<option value="${t.id}">${t.tableName} (${t.zone})</option>`).join("");
+      tableSel.value = state.selectedTableId ? String(state.selectedTableId) : "";
+    } else {
+      tableSel.style.display = "none";
+      state.selectedTableId = null;
+    }
+
+    // Badge
+    const badge = $("orderTypeBadge");
+    badge.textContent = state.orderType;
+    badge.classList.remove("dine","take","del");
+    badge.classList.add(state.orderType === "DineIn" ? "dine" : state.orderType === "Takeaway" ? "take" : "del");
+
+    // Meta
+    const metaTable = $("metaTable");
+    const metaCustomer = $("metaCustomer");
+
+    if (state.orderType === "DineIn" && state.selectedTableId) {
+      metaTable.style.display = "";
+      metaTable.textContent = `Table: ${getTableName(state.selectedTableId)}`;
+    } else {
+      metaTable.style.display = "none";
+      metaTable.textContent = "";
+    }
+
+    if (state.selectedCustomer) {
+      metaCustomer.style.display = "";
+      metaCustomer.textContent = `Customer: ${state.selectedCustomer.name}`;
+    } else {
+      metaCustomer.style.display = "none";
+      metaCustomer.textContent = "";
+    }
+
+    $("customerBtnText").textContent = state.selectedCustomer ? state.selectedCustomer.name : "Add Customer";
+  }
+
+  function renderCategories() {
+    const row = $("categoryRow");
+    row.innerHTML = demo.categories.map(cat => {
+      const active = cat.id === state.selectedCategoryId ? "active" : "";
+      const fallbackBg = cat.fallbackBg || "#2c3e50";
+      return `
+        <div class="cat-tile ${active}" data-cat="${cat.id}">
+          <img src="${cat.image}" alt="${cat.name}"
+               loading="lazy"
+               onerror="this.parentElement.style.background='${fallbackBg}'; this.style.display='none';">
+          <span>${cat.name}</span>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderItems() {
+    const grid = $("itemGrid");
+    const items = filteredItems();
+    grid.innerHTML = items.map(item => {
+      const hasSizes = !!(item.allowSizes && item.sizes && item.sizes.length);
+      return `
+        <div class="item-card" data-item="${item.id}">
+          <div class="item-img-container">
+            <img src="${item.image || "https://placehold.co/400x250?text=No+Image"}"
+                 alt="${item.name}"
+                 onerror="this.src='https://placehold.co/400x250?text=No+Image'">
+          </div>
+          <div class="item-details">
+            <div>
+              <h4 title="${item.name}">${item.name}</h4>
+              <span class="item-code">${item.code || ""}</span>
+            </div>
+            <div class="item-price">
+              <span>${money(item.defaultPrice)}</span>
+              ${hasSizes ? `<span class="pill">Sizes</span>` : ``}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    $("noItems").style.display = items.length ? "none" : "";
+  }
+
+  function renderOrder() {
+    const list = $("orderList");
+    if (state.orderLines.length === 0) {
+      list.innerHTML = `
+        <div class="order-empty">
+          <i class="fa fa-cart-shopping"></i>
+          <div style="font-weight:900; color:#fff; margin-top:6px;">No items added</div>
+          <div style="margin-top:4px;">Tap a menu item to add it.</div>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = state.orderLines.map(line => {
+      const mods = line.modifiers && line.modifiers.length
+        ? `<div class="line-mods">${line.modifiers.map(m => m.name).join(", ")}</div>` : "";
+      const notes = line.notes ? `<div class="line-notes">${escapeHtml(line.notes)}</div>` : "";
+      const size = line.sizeName ? `<div class="line-sub">${line.sizeName}</div>` : "";
+      const disc = line.discountPercent > 0 ? `<div class="line-disc">-${line.discountPercent}% off</div>` : "";
+
+      return `
+        <div class="order-item-row" data-line="${line.id}">
+          <div style="display:flex; align-items:flex-start; gap: 10px; flex:1; min-width:0;">
+            <span class="qty-badge">${line.quantity}</span>
+            <div style="min-width:0;">
+              <div class="line-title" title="${escapeHtml(line.name)}">${escapeHtml(line.name)}</div>
+              ${size}
+              ${mods}
+              ${notes}
+              <div class="qty-controls" style="margin-top:10px;">
+                <button class="qty-btn" data-action="dec"><i class="fa fa-minus"></i></button>
+                <div class="qty-num">${line.quantity}</div>
+                <button class="qty-btn" data-action="inc"><i class="fa fa-plus"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="line-actions">
+            <div style="display:flex; align-items:center; gap: 10px;">
+              <div class="line-pricebox" data-action="discount" title="Click to apply discount">
+                <div class="line-net">${money(line.lineNet)}</div>
+                <div class="line-calc">${money(line.effectivePrice)} x ${line.quantity}</div>
+                ${disc}
+              </div>
+              <i class="fa fa-trash trash" data-action="remove" title="Remove"></i>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderTotals() {
+    const t = computeTotals();
+    $("subtotalVal").textContent = money(t.subtotal);
+
+    if (t.totalLineDiscount > 0.00001) {
+      $("lineDiscRow").style.display = "";
+      $("lineDiscVal").textContent = `-${money(t.totalLineDiscount).slice(1)}`;
+    } else {
+      $("lineDiscRow").style.display = "none";
+    }
+
+    if (t.billDiscountAmount > 0.00001) {
+      $("billDiscAmountRow").style.display = "";
+      $("billDiscAmountVal").textContent = `-${money(t.billDiscountAmount).slice(1)}`;
+    } else {
+      $("billDiscAmountRow").style.display = "none";
+    }
+
+    const branch = getBranch();
+    $("svcPct").textContent = branch.serviceChargePercent;
+    $("vatPct").textContent = branch.vatPercent;
+
+    $("svcRow").style.display = branch.serviceChargePercent > 0 ? "" : "none";
+    $("vatRow").style.display = branch.vatPercent > 0 ? "" : "none";
+
+    $("svcVal").textContent = money(t.serviceCharge);
+    $("vatVal").textContent = money(t.tax);
+
+    $("grandTotalVal").textContent = money(t.grandTotal);
+    $("payBtnAmount").textContent = money(t.grandTotal);
+
+    const canPay = state.orderLines.length > 0;
+    $("payBtn").disabled = !canPay;
+    $("payTotalBig").textContent = money(t.grandTotal);
+  }
+
+  function renderPaymentMethods() {
+    const grid = $("paymentGrid");
+    grid.innerHTML = demo.paymentMethods.map(pm => {
+      const icon = pm.type === "Cash" ? `<i class="fa fa-dollar-sign"></i>` : `<i class="fa fa-credit-card"></i>`;
+      return `<button class="pay-method" data-pm="${pm.id}">${icon} ${pm.name}</button>`;
+    }).join("");
+  }
+
+  function renderAll() {
+    renderHeader();
+    renderOrderTypeControls();
+    renderCategories();
+    renderItems();
+    renderOrder();
+    renderTotals();
+  }
+
+  /* =========================
+     Actions (TSX port)
+     ========================= */
+  function openModal(backdropId) {
+    const el = $(backdropId);
+    el.style.display = "flex";
+    el.setAttribute("aria-hidden", "false");
+  }
+  function closeModal(backdropId) {
+    const el = $(backdropId);
+    el.style.display = "none";
+    el.setAttribute("aria-hidden", "true");
+  }
+
+  function handleItemClick(itemId) {
+    const item = demo.menuItems.find(x => x.id === itemId);
+    if (!item) return;
+
+    state.selectedItem = item;
+    state.selectedModifiers = [];
+    state.itemQty = 1;
+    state.itemNotes = "";
+    state.selectedSizeId = (item.allowSizes && item.sizes && item.sizes.length) ? item.sizes[0].id : null;
+
+    // Populate modal
+    $("itemModalName").textContent = item.name;
+
+    // sizes
+    const hasSizes = item.allowSizes && item.sizes && item.sizes.length;
+    $("sizesSection").style.display = hasSizes ? "" : "none";
+    if (hasSizes) {
+      $("sizesGrid").innerHTML = item.sizes.map(s => `
+        <button class="size-btn ${s.id === state.selectedSizeId ? "active" : ""}" data-size="${s.id}">
+          <div class="size-name">${s.sizeName}</div>
+          <div class="size-price">${money(s.price)}</div>
+        </button>
+      `).join("");
+    } else {
+      $("sizesGrid").innerHTML = "";
+    }
+
+    // modifiers
+    $("modsSection").style.display = demo.modifiers.length ? "" : "none";
+    $("modsList").innerHTML = demo.modifiers.map(mod => renderModRow(mod)).join("");
+
+    // qty + notes
+    $("itemQtyNum").textContent = String(state.itemQty);
+    $("itemNotes").value = "";
+
+    openModal("itemModalBackdrop");
+  }
+
+  function renderModRow(mod) {
+    const sel = state.selectedModifiers.find(m => m.modifierId === mod.id);
+    if (!sel) {
+      return `
+        <div class="mod-row" data-mod="${mod.id}">
+          <div class="mod-left">
+            <div class="mod-name">${escapeHtml(mod.name)}</div>
+            <div class="mod-extra">+${money(mod.extraPrice)}</div>
+          </div>
+          <div class="mod-right">
+            <button class="btn" data-action="addmod" style="padding:8px 10px; border-radius: 10px;">
+              Add
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    return `
+      <div class="mod-row" data-mod="${mod.id}">
+        <div class="mod-left">
+          <div class="mod-name">${escapeHtml(mod.name)}</div>
+          <div class="mod-extra">+${money(mod.extraPrice)}</div>
+        </div>
+        <div class="mod-right">
+          <button class="mini-btn danger" data-action="decmod" aria-label="Minus"><i class="fa fa-minus"></i></button>
+          <div class="mini-num">${sel.quantity}</div>
+          <button class="mini-btn plus" data-action="incmod" aria-label="Plus"><i class="fa fa-plus"></i></button>
+        </div>
+      </div>
+    `;
+  }
+
+  function addToOrder(item, sizeId, mods, qty, notes) {
+    const size = sizeId && item.sizes ? item.sizes.find(s => s.id === sizeId) : null;
+    const basePrice = size ? size.price : item.defaultPrice;
+
+    let modifiersExtra = 0;
+    const modifierDetails = [];
+
+    (mods || []).forEach(m => {
+      const mod = demo.modifiers.find(x => x.id === m.modifierId);
+      if (!mod) return;
+      const price = mod.extraPrice * m.quantity;
+      modifiersExtra += price;
+      modifierDetails.push({ modifierId: m.modifierId, name: mod.name, quantity: m.quantity, price });
+    });
+
+    const effectivePrice = basePrice + modifiersExtra;
+    const lineTotal = effectivePrice * qty;
+
+    const newLine = {
+      id: uid(),
+      menuItemId: item.id,
+      menuItemSizeId: sizeId || null,
+      name: item.name,
+      sizeName: size ? size.sizeName : null,
+      quantity: qty,
+      basePrice,
+      modifiersExtra,
+      effectivePrice,
+      lineTotal,
+      discountPercent: 0,
+      discountAmount: 0,
+      lineNet: lineTotal,
+      notes: notes || "",
+      modifiers: modifierDetails
+    };
+
+    state.orderLines.push(newLine);
+  }
+
+  function updateLineQuantity(lineId, delta) {
+    state.orderLines = state.orderLines.map(line => {
+      if (line.id !== lineId) return line;
+      const newQty = Math.max(1, line.quantity + delta);
+      const lineTotal = line.effectivePrice * newQty;
+      const discountAmount = lineTotal * (line.discountPercent / 100);
+      return {
+        ...line,
+        quantity: newQty,
+        lineTotal,
+        discountAmount,
+        lineNet: lineTotal - discountAmount
+      };
+    });
+  }
+
+  function removeLine(lineId) {
+    state.orderLines = state.orderLines.filter(l => l.id !== lineId);
+  }
+
+  function openLineDiscount(lineId) {
+    const line = state.orderLines.find(l => l.id === lineId);
+    if (!line) return;
+    state.selectedLineIdForDiscount = lineId;
+    state.lineDiscountInput = line.discountPercent || 0;
+    $("lineDiscInput").value = String(state.lineDiscountInput);
+    openModal("lineDiscModalBackdrop");
+  }
+
+  function applyLineDiscount() {
+    const lineId = state.selectedLineIdForDiscount;
+    if (!lineId) return;
+
+    const pct = clampPct(parseFloat($("lineDiscInput").value));
+    state.orderLines = state.orderLines.map(line => {
+      if (line.id !== lineId) return line;
+      const discountAmount = line.lineTotal * (pct / 100);
+      return {
+        ...line,
+        discountPercent: pct,
+        discountAmount,
+        lineNet: line.lineTotal - discountAmount
+      };
+    });
+
+    state.selectedLineIdForDiscount = null;
+    closeModal("lineDiscModalBackdrop");
+  }
+
+  function clearOrder() {
+    state.orderLines = [];
+    state.selectedTableId = null;
+    state.selectedCustomer = null;
+    state.billDiscount = 0;
+    $("billDiscountInput").value = "0";
+    renderAll();
+  }
+
+  async function processPayment(paymentMethodId) {
+    if (state.orderLines.length === 0) return;
+
+    state.processing = true;
+    $("processingBox").style.display = "";
+    $("paymentGrid").style.display = "none";
+
+    // Demo delay (replace with API later)
+    await new Promise(r => setTimeout(r, 1200));
+
+    const pm = demo.paymentMethods.find(x => x.id === paymentMethodId);
+    const totals = computeTotals();
+    const orderNo = Math.floor(1000 + Math.random() * 9000);
+
+    alert(`✓ Order #${orderNo} paid via ${pm ? pm.name : "Payment"}\nAmount: ${money(totals.grandTotal)}\nStatus: Paid`);
+
+    state.processing = false;
+    $("processingBox").style.display = "none";
+    $("paymentGrid").style.display = "";
+
+    closeModal("payModalBackdrop");
+    clearOrder();
+  }
+
+  /* =========================
+     Events
+     ========================= */
+  function wireEvents() {
+    // Time
+    function updateTime() {
+      const now = new Date();
+      $("live-clock").textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    // Branch change
+    $("branchSelect").addEventListener("change", (e) => {
+      state.selectedBranchId = parseInt(e.target.value, 10);
+      renderHeader();
+      renderTotals();
+    });
+
+    // Order type tabs
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.orderType = btn.getAttribute("data-ordertype");
+        renderOrderTypeControls();
+        renderTotals();
+      });
+    });
+
+    // Table select
+    $("tableSelect").addEventListener("change", (e) => {
+      const v = e.target.value;
+      state.selectedTableId = v ? parseInt(v, 10) : null;
+      renderOrderTypeControls();
+    });
+
+    // Customer modal open
+    $("customerBtn").addEventListener("click", () => {
+      renderCustomerList();
+      openModal("customerModalBackdrop");
+    });
+
+    // Search input
+    $("searchInput").addEventListener("input", (e) => {
+      state.searchTerm = e.target.value;
+      renderItems();
+    });
+
+    // Category click (delegation)
+    $("categoryRow").addEventListener("click", (e) => {
+      const tile = e.target.closest(".cat-tile");
+      if (!tile) return;
+      const id = parseInt(tile.getAttribute("data-cat"), 10);
+      state.selectedCategoryId = id;
+      renderCategories();
+      renderItems();
+    });
+
+    // Item click (delegation)
+    $("itemGrid").addEventListener("click", (e) => {
+      const card = e.target.closest(".item-card");
+      if (!card) return;
+      handleItemClick(parseInt(card.getAttribute("data-item"), 10));
+    });
+
+    // Order list actions (delegation)
+    $("orderList").addEventListener("click", (e) => {
+      const row = e.target.closest(".order-item-row");
+      if (!row) return;
+      const lineId = row.getAttribute("data-line");
+      const actionEl = e.target.closest("[data-action]");
+      if (!actionEl) return;
+      const action = actionEl.getAttribute("data-action");
+
+      if (action === "inc") { updateLineQuantity(lineId, +1); renderOrder(); renderTotals(); }
+      if (action === "dec") { updateLineQuantity(lineId, -1); renderOrder(); renderTotals(); }
+      if (action === "remove") { removeLine(lineId); renderOrder(); renderTotals(); renderOrderTypeControls(); }
+      if (action === "discount") { openLineDiscount(lineId); }
+    });
+
+    // Bill discount
+    $("billDiscountInput").addEventListener("input", (e) => {
+      state.billDiscount = clampPct(parseFloat(e.target.value));
+      renderTotals();
+    });
+
+    // Pay button
+    $("payBtn").addEventListener("click", () => {
+      renderPaymentMethods();
+      $("processingBox").style.display = "none";
+      $("paymentGrid").style.display = "";
+      openModal("payModalBackdrop");
+    });
+
+    // Clear button
+    $("clearBtn").addEventListener("click", clearOrder);
+
+    // Modal close buttons
+    document.querySelectorAll("[data-close]").forEach(btn => {
+      btn.addEventListener("click", () => closeModal(btn.getAttribute("data-close")));
+    });
+    // Backdrop click closes
+    ["itemModalBackdrop","customerModalBackdrop","lineDiscModalBackdrop","payModalBackdrop"].forEach(id => {
+      $(id).addEventListener("click", (e) => { if (e.target.id === id) closeModal(id); });
+    });
+    // ESC closes topmost
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      ["payModalBackdrop","lineDiscModalBackdrop","customerModalBackdrop","itemModalBackdrop"].forEach(id => {
+        if ($(id).style.display === "flex") closeModal(id);
+      });
+    });
+
+    // Item modal events
+    $("itemModalBackdrop").addEventListener("click", (e) => {
+      // sizes
+      const sizeBtn = e.target.closest(".size-btn");
+      if (sizeBtn && state.selectedItem) {
+        state.selectedSizeId = parseInt(sizeBtn.getAttribute("data-size"), 10);
+        // re-render sizes state
+        $("sizesGrid").querySelectorAll(".size-btn").forEach(b => b.classList.remove("active"));
+        sizeBtn.classList.add("active");
+        return;
+      }
+
+      // modifiers
+      const modRow = e.target.closest(".mod-row");
+      if (modRow) {
+        const modId = parseInt(modRow.getAttribute("data-mod"), 10);
+        const actionEl = e.target.closest("[data-action]");
+        if (!actionEl) return;
+        const action = actionEl.getAttribute("data-action");
+
+        if (action === "addmod") {
+          state.selectedModifiers.push({ modifierId: modId, quantity: 1 });
+        }
+        if (action === "incmod") {
+          state.selectedModifiers = state.selectedModifiers.map(m => m.modifierId === modId ? ({...m, quantity: m.quantity + 1}) : m);
+        }
+        if (action === "decmod") {
+          state.selectedModifiers = state.selectedModifiers.flatMap(m => {
+            if (m.modifierId !== modId) return [m];
+            if (m.quantity <= 1) return [];
+            return [{...m, quantity: m.quantity - 1}];
+          });
+        }
+        // re-render only modifiers list
+        $("modsList").innerHTML = demo.modifiers.map(mod => renderModRow(mod)).join("");
+      }
+    });
+
+    $("itemQtyMinus").addEventListener("click", () => {
+      state.itemQty = Math.max(1, state.itemQty - 1);
+      $("itemQtyNum").textContent = String(state.itemQty);
+    });
+    $("itemQtyPlus").addEventListener("click", () => {
+      state.itemQty += 1;
+      $("itemQtyNum").textContent = String(state.itemQty);
+    });
+
+    $("addToOrderBtn").addEventListener("click", () => {
+      if (!state.selectedItem) return;
+      const notes = $("itemNotes").value.trim();
+      addToOrder(
+        state.selectedItem,
+        state.selectedSizeId,
+        state.selectedModifiers,
+        state.itemQty,
+        notes
+      );
+      closeModal("itemModalBackdrop");
+      state.selectedItem = null;
+      renderOrder();
+      renderTotals();
+      renderOrderTypeControls();
+    });
+
+    // Customer list click (delegation)
+    $("customerList").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-customer]");
+      if (!btn) return;
+      const cid = parseInt(btn.getAttribute("data-customer"), 10);
+      if (cid === -1) {
+        state.selectedCustomer = null;
+      } else {
+        state.selectedCustomer = demo.customers.find(c => c.id === cid) || null;
+      }
+      closeModal("customerModalBackdrop");
+      renderOrderTypeControls();
+    });
+
+    // Line discount apply
+    $("applyLineDiscBtn").addEventListener("click", applyLineDiscount);
+
+    // Payment click (delegation)
+    $("paymentGrid").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-pm]");
+      if (!btn) return;
+      const id = parseInt(btn.getAttribute("data-pm"), 10);
+      processPayment(id);
+    });
+  }
+
+  function renderCustomerList() {
+    const wrap = $("customerList");
+    wrap.innerHTML = `
+      <button class="btn" data-customer="-1" style="width:100%; text-align:left; justify-content:flex-start; display:flex; gap:10px;">
+        <i class="fa fa-user-slash" style="color:var(--text-muted);"></i> No Customer (Walk-in)
+      </button>
+      <div style="height: 8px;"></div>
+      ${demo.customers.filter(c => c.id !== 1).map(c => `
+        <button class="btn" data-customer="${c.id}" style="width:100%; text-align:left; justify-content:flex-start; display:flex; flex-direction:column; align-items:flex-start; gap:4px;">
+          <div style="font-weight:1000;">${escapeHtml(c.name)}</div>
+          <div style="font-size:0.85rem; color: var(--text-muted);">${escapeHtml(c.phone)}</div>
+        </button>
+      `).join("")}
+    `;
+  }
+
+  function escapeHtml(s) {
+    return String(s || "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  /* =========================
+     Init
+     ========================= */
+  (function init() {
+    renderBranchSelect();
+    renderHeader();
+    renderPaymentMethods();
+    wireEvents();
+    renderAll();
+  })();
+</script>
+
+</body>
+</html>

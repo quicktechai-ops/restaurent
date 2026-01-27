@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
 import Branches from './pages/Branches'
 import Users from './pages/Users'
@@ -18,6 +19,7 @@ import DeliveryZones from './pages/DeliveryZones'
 import Inventory from './pages/Inventory'
 import Suppliers from './pages/Suppliers'
 import Employees from './pages/Employees'
+import Staff from './pages/Staff'
 import Reservations from './pages/Reservations'
 import GiftCards from './pages/GiftCards'
 import Loyalty from './pages/Loyalty'
@@ -40,6 +42,7 @@ import CommissionPolicies from './pages/CommissionPolicies'
 import ApprovalRules from './pages/ApprovalRules'
 import ReceiptTemplates from './pages/ReceiptTemplates'
 import Reports from './pages/Reports'
+import POS from './pages/POSDark'
 
 function App() {
   const { user, isLoading } = useAuth()
@@ -61,7 +64,8 @@ function App() {
           user ? (
             <Layout>
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/branches" element={<Branches />} />
                 <Route path="/users" element={<Users />} />
                 <Route path="/roles" element={<Roles />} />
@@ -83,6 +87,7 @@ function App() {
                 <Route path="/stock-adjustment" element={<StockAdjustment />} />
                 <Route path="/stock-count" element={<StockCount />} />
                 <Route path="/employees" element={<Employees />} />
+                <Route path="/staff" element={<Staff />} />
                 <Route path="/attendance" element={<Attendance />} />
                 <Route path="/commission-policies" element={<CommissionPolicies />} />
                 <Route path="/reservations" element={<Reservations />} />
@@ -99,6 +104,7 @@ function App() {
                 <Route path="/exchange-rates" element={<ExchangeRates />} />
                 <Route path="/recipes" element={<Recipes />} />
                 <Route path="/inventory-settings" element={<InventorySettings />} />
+                <Route path="/pos" element={<POS />} />
               </Routes>
             </Layout>
           ) : (
