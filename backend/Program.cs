@@ -87,8 +87,9 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Configure to listen on all network interfaces
-builder.WebHost.UseUrls("http://0.0.0.0:5000");
+// Configure to listen on all network interfaces (port from command line or default 5001)
+var urls = args.FirstOrDefault(a => a.StartsWith("--urls="))?.Replace("--urls=", "") ?? "http://0.0.0.0:5001";
+builder.WebHost.UseUrls(urls);
 
 var app = builder.Build();
 
