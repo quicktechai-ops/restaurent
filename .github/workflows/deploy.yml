@@ -1,0 +1,39 @@
+name: Deploy to GCP Server
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/restaurent
+            git pull origin master
+            
+            # Build admin frontend
+            cd ~/restaurent/admin
+            npm install
+            npm run build
+            
+            # Build company frontend
+            cd ~/restaurent/company
+            npm install
+            npm run build
+            
+            # Rebuild and restart backend
+            cd ~/restaurent/backend
+            ~/.dotnet/dotnet restore
+            ~/.dotnet/dotnet build --configuration Release
+            sudo systemctl restart restaurant-api
+            
+            echo "Deployment completed successfully!"
