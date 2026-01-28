@@ -8,7 +8,6 @@
 5. [Inventory Management Testing](#5-inventory-management-testing)
 6. [Customer & Loyalty Testing](#6-customer--loyalty-testing)
 7. [Reports Testing](#7-reports-testing)
-
 ---
 
 ## 1. Initial Setup

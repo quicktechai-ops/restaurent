@@ -57,7 +57,7 @@ export default function Login() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="input"
-              placeholder="Enter your username"
+              placeholder="quicktech company"
               required
             />
           </div>
@@ -73,7 +73,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input pr-10"
-                placeholder="Enter your password"
+                placeholder="71526575"
                 required
               />
               <button
