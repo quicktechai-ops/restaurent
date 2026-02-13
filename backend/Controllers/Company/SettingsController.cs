@@ -24,32 +24,39 @@ public class SettingsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<SystemSettingDto>>> GetAll([FromQuery] int? branchId)
     {
-        var companyId = GetCompanyId();
-        var query = _context.SystemSettings
-            .Include(s => s.Branch)
-            .Where(s => s.CompanyId == companyId);
+        try
+        {
+            var companyId = GetCompanyId();
+            var query = _context.SystemSettings
+                .Include(s => s.Branch)
+                .Where(s => s.CompanyId == companyId);
 
-        if (branchId.HasValue)
-            query = query.Where(s => s.BranchId == branchId.Value || s.BranchId == null);
-        else
-            query = query.Where(s => s.BranchId == null);
+            if (branchId.HasValue)
+                query = query.Where(s => s.BranchId == branchId.Value || s.BranchId == null);
+            else
+                query = query.Where(s => s.BranchId == null);
 
-        var settings = await query
-            .OrderBy(s => s.SettingKey)
-            .Select(s => new SystemSettingDto
-            {
-                Id = s.SettingId,
-                BranchId = s.BranchId,
-                BranchName = s.Branch != null ? s.Branch.Name : null,
-                SettingKey = s.SettingKey,
-                SettingValue = s.SettingValue,
-                SettingType = s.SettingType,
-                Description = s.Description,
-                UpdatedAt = s.UpdatedAt
-            })
-            .ToListAsync();
+            var settings = await query
+                .OrderBy(s => s.SettingKey)
+                .Select(s => new SystemSettingDto
+                {
+                    Id = s.SettingId,
+                    BranchId = s.BranchId,
+                    BranchName = s.Branch != null ? s.Branch.Name : null,
+                    SettingKey = s.SettingKey,
+                    SettingValue = s.SettingValue,
+                    SettingType = s.SettingType,
+                    Description = s.Description,
+                    UpdatedAt = s.UpdatedAt
+                })
+                .ToListAsync();
 
-        return Ok(settings);
+            return Ok(settings);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message, inner = ex.InnerException?.Message });
+        }
     }
 
     [HttpGet("{key}")]
@@ -86,53 +93,62 @@ public class SettingsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<SystemSettingDto>> CreateOrUpdate([FromBody] UpdateSystemSettingRequest request)
     {
-        var companyId = GetCompanyId();
-        var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
-
-        var existing = await _context.SystemSettings
-            .FirstOrDefaultAsync(s => s.CompanyId == companyId && s.SettingKey == request.SettingKey && s.BranchId == request.BranchId);
-
-        if (existing != null)
+        try
         {
-            existing.SettingValue = request.SettingValue;
-            existing.SettingType = request.SettingType;
-            existing.Description = request.Description;
-            existing.UpdatedAt = DateTime.UtcNow;
-            existing.UpdatedByUserId = userId;
-        }
-        else
-        {
-            existing = new SystemSetting
+            var companyId = GetCompanyId();
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            int? userId = !string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var uid) && uid > 0 ? uid : null;
+
+            var existing = await _context.SystemSettings
+                .FirstOrDefaultAsync(s => s.CompanyId == companyId && s.SettingKey == request.SettingKey && s.BranchId == request.BranchId);
+
+            if (existing != null)
             {
-                CompanyId = companyId,
-                BranchId = request.BranchId,
-                SettingKey = request.SettingKey,
-                SettingValue = request.SettingValue,
-                SettingType = request.SettingType,
-                Description = request.Description,
-                UpdatedByUserId = userId
-            };
-            _context.SystemSettings.Add(existing);
+                existing.SettingValue = request.SettingValue;
+                existing.SettingType = request.SettingType ?? "String";
+                existing.Description = request.Description;
+                existing.UpdatedAt = DateTime.UtcNow;
+                // Don't set UpdatedByUserId to avoid FK constraint issues
+            }
+            else
+            {
+                existing = new SystemSetting
+                {
+                    CompanyId = companyId,
+                    BranchId = request.BranchId,
+                    SettingKey = request.SettingKey,
+                    SettingValue = request.SettingValue,
+                    SettingType = request.SettingType ?? "String",
+                    Description = request.Description,
+                    UpdatedByUserId = null
+                };
+                _context.SystemSettings.Add(existing);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new SystemSettingDto
+            {
+                Id = existing.SettingId,
+                BranchId = existing.BranchId,
+                SettingKey = existing.SettingKey,
+                SettingValue = existing.SettingValue,
+                SettingType = existing.SettingType,
+                UpdatedAt = existing.UpdatedAt
+            });
         }
-
-        await _context.SaveChangesAsync();
-
-        return Ok(new SystemSettingDto
+        catch (Exception ex)
         {
-            Id = existing.SettingId,
-            BranchId = existing.BranchId,
-            SettingKey = existing.SettingKey,
-            SettingValue = existing.SettingValue,
-            SettingType = existing.SettingType,
-            UpdatedAt = existing.UpdatedAt
-        });
+            return StatusCode(500, new { message = ex.Message, inner = ex.InnerException?.Message });
+        }
     }
 
     [HttpPost("bulk")]
     public async Task<ActionResult> BulkUpdate([FromBody] List<UpdateSystemSettingRequest> requests)
     {
         var companyId = GetCompanyId();
-        var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        int? userId = !string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var uid) && uid > 0 ? uid : null;
 
         foreach (var request in requests)
         {
@@ -143,7 +159,7 @@ public class SettingsController : ControllerBase
             {
                 existing.SettingValue = request.SettingValue;
                 existing.UpdatedAt = DateTime.UtcNow;
-                existing.UpdatedByUserId = userId;
+                // Don't set UpdatedByUserId to avoid FK constraint issues
             }
             else
             {
@@ -153,9 +169,9 @@ public class SettingsController : ControllerBase
                     BranchId = request.BranchId,
                     SettingKey = request.SettingKey,
                     SettingValue = request.SettingValue,
-                    SettingType = request.SettingType,
+                    SettingType = request.SettingType ?? "String",
                     Description = request.Description,
-                    UpdatedByUserId = userId
+                    UpdatedByUserId = null
                 });
             }
         }

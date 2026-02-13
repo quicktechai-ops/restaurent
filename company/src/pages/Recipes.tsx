@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { recipesApi } from '../lib/api';
 import api from '../lib/api';
 import { Plus, Edit, Trash2, ChefHat } from 'lucide-react';
 
 export default function Recipes() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -13,7 +15,7 @@ export default function Recipes() {
     yield: 1,
     ingredients: [] as { inventoryItemId: number; quantity: number; unit: string }[]
   });
-  const [newIngredient, setNewIngredient] = useState({ inventoryItemId: 0, quantity: 0, unit: '' });
+  const [newIngredient, setNewIngredient] = useState({ inventoryItemId: 0, quantity: '', unit: '' });
 
   const { data: recipes = [], isLoading } = useQuery({
     queryKey: ['recipes'],
@@ -55,7 +57,7 @@ export default function Recipes() {
     setShowForm(false);
     setEditingId(null);
     setFormData({ menuItemId: 0, yield: 1, ingredients: [] });
-    setNewIngredient({ inventoryItemId: 0, quantity: 0, unit: '' });
+    setNewIngredient({ inventoryItemId: 0, quantity: '', unit: '' });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -85,23 +87,24 @@ export default function Recipes() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this recipe?')) {
+    if (confirm(t('common.confirmDelete'))) {
       deleteMutation.mutate(id);
     }
   };
 
   const addIngredient = () => {
     console.log('Adding ingredient:', newIngredient, 'inventoryItems:', inventoryItems);
-    if (newIngredient.inventoryItemId && newIngredient.quantity > 0) {
+    const qty = parseFloat(newIngredient.quantity);
+    if (newIngredient.inventoryItemId && qty > 0) {
       const item = inventoryItems.find((i: any) => i.id === newIngredient.inventoryItemId);
       console.log('Found item:', item);
-      const newIng = { ...newIngredient, unit: item?.unitOfMeasure || newIngredient.unit };
+      const newIng = { inventoryItemId: newIngredient.inventoryItemId, quantity: qty, unit: item?.unitOfMeasure || newIngredient.unit };
       console.log('New ingredient to add:', newIng);
       setFormData({
         ...formData,
         ingredients: [...formData.ingredients, newIng]
       });
-      setNewIngredient({ inventoryItemId: 0, quantity: 0, unit: '' });
+      setNewIngredient({ inventoryItemId: 0, quantity: '', unit: '' });
     } else {
       console.log('Validation failed - inventoryItemId:', newIngredient.inventoryItemId, 'quantity:', newIngredient.quantity);
     }
@@ -124,36 +127,36 @@ export default function Recipes() {
     return item?.name || 'Unknown';
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>{t('common.loading')}</div>;
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <ChefHat className="w-6 h-6" /> Recipes
+          <ChefHat className="w-6 h-6" /> {t('recipes.title')}
         </h1>
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
         >
-          <Plus className="w-4 h-4" /> Add Recipe
+          <Plus className="w-4 h-4" /> {t('recipes.addRecipe')}
         </button>
       </div>
 
       {showForm && (
         <div className="bg-gray-900 rounded-lg shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit Recipe' : 'Add Recipe'}</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('recipes.editRecipe') : t('recipes.addRecipe')}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Menu Item *</label>
+                <label className="block text-sm font-medium mb-1">{t('recipes.menuItem')} *</label>
                 <select
                   value={formData.menuItemId}
                   onChange={(e) => setFormData({ ...formData, menuItemId: parseInt(e.target.value) })}
                   className="w-full border rounded-lg px-3 py-2"
                   required
                 >
-                  <option value={0}>Select menu item</option>
+                  <option value={0}>{t('common.select')} {t('common.item')}</option>
                   {menuItems.map((item: any) => (
                     <option key={item.id} value={item.id}>
                       {item.name}
@@ -162,7 +165,7 @@ export default function Recipes() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Yield (portions)</label>
+                <label className="block text-sm font-medium mb-1">{t('recipes.yield')}</label>
                 <input
                   type="number"
                   value={formData.yield}
@@ -174,7 +177,7 @@ export default function Recipes() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Ingredients</label>
+              <label className="block text-sm font-medium mb-2">{t('recipes.ingredients')}</label>
               <div className="border rounded-lg p-4 bg-gray-800">
                 <div className="flex gap-2 mb-4">
                   <select
@@ -182,7 +185,7 @@ export default function Recipes() {
                     onChange={(e) => setNewIngredient({ ...newIngredient, inventoryItemId: parseInt(e.target.value) })}
                     className="flex-1 border rounded-lg px-3 py-2"
                   >
-                    <option value={0}>Select ingredient</option>
+                    <option value={0}>{t('common.select')} {t('recipes.ingredient')}</option>
                     {inventoryItems.map((item: any) => (
                       <option key={item.id} value={item.id}>
                         {item.name} ({item.unitOfMeasure})
@@ -192,9 +195,9 @@ export default function Recipes() {
                   <input
                     type="number"
                     step="0.001"
-                    placeholder="Qty"
+                    placeholder={t('inventory.qty')}
                     value={newIngredient.quantity || ''}
-                    onChange={(e) => setNewIngredient({ ...newIngredient, quantity: parseFloat(e.target.value) })}
+                    onChange={(e) => setNewIngredient({ ...newIngredient, quantity: e.target.value })}
                     className="w-24 border rounded-lg px-3 py-2"
                   />
                   <button
@@ -236,17 +239,17 @@ export default function Recipes() {
                     </tbody>
                   </table>
                 ) : (
-                  <p className="text-gray-500 text-sm">No ingredients added yet</p>
+                  <p className="text-gray-500 text-sm">{t('recipes.noIngredients')}</p>
                 )}
               </div>
             </div>
 
             <div className="flex gap-4">
               <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-                {editingId ? 'Update' : 'Create'}
+                {editingId ? t('common.update') : t('common.create')}
               </button>
               <button type="button" onClick={resetForm} className="bg-gray-300 px-6 py-2 rounded-lg hover:bg-gray-400">
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </form>
@@ -257,11 +260,11 @@ export default function Recipes() {
         <table className="table">
           <thead className="bg-gray-800">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Menu Item</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Yield</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ingredients</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Est. Cost</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('recipes.menuItem')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('recipes.yield')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('recipes.ingredients')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('recipes.estCost')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -286,7 +289,7 @@ export default function Recipes() {
             {recipes.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                  No recipes defined yet
+                  {t('recipes.noRecipes')}
                 </td>
               </tr>
             )}

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { currenciesApi } from '../lib/api';
 import { Plus, Edit, ToggleLeft, ToggleRight, Star } from 'lucide-react';
 
 export default function Currencies() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -73,26 +75,26 @@ export default function Currencies() {
     setShowForm(true);
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>{t('common.loading')}</div>;
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Currencies</h1>
+        <h1 className="text-2xl font-bold">{t('admin.currencies')}</h1>
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
         >
-          <Plus className="w-4 h-4" /> Add Currency
+          <Plus className="w-4 h-4" /> {t('currencies.addCurrency')}
         </button>
       </div>
 
       {showForm && (
         <div className="bg-gray-900 rounded-lg shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit Currency' : 'Add Currency'}</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('currencies.editCurrency') : t('currencies.addCurrency')}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Currency Code *</label>
+              <label className="block text-sm font-medium mb-1">{t('currencies.currencyCode')} *</label>
               <input
                 type="text"
                 value={formData.currencyCode}
@@ -101,22 +103,22 @@ export default function Currencies() {
                 maxLength={3}
                 required
                 disabled={!!editingId}
-                placeholder="USD"
+                placeholder={t('currencies.codePlaceholder')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Name *</label>
+              <label className="block text-sm font-medium mb-1">{t('common.name')} *</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full border rounded-lg px-3 py-2"
                 required
-                placeholder="US Dollar"
+                placeholder={t('currencies.namePlaceholder')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Symbol *</label>
+              <label className="block text-sm font-medium mb-1">{t('currencies.symbol')} *</label>
               <input
                 type="text"
                 value={formData.symbol}
@@ -127,7 +129,7 @@ export default function Currencies() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Decimal Places</label>
+              <label className="block text-sm font-medium mb-1">{t('currencies.decimalPlaces')}</label>
               <input
                 type="number"
                 value={formData.decimalPlaces}
@@ -139,10 +141,10 @@ export default function Currencies() {
             </div>
             <div className="md:col-span-2 flex gap-4">
               <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-                {editingId ? 'Update' : 'Create'}
+                {editingId ? t('common.update') : t('common.create')}
               </button>
               <button type="button" onClick={resetForm} className="bg-gray-300 px-6 py-2 rounded-lg hover:bg-gray-400">
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </form>
@@ -153,13 +155,13 @@ export default function Currencies() {
         <table className="table">
           <thead className="bg-gray-800">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Symbol</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Decimals</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Default</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.code')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.name')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('currencies.symbol')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('currencies.decimalPlaces')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('currencies.default')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -176,7 +178,7 @@ export default function Currencies() {
                     <button
                       onClick={() => setDefaultMutation.mutate(currency.currencyCode)}
                       className="text-gray-400 hover:text-yellow-500"
-                      title="Set as default"
+                      title={t('currencies.setAsDefault')}
                     >
                       <Star className="w-5 h-5" />
                     </button>
@@ -184,7 +186,7 @@ export default function Currencies() {
                 </td>
                 <td className="px-6 py-4">
                   <span className={`px-2 py-1 rounded-full text-xs ${currency.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {currency.isActive ? 'Active' : 'Inactive'}
+                    {currency.isActive ? t('common.active') : t('common.inactive')}
                   </span>
                 </td>
                 <td className="px-6 py-4">

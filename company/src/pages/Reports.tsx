@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import api from '../lib/api'
 import { BarChart3, TrendingUp, Package, Users, DollarSign, Calendar, Download, FileText } from 'lucide-react'
 
@@ -12,6 +13,7 @@ const styles = {
 }
 
 export default function Reports() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('sales')
   const [dateRange, setDateRange] = useState({ from: new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0], to: new Date().toISOString().split('T')[0] })
 
@@ -34,24 +36,24 @@ export default function Reports() {
   })
 
   const tabs = [
-    { id: 'sales', label: 'Sales', icon: TrendingUp },
-    { id: 'inventory', label: 'Inventory', icon: Package },
-    { id: 'customers', label: 'Customers', icon: Users },
+    { id: 'sales', label: t('reports.sales'), icon: TrendingUp },
+    { id: 'inventory', label: t('reports.inventory'), icon: Package },
+    { id: 'customers', label: t('reports.customers'), icon: Users },
   ]
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: styles.textMain }}><BarChart3 size={28} /> Reports</h1>
-        <button className="px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:-translate-y-0.5" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}`, color: styles.textMain }}><Download size={18} /> Export</button>
+        <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: styles.textMain }}><BarChart3 size={28} /> {t('reports.title')}</h1>
+        <button className="px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:-translate-y-0.5" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}`, color: styles.textMain }}><Download size={18} /> {t('reports.export')}</button>
       </div>
 
       {/* Date Range Filter */}
       <div className="p-4 mb-6 flex items-center gap-4 rounded-xl" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}` }}>
         <Calendar size={18} style={{ color: styles.textMuted }} />
-        <span className="text-sm font-medium" style={{ color: styles.textMain }}>Date Range:</span>
+        <span className="text-sm font-medium" style={{ color: styles.textMain }}>{t('reports.dateRange')}:</span>
         <input type="date" value={dateRange.from} onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })} className="px-3 py-2 rounded-lg outline-none" style={{ background: styles.inputBg, border: `1px solid ${styles.cardBorder}`, color: styles.textMain }} />
-        <span style={{ color: styles.textMuted }}>to</span>
+        <span style={{ color: styles.textMuted }}>{t('reports.to')}</span>
         <input type="date" value={dateRange.to} onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })} className="px-3 py-2 rounded-lg outline-none" style={{ background: styles.inputBg, border: `1px solid ${styles.cardBorder}`, color: styles.textMain }} />
       </div>
 
@@ -79,7 +81,7 @@ export default function Reports() {
                 <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center"><DollarSign size={20} className="text-green-400" /></div>
                 <div>
                   <p className="text-2xl font-bold" style={{ color: styles.textMain }}>${salesReport?.totalRevenue?.toFixed(2) || '0.00'}</p>
-                  <p className="text-sm" style={{ color: styles.textMuted }}>Total Revenue</p>
+                  <p className="text-sm" style={{ color: styles.textMuted }}>{t('reports.totalRevenue')}</p>
                 </div>
               </div>
             </div>
@@ -88,7 +90,7 @@ export default function Reports() {
                 <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center"><FileText size={20} className="text-blue-400" /></div>
                 <div>
                   <p className="text-2xl font-bold" style={{ color: styles.textMain }}>{salesReport?.totalOrders || 0}</p>
-                  <p className="text-sm" style={{ color: styles.textMuted }}>Total Orders</p>
+                  <p className="text-sm" style={{ color: styles.textMuted }}>{t('reports.totalOrders')}</p>
                 </div>
               </div>
             </div>
@@ -97,7 +99,7 @@ export default function Reports() {
                 <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center"><TrendingUp size={20} className="text-purple-400" /></div>
                 <div>
                   <p className="text-2xl font-bold" style={{ color: styles.textMain }}>${salesReport?.averageTicket?.toFixed(2) || '0.00'}</p>
-                  <p className="text-sm" style={{ color: styles.textMuted }}>Avg. Ticket</p>
+                  <p className="text-sm" style={{ color: styles.textMuted }}>{t('reports.avgTicket')}</p>
                 </div>
               </div>
             </div>
@@ -106,7 +108,7 @@ export default function Reports() {
                 <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center"><Users size={20} className="text-orange-400" /></div>
                 <div>
                   <p className="text-2xl font-bold" style={{ color: styles.textMain }}>{salesReport?.uniqueCustomers || 0}</p>
-                  <p className="text-sm" style={{ color: styles.textMuted }}>Unique Customers</p>
+                  <p className="text-sm" style={{ color: styles.textMuted }}>{t('reports.uniqueCustomers')}</p>
                 </div>
               </div>
             </div>
@@ -114,14 +116,14 @@ export default function Reports() {
 
           {/* Sales by Category */}
           <div className="p-4 rounded-xl" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}` }}>
-            <h3 className="font-semibold mb-4" style={{ color: styles.textMain }}>Sales by Category</h3>
+            <h3 className="font-semibold mb-4" style={{ color: styles.textMain }}>{t('reports.salesByCategory')}</h3>
             <table className="table">
               <thead style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <tr>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Category</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Items Sold</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Revenue</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>% of Total</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.category')}</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.itemsSold')}</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.revenue')}</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.percentOfTotal')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -142,19 +144,19 @@ export default function Reports() {
                 ))}
               </tbody>
             </table>
-            {(!salesReport?.byCategory || salesReport.byCategory.length === 0) && <p className="text-center py-4" style={{ color: styles.textMuted }}>No data available</p>}
+            {(!salesReport?.byCategory || salesReport.byCategory.length === 0) && <p className="text-center py-4" style={{ color: styles.textMuted }}>{t('reports.noData')}</p>}
           </div>
 
           {/* Top Selling Items */}
           <div className="p-4 rounded-xl" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}` }}>
-            <h3 className="font-semibold mb-4" style={{ color: styles.textMain }}>Top Selling Items</h3>
+            <h3 className="font-semibold mb-4" style={{ color: styles.textMain }}>{t('reports.topSellingItems')}</h3>
             <table className="table">
               <thead style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <tr>
                   <th className="text-left p-3" style={{ color: styles.textMuted }}>#</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Item</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Quantity</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Revenue</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.item')}</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.quantity')}</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.revenue')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -168,7 +170,7 @@ export default function Reports() {
                 ))}
               </tbody>
             </table>
-            {(!salesReport?.topItems || salesReport.topItems.length === 0) && <p className="text-center py-4" style={{ color: styles.textMuted }}>No data available</p>}
+            {(!salesReport?.topItems || salesReport.topItems.length === 0) && <p className="text-center py-4" style={{ color: styles.textMuted }}>{t('reports.noData')}</p>}
           </div>
         </div>
       )}
@@ -179,29 +181,29 @@ export default function Reports() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-xl" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}` }}>
               <p className="text-2xl font-bold" style={{ color: styles.textMain }}>{inventoryReport?.totalItems || 0}</p>
-              <p className="text-sm" style={{ color: styles.textMuted }}>Total Items</p>
+              <p className="text-sm" style={{ color: styles.textMuted }}>{t('reports.totalItems')}</p>
             </div>
             <div className="p-4 rounded-xl" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}` }}>
               <p className="text-2xl font-bold text-red-400">{inventoryReport?.lowStockItems || 0}</p>
-              <p className="text-sm" style={{ color: styles.textMuted }}>Low Stock Items</p>
+              <p className="text-sm" style={{ color: styles.textMuted }}>{t('reports.lowStockItems')}</p>
             </div>
             <div className="p-4 rounded-xl" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}` }}>
               <p className="text-2xl font-bold" style={{ color: styles.textMain }}>${inventoryReport?.totalValue?.toFixed(2) || '0.00'}</p>
-              <p className="text-sm" style={{ color: styles.textMuted }}>Total Inventory Value</p>
+              <p className="text-sm" style={{ color: styles.textMuted }}>{t('reports.totalInventoryValue')}</p>
             </div>
           </div>
 
           <div className="p-4 rounded-xl" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}` }}>
-            <h3 className="font-semibold mb-4" style={{ color: styles.textMain }}>Stock Status</h3>
+            <h3 className="font-semibold mb-4" style={{ color: styles.textMain }}>{t('reports.stockStatus')}</h3>
             <table className="table">
               <thead style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <tr>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Item</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Current Qty</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Min Level</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Unit Cost</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Total Value</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Status</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.item')}</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.currentQty')}</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.minLevel')}</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.unitCost')}</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.totalValue')}</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('common.status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -214,14 +216,14 @@ export default function Reports() {
                     <td className="p-3" style={{ color: styles.textMuted }}>${item.totalValue?.toFixed(2)}</td>
                     <td className="p-3">
                       <span className={`px-2 py-1 rounded text-xs ${item.quantity <= item.minLevel ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
-                        {item.quantity <= item.minLevel ? 'Low Stock' : 'OK'}
+                        {item.quantity <= item.minLevel ? t('reports.lowStock') : t('reports.ok')}
                       </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {(!inventoryReport?.items || inventoryReport.items.length === 0) && <p className="text-center py-4" style={{ color: styles.textMuted }}>No data available</p>}
+            {(!inventoryReport?.items || inventoryReport.items.length === 0) && <p className="text-center py-4" style={{ color: styles.textMuted }}>{t('reports.noData')}</p>}
           </div>
         </div>
       )}
@@ -232,28 +234,28 @@ export default function Reports() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-xl" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}` }}>
               <p className="text-2xl font-bold" style={{ color: styles.textMain }}>{customerReport?.totalCustomers || 0}</p>
-              <p className="text-sm" style={{ color: styles.textMuted }}>Total Customers</p>
+              <p className="text-sm" style={{ color: styles.textMuted }}>{t('reports.totalCustomers')}</p>
             </div>
             <div className="p-4 rounded-xl" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}` }}>
               <p className="text-2xl font-bold text-green-400">{customerReport?.newCustomers || 0}</p>
-              <p className="text-sm" style={{ color: styles.textMuted }}>New This Period</p>
+              <p className="text-sm" style={{ color: styles.textMuted }}>{t('reports.newThisPeriod')}</p>
             </div>
             <div className="p-4 rounded-xl" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}` }}>
               <p className="text-2xl font-bold" style={{ color: styles.textMain }}>{customerReport?.repeatRate?.toFixed(1) || 0}%</p>
-              <p className="text-sm" style={{ color: styles.textMuted }}>Repeat Rate</p>
+              <p className="text-sm" style={{ color: styles.textMuted }}>{t('reports.repeatRate')}</p>
             </div>
           </div>
 
           <div className="p-4 rounded-xl" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}` }}>
-            <h3 className="font-semibold mb-4" style={{ color: styles.textMain }}>Top Customers</h3>
+            <h3 className="font-semibold mb-4" style={{ color: styles.textMain }}>{t('reports.topCustomers')}</h3>
             <table className="table">
               <thead style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <tr>
                   <th className="text-left p-3" style={{ color: styles.textMuted }}>#</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Customer</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Orders</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Total Spent</th>
-                  <th className="text-left p-3" style={{ color: styles.textMuted }}>Last Visit</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.customer')}</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.orders')}</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.totalSpent')}</th>
+                  <th className="text-left p-3" style={{ color: styles.textMuted }}>{t('reports.lastVisit')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -268,7 +270,7 @@ export default function Reports() {
                 ))}
               </tbody>
             </table>
-            {(!customerReport?.topCustomers || customerReport.topCustomers.length === 0) && <p className="text-center py-4" style={{ color: styles.textMuted }}>No data available</p>}
+            {(!customerReport?.topCustomers || customerReport.topCustomers.length === 0) && <p className="text-center py-4" style={{ color: styles.textMuted }}>{t('reports.noData')}</p>}
           </div>
         </div>
       )}

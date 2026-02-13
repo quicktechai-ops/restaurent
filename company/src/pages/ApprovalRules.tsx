@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import api from '../lib/api'
 import { Plus, Edit, Trash2, Shield, Lock, Key } from 'lucide-react'
 
 export default function ApprovalRules() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -89,67 +91,67 @@ export default function ApprovalRules() {
     }
   }
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return <div>{t('common.loading')}</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Shield size={28} /> Approval Rules</h1>
-        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> Add Rule</button>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Shield size={28} /> {t('approvalRules.title')}</h1>
+        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> {t('approvalRules.addRule')}</button>
       </div>
 
       <div className="card p-4 mb-6 bg-blue-50 border-blue-200">
         <p className="text-sm text-blue-800">
-          <strong>Approval rules</strong> control which actions require manager authorization. When a user attempts a restricted action that exceeds their limit, they'll need to enter a manager PIN.
+          <strong>{t('approvalRules.title')}</strong> {t('approvalRules.description')}
         </p>
       </div>
 
       {showForm && (
         <div className="card mb-6 p-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit' : 'Create'} Approval Rule</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('approvalRules.editRule') : t('approvalRules.addRule')}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Rule Type *</label>
+              <label className="block text-sm font-medium mb-1">{t('approvalRules.ruleType')} *</label>
               <select value={formData.ruleType} onChange={(e) => setFormData({ ...formData, ruleType: e.target.value })} className="input" required>
-                <option value="max_discount">Maximum Discount Without Approval</option>
-                <option value="price_change">Price Change in Order</option>
-                <option value="void_paid">Void Paid Invoice</option>
-                <option value="refund">Process Refund</option>
-                <option value="delete_order">Delete Order</option>
+                <option value="max_discount">{t('approvalRules.maxDiscount')}</option>
+                <option value="price_change">{t('approvalRules.priceChange')}</option>
+                <option value="void_paid">{t('approvalRules.voidPaid')}</option>
+                <option value="refund">{t('approvalRules.processRefund')}</option>
+                <option value="delete_order">{t('approvalRules.deleteOrder')}</option>
               </select>
               <p className="text-xs text-gray-500 mt-1">{getRuleTypeDescription(formData.ruleType)}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Apply to Role</label>
+              <label className="block text-sm font-medium mb-1">{t('approvalRules.applyToRole')}</label>
               <select value={formData.roleId} onChange={(e) => setFormData({ ...formData, roleId: e.target.value })} className="input">
-                <option value="">All Roles</option>
+                <option value="">{t('approvalRules.allRoles')}</option>
                 {roles?.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
             </div>
             {formData.ruleType === 'max_discount' && (
               <div>
-                <label className="block text-sm font-medium mb-1">Threshold (%) *</label>
+                <label className="block text-sm font-medium mb-1">{t('approvalRules.threshold')} *</label>
                 <input type="number" step="0.1" min="0" max="100" value={formData.threshold} onChange={(e) => setFormData({ ...formData, threshold: parseFloat(e.target.value) || 0 })} className="input" required />
-                <p className="text-xs text-gray-500 mt-1">Discounts above this % require approval</p>
+                <p className="text-xs text-gray-500 mt-1">{t('approvalRules.discountHint')}</p>
               </div>
             )}
             <div className="flex flex-col gap-3">
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={formData.requireManagerPin} onChange={(e) => setFormData({ ...formData, requireManagerPin: e.target.checked })} />
-                <Key size={16} /> Require Manager PIN
+                <Key size={16} /> {t('approvalRules.requireManagerPin')}
               </label>
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={formData.requireReason} onChange={(e) => setFormData({ ...formData, requireReason: e.target.checked })} />
-                Require Reason/Notes
+                {t('approvalRules.requireReason')}
               </label>
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} />
-                Active
+                {t('common.active')}
               </label>
             </div>
             <div className="md:col-span-2 flex gap-2">
-              <button type="submit" className="btn-primary">{editingId ? 'Update' : 'Create'} Rule</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary">{editingId ? t('common.update') : t('common.create')}</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         </div>
@@ -159,13 +161,13 @@ export default function ApprovalRules() {
         <table className="table">
           <thead className="bg-gray-800">
             <tr>
-              <th className="text-left p-3">Rule Type</th>
-              <th className="text-left p-3">Role</th>
-              <th className="text-left p-3">Threshold</th>
-              <th className="text-left p-3">Manager PIN</th>
-              <th className="text-left p-3">Requires Reason</th>
-              <th className="text-left p-3">Status</th>
-              <th className="text-left p-3">Actions</th>
+              <th className="text-left p-3">{t('approvalRules.ruleType')}</th>
+              <th className="text-left p-3">{t('users.role')}</th>
+              <th className="text-left p-3">{t('approvalRules.threshold')}</th>
+              <th className="text-left p-3">{t('approvalRules.managerPin')}</th>
+              <th className="text-left p-3">{t('approvalRules.requiresReason')}</th>
+              <th className="text-left p-3">{t('common.status')}</th>
+              <th className="text-left p-3">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -180,13 +182,13 @@ export default function ApprovalRules() {
                     </div>
                   </div>
                 </td>
-                <td className="p-3">{rule.roleName || 'All Roles'}</td>
+                <td className="p-3">{rule.roleName || t('approvalRules.allRoles')}</td>
                 <td className="p-3">{rule.ruleType === 'max_discount' ? `${rule.threshold}%` : '-'}</td>
                 <td className="p-3">{rule.requireManagerPin ? '✓ Yes' : '✗ No'}</td>
                 <td className="p-3">{rule.requireReason ? '✓ Yes' : '✗ No'}</td>
                 <td className="p-3">
                   <span className={`px-2 py-1 rounded text-xs ${rule.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                    {rule.isActive ? 'Active' : 'Inactive'}
+                    {rule.isActive ? t('common.active') : t('common.inactive')}
                   </span>
                 </td>
                 <td className="p-3">
@@ -199,7 +201,7 @@ export default function ApprovalRules() {
             ))}
           </tbody>
         </table>
-        {(!rules || rules.length === 0) && <p className="text-center text-gray-500 py-8">No approval rules defined</p>}
+        {(!rules || rules.length === 0) && <p className="text-center text-gray-500 py-8">{t('approvalRules.noRules')}</p>}
       </div>
     </div>
   )

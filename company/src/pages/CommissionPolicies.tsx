@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import api from '../lib/api'
 import { Plus, Edit, Trash2, DollarSign, Percent } from 'lucide-react'
 
 export default function CommissionPolicies() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -73,77 +75,77 @@ export default function CommissionPolicies() {
     setShowForm(true)
   }
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return <div>{t('common.loading')}</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><DollarSign size={28} /> Commission Policies</h1>
-        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> Add Policy</button>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><DollarSign size={28} /> {t('commissionPolicies.title')}</h1>
+        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> {t('commissionPolicies.addPolicy')}</button>
       </div>
 
       {showForm && (
         <div className="card mb-6 p-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit' : 'Create'} Commission Policy</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('commissionPolicies.editPolicy') : t('commissionPolicies.addPolicy')}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Policy Name *</label>
+              <label className="block text-sm font-medium mb-1">{t('commissionPolicies.policyName')} *</label>
               <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input" required />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Commission Type *</label>
+              <label className="block text-sm font-medium mb-1">{t('commissionPolicies.commissionType')} *</label>
               <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="input" required>
-                <option value="percentage">Percentage of Sales</option>
-                <option value="fixed_per_item">Fixed Amount per Item</option>
-                <option value="fixed_per_order">Fixed Amount per Order</option>
-                <option value="tiered">Tiered (Based on Sales)</option>
+                <option value="percentage">{t('commissionPolicies.percentageOfSales')}</option>
+                <option value="fixed_per_item">{t('commissionPolicies.fixedPerItem')}</option>
+                <option value="fixed_per_order">{t('commissionPolicies.fixedPerOrder')}</option>
+                <option value="tiered">{t('commissionPolicies.tiered')}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Value *</label>
+              <label className="block text-sm font-medium mb-1">{t('commissionPolicies.value')} *</label>
               <div className="flex items-center gap-2">
                 <input type="number" step="0.01" value={formData.value} onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })} className="input" required />
                 <span className="text-gray-500">{formData.type === 'percentage' ? '%' : '$'}</span>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Applies To *</label>
+              <label className="block text-sm font-medium mb-1">{t('commissionPolicies.appliesTo')} *</label>
               <select value={formData.appliesTo} onChange={(e) => setFormData({ ...formData, appliesTo: e.target.value })} className="input" required>
-                <option value="all">All Items</option>
-                <option value="category">Specific Category</option>
-                <option value="item">Specific Item</option>
+                <option value="all">{t('commissionPolicies.allItems')}</option>
+                <option value="category">{t('commissionPolicies.specificCategory')}</option>
+                <option value="item">{t('commissionPolicies.specificItem')}</option>
               </select>
             </div>
             {formData.appliesTo === 'category' && (
               <div>
-                <label className="block text-sm font-medium mb-1">Category</label>
+                <label className="block text-sm font-medium mb-1">{t('inventory.category')}</label>
                 <select value={formData.categoryId} onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })} className="input">
-                  <option value="">Select Category</option>
+                  <option value="">{t('commissionPolicies.selectCategory')}</option>
                   {categories?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
             )}
             {formData.appliesTo === 'item' && (
               <div>
-                <label className="block text-sm font-medium mb-1">Menu Item</label>
+                <label className="block text-sm font-medium mb-1">{t('commissionPolicies.menuItem')}</label>
                 <select value={formData.menuItemId} onChange={(e) => setFormData({ ...formData, menuItemId: e.target.value })} className="input">
-                  <option value="">Select Item</option>
+                  <option value="">{t('commissionPolicies.selectItem')}</option>
                   {menuItems?.map((i: any) => <option key={i.id} value={i.id}>{i.name}</option>)}
                 </select>
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium mb-1">Min Sales Amount</label>
+              <label className="block text-sm font-medium mb-1">{t('commissionPolicies.minSalesAmount')}</label>
               <input type="number" step="0.01" value={formData.minSalesAmount} onChange={(e) => setFormData({ ...formData, minSalesAmount: parseFloat(e.target.value) || 0 })} className="input" />
-              <p className="text-xs text-gray-500 mt-1">Commission only applies if total sales exceed this amount</p>
+              <p className="text-xs text-gray-500 mt-1">{t('commissionPolicies.minSalesHint')}</p>
             </div>
             <div className="flex items-center gap-2">
               <input type="checkbox" id="isActive" checked={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} />
-              <label htmlFor="isActive">Active</label>
+              <label htmlFor="isActive">{t('common.active')}</label>
             </div>
             <div className="md:col-span-2 flex gap-2">
-              <button type="submit" className="btn-primary">{editingId ? 'Update' : 'Create'} Policy</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary">{editingId ? t('common.update') : t('common.create')}</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         </div>
@@ -153,13 +155,13 @@ export default function CommissionPolicies() {
         <table className="table">
           <thead className="bg-gray-800">
             <tr>
-              <th className="text-left p-3">Policy Name</th>
-              <th className="text-left p-3">Type</th>
-              <th className="text-left p-3">Value</th>
-              <th className="text-left p-3">Applies To</th>
-              <th className="text-left p-3">Min Sales</th>
-              <th className="text-left p-3">Status</th>
-              <th className="text-left p-3">Actions</th>
+              <th className="text-left p-3">{t('commissionPolicies.policyName')}</th>
+              <th className="text-left p-3">{t('common.type')}</th>
+              <th className="text-left p-3">{t('commissionPolicies.value')}</th>
+              <th className="text-left p-3">{t('commissionPolicies.appliesTo')}</th>
+              <th className="text-left p-3">{t('commissionPolicies.minSales')}</th>
+              <th className="text-left p-3">{t('common.status')}</th>
+              <th className="text-left p-3">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -174,14 +176,14 @@ export default function CommissionPolicies() {
                   {policy.value}{policy.type === 'percentage' ? '%' : ''}
                 </td>
                 <td className="p-3">
-                  {policy.appliesTo === 'all' && 'All Items'}
-                  {policy.appliesTo === 'category' && `Category: ${policy.categoryName}`}
-                  {policy.appliesTo === 'item' && `Item: ${policy.menuItemName}`}
+                  {policy.appliesTo === 'all' && t('commissionPolicies.allItems')}
+                  {policy.appliesTo === 'category' && `${t('inventory.category')}: ${policy.categoryName}`}
+                  {policy.appliesTo === 'item' && `${t('commissionPolicies.menuItem')}: ${policy.menuItemName}`}
                 </td>
                 <td className="p-3">{policy.minSalesAmount > 0 ? `$${policy.minSalesAmount}` : '-'}</td>
                 <td className="p-3">
                   <span className={`px-2 py-1 rounded text-xs ${policy.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                    {policy.isActive ? 'Active' : 'Inactive'}
+                    {policy.isActive ? t('common.active') : t('common.inactive')}
                   </span>
                 </td>
                 <td className="p-3">
@@ -194,7 +196,7 @@ export default function CommissionPolicies() {
             ))}
           </tbody>
         </table>
-        {(!policies || policies.length === 0) && <p className="text-center text-gray-500 py-8">No commission policies defined</p>}
+        {(!policies || policies.length === 0) && <p className="text-center text-gray-500 py-8">{t('commissionPolicies.noPolicies')}</p>}
       </div>
     </div>
   )

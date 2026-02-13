@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { reservationsApi, branchesApi, tablesApi } from '../lib/api'
 import { Plus, Edit, Trash2, Clock, Users } from 'lucide-react'
 
@@ -33,6 +34,7 @@ const getDateRange = (type: DateRangeType, baseDate: string) => {
 }
 
 export default function Reservations() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -100,14 +102,14 @@ export default function Reservations() {
     }
   }
 
-  if (isLoading) return <div className="text-gray-400">Loading...</div>
+  if (isLoading) return <div className="text-gray-400">{t('common.loading')}</div>
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Reservations</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('nav.reservations')}</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
-          <Plus size={20} /> New Reservation
+          <Plus size={20} /> {t('reservations.addReservation')}
         </button>
       </div>
 
@@ -117,19 +119,19 @@ export default function Reservations() {
             onClick={() => setDateRangeType('day')} 
             className={`px-3 py-2 text-sm ${dateRangeType === 'day' ? 'bg-primary-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
           >
-            Day
+            {t('reservations.day')}
           </button>
           <button 
             onClick={() => setDateRangeType('week')} 
             className={`px-3 py-2 text-sm ${dateRangeType === 'week' ? 'bg-primary-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
           >
-            Week
+            {t('reservations.week')}
           </button>
           <button 
             onClick={() => setDateRangeType('month')} 
             className={`px-3 py-2 text-sm ${dateRangeType === 'month' ? 'bg-primary-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
           >
-            Month
+            {t('reservations.month')}
           </button>
         </div>
         <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="input" />
@@ -139,40 +141,40 @@ export default function Reservations() {
           </span>
         )}
         <select value={branchFilter || ''} onChange={(e) => setBranchFilter(e.target.value ? parseInt(e.target.value) : undefined)} className="input">
-          <option value="">All Branches</option>
+          <option value="">{t('common.all')} {t('nav.branches')}</option>
           {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
       </div>
 
       {showForm && (
         <div className="card mb-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit' : 'New'} Reservation</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('reservations.editReservation') : t('reservations.addReservation')}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <select value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: parseInt(e.target.value) })} className="input" required>
-              <option value="">Select Branch *</option>
+              <option value="">{t('common.select')} {t('staff.branch')} *</option>
               {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
-            <input type="text" placeholder="Customer Name *" value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} className="input" required />
-            <input type="tel" placeholder="Phone *" value={formData.customerPhone} onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })} className="input" required />
+            <input type="text" placeholder={`${t('reservations.customerName')} *`} value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} className="input" required />
+            <input type="tel" placeholder={`${t('reservations.phone')} *`} value={formData.customerPhone} onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })} className="input" required />
             <input type="date" value={formData.reservationDate} onChange={(e) => setFormData({ ...formData, reservationDate: e.target.value })} className="input" required />
             <input type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} className="input" required />
-            <input type="number" placeholder="Duration (mins)" value={formData.durationMinutes} onChange={(e) => setFormData({ ...formData, durationMinutes: parseInt(e.target.value) || 90 })} className="input" />
-            <input type="number" placeholder="Party Size" value={formData.partySize} onChange={(e) => setFormData({ ...formData, partySize: parseInt(e.target.value) || 2 })} className="input" required />
+            <input type="number" placeholder={t('reservations.duration')} value={formData.durationMinutes} onChange={(e) => setFormData({ ...formData, durationMinutes: parseInt(e.target.value) || 90 })} className="input" />
+            <input type="number" placeholder={t('reservations.partySize')} value={formData.partySize} onChange={(e) => setFormData({ ...formData, partySize: parseInt(e.target.value) || 2 })} className="input" required />
             <select value={formData.tableId} onChange={(e) => setFormData({ ...formData, tableId: e.target.value })} className="input">
-              <option value="">Select Table (Optional)</option>
+              <option value="">{t('common.select')} {t('reservations.table')} ({t('common.optional')})</option>
               {tables?.data?.map((t: any) => <option key={t.id} value={t.id}>{t.tableName} ({t.capacity} seats)</option>)}
             </select>
             <select value={formData.channel} onChange={(e) => setFormData({ ...formData, channel: e.target.value })} className="input">
-              <option value="Phone">Phone</option>
-              <option value="WalkIn">Walk-In</option>
-              <option value="Online">Online</option>
+              <option value="Phone">{t('reservations.phone')}</option>
+              <option value="WalkIn">{t('reservations.walkIn')}</option>
+              <option value="Online">{t('reservations.online')}</option>
             </select>
-            <textarea placeholder="Notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input md:col-span-3" rows={2} />
+            <textarea placeholder={t('common.notes')} value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input md:col-span-3" rows={2} />
             <div className="md:col-span-3 flex gap-2">
               <button type="submit" className="btn-primary" disabled={createMutation.isPending || updateMutation.isPending}>
-                {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save'}
+                {createMutation.isPending || updateMutation.isPending ? t('common.saving') : t('common.save')}
               </button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         </div>
@@ -182,12 +184,12 @@ export default function Reservations() {
         <table className="table">
           <thead>
             <tr className="border-b border-gray-700">
-              <th className="text-left p-3">Time</th>
-              <th className="text-left p-3">Customer</th>
-              <th className="text-left p-3">Party</th>
-              <th className="text-left p-3">Table</th>
-              <th className="text-left p-3">Status</th>
-              <th className="text-left p-3">Actions</th>
+              <th className="text-left p-3">{t('reservations.time')}</th>
+              <th className="text-left p-3">{t('reservations.customer')}</th>
+              <th className="text-left p-3">{t('reservations.party')}</th>
+              <th className="text-left p-3">{t('reservations.table')}</th>
+              <th className="text-left p-3">{t('common.status')}</th>
+              <th className="text-left p-3">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -199,11 +201,11 @@ export default function Reservations() {
                 <td className="p-3">{res.tableName || '-'}</td>
                 <td className="p-3">
                   <select value={res.status} onChange={(e) => statusMutation.mutate({ id: res.id, status: e.target.value })} className={`px-2 py-1 rounded text-xs border-0 ${getStatusColor(res.status)}`}>
-                    <option value="Pending">Pending</option>
-                    <option value="Confirmed">Confirmed</option>
-                    <option value="Seated">Seated</option>
-                    <option value="Canceled">Canceled</option>
-                    <option value="NoShow">No Show</option>
+                    <option value="Pending">{t('reservations.pending')}</option>
+                    <option value="Confirmed">{t('reservations.confirmed')}</option>
+                    <option value="Seated">{t('reservations.seated')}</option>
+                    <option value="Canceled">{t('reservations.canceled')}</option>
+                    <option value="NoShow">{t('reservations.noShow')}</option>
                   </select>
                 </td>
                 <td className="p-3">
@@ -216,7 +218,7 @@ export default function Reservations() {
             ))}
           </tbody>
         </table>
-        {reservations?.data?.length === 0 && <p className="text-center text-gray-500 py-8">No reservations for this date</p>}
+        {reservations?.data?.length === 0 && <p className="text-center text-gray-500 py-8">{t('reservations.noReservations')}</p>}
       </div>
     </div>
   )

@@ -1,9 +1,11 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import api from '../lib/api'
 import { ArrowLeft, User, Phone, Mail, MapPin, Star, Gift, ShoppingBag, TrendingUp, Calendar, Award } from 'lucide-react'
 
 export default function CustomerProfile() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const queryClient = useQueryClient()
   
@@ -39,13 +41,13 @@ export default function CustomerProfile() {
     }
   })
 
-  if (isLoading) return <div>Loading...</div>
-  if (!customer) return <div>Customer not found</div>
+  if (isLoading) return <div>{t('common.loading')}</div>
+  if (!customer) return <div>{t('customerProfile.notFound')}</div>
 
   return (
     <div className="p-6">
       <Link to="/customers" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4">
-        <ArrowLeft size={20} /> Back to Customers
+        <ArrowLeft size={20} /> {t('customerProfile.backToCustomers')}
       </Link>
 
       {/* Header */}
@@ -64,7 +66,7 @@ export default function CustomerProfile() {
           </div>
           <div className="text-right">
             <span className={`px-3 py-1 rounded-full text-sm ${customer.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              {customer.isActive ? 'Active' : 'Inactive'}
+              {customer.isActive ? t('common.active') : t('common.inactive')}
             </span>
           </div>
         </div>
@@ -79,7 +81,7 @@ export default function CustomerProfile() {
             </div>
             <div>
               <p className="text-2xl font-bold">{stats?.totalOrders || 0}</p>
-              <p className="text-sm text-gray-500">Total Orders</p>
+              <p className="text-sm text-gray-500">{t('customerProfile.totalOrders')}</p>
             </div>
           </div>
         </div>
@@ -90,7 +92,7 @@ export default function CustomerProfile() {
             </div>
             <div>
               <p className="text-2xl font-bold">${stats?.totalSpent?.toFixed(2) || '0.00'}</p>
-              <p className="text-sm text-gray-500">Total Spent</p>
+              <p className="text-sm text-gray-500">{t('customerProfile.totalSpent')}</p>
             </div>
           </div>
         </div>
@@ -101,7 +103,7 @@ export default function CustomerProfile() {
             </div>
             <div>
               <p className="text-2xl font-bold">${stats?.averageTicket?.toFixed(2) || '0.00'}</p>
-              <p className="text-sm text-gray-500">Avg. Ticket</p>
+              <p className="text-sm text-gray-500">{t('customerProfile.avgTicket')}</p>
             </div>
           </div>
         </div>
@@ -112,7 +114,7 @@ export default function CustomerProfile() {
             </div>
             <div>
               <p className="text-2xl font-bold">{stats?.totalVisits || 0}</p>
-              <p className="text-sm text-gray-500">Total Visits</p>
+              <p className="text-sm text-gray-500">{t('customerProfile.totalVisits')}</p>
             </div>
           </div>
         </div>
@@ -121,35 +123,35 @@ export default function CustomerProfile() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Loyalty Info */}
         <div className="card p-4">
-          <h2 className="font-semibold mb-4 flex items-center gap-2"><Award size={18} /> Loyalty Program</h2>
+          <h2 className="font-semibold mb-4 flex items-center gap-2"><Award size={18} /> {t('customerProfile.loyaltyProgram')}</h2>
           {loyaltyInfo ? (
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Card Number</span>
+                <span className="text-gray-600">{t('customerProfile.cardNumber')}</span>
                 <span className="font-medium">{loyaltyInfo.cardNumber || '-'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Current Tier</span>
+                <span className="text-gray-600">{t('customerProfile.currentTier')}</span>
                 <span className="font-medium text-primary-600">{loyaltyInfo.tierName || 'None'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Points Balance</span>
+                <span className="text-gray-600">{t('customerProfile.pointsBalance')}</span>
                 <span className="font-bold text-lg">{loyaltyInfo.pointsBalance || 0}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Member Since</span>
+                <span className="text-gray-600">{t('customerProfile.memberSince')}</span>
                 <span className="font-medium">{loyaltyInfo.memberSince ? new Date(loyaltyInfo.memberSince).toLocaleDateString() : '-'}</span>
               </div>
             </div>
           ) : (
             <div className="text-center py-4">
-              <p className="text-gray-500 mb-3">Not enrolled in loyalty program</p>
+              <p className="text-gray-500 mb-3">{t('customerProfile.notEnrolled')}</p>
               <button 
                 onClick={() => enrollMutation.mutate()}
                 disabled={enrollMutation.isPending}
                 className="btn-primary"
               >
-                {enrollMutation.isPending ? 'Enrolling...' : 'Enroll in Loyalty Program'}
+                {enrollMutation.isPending ? t('customerProfile.enrolling') : t('customerProfile.enrollInLoyalty')}
               </button>
             </div>
           )}
@@ -157,7 +159,7 @@ export default function CustomerProfile() {
 
         {/* Addresses */}
         <div className="card p-4">
-          <h2 className="font-semibold mb-4 flex items-center gap-2"><MapPin size={18} /> Delivery Addresses</h2>
+          <h2 className="font-semibold mb-4 flex items-center gap-2"><MapPin size={18} /> {t('customerProfile.deliveryAddresses')}</h2>
           <div className="space-y-3 max-h-48 overflow-y-auto">
             {addresses?.map((addr: any) => (
               <div key={addr.id} className="border-b pb-2">
@@ -166,13 +168,13 @@ export default function CustomerProfile() {
                 <p className="text-xs text-gray-500">{[addr.area, addr.city].filter(Boolean).join(', ')}</p>
               </div>
             ))}
-            {(!addresses || addresses.length === 0) && <p className="text-gray-500 text-center py-4">No addresses</p>}
+            {(!addresses || addresses.length === 0) && <p className="text-gray-500 text-center py-4">{t('customerProfile.noAddresses')}</p>}
           </div>
         </div>
 
         {/* Favorite Items */}
         <div className="card p-4">
-          <h2 className="font-semibold mb-4 flex items-center gap-2"><Gift size={18} /> Favorite Items</h2>
+          <h2 className="font-semibold mb-4 flex items-center gap-2"><Gift size={18} /> {t('customerProfile.favoriteItems')}</h2>
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {stats?.favoriteItems?.map((item: any, idx: number) => (
               <div key={idx} className="flex justify-between items-center">
@@ -180,24 +182,24 @@ export default function CustomerProfile() {
                 <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{item.quantity}x</span>
               </div>
             ))}
-            {(!stats?.favoriteItems || stats.favoriteItems.length === 0) && <p className="text-gray-500 text-center py-4">No orders yet</p>}
+            {(!stats?.favoriteItems || stats.favoriteItems.length === 0) && <p className="text-gray-500 text-center py-4">{t('customerProfile.noFavoriteItems')}</p>}
           </div>
         </div>
       </div>
 
       {/* Order History */}
       <div className="card mt-6">
-        <h2 className="font-semibold p-4 border-b flex items-center gap-2"><ShoppingBag size={18} /> Order History</h2>
+        <h2 className="font-semibold p-4 border-b flex items-center gap-2"><ShoppingBag size={18} /> {t('customerProfile.orderHistory')}</h2>
         <div className="overflow-x-auto">
           <table className="table">
             <thead>
               <tr className="border-b bg-gray-800">
-                <th className="text-left p-3">Order #</th>
-                <th className="text-left p-3">Date</th>
-                <th className="text-left p-3">Type</th>
-                <th className="text-left p-3">Items</th>
-                <th className="text-left p-3">Total</th>
-                <th className="text-left p-3">Status</th>
+                <th className="text-left p-3">{t('customerProfile.orderNumber')}</th>
+                <th className="text-left p-3">{t('customerProfile.date')}</th>
+                <th className="text-left p-3">{t('common.type')}</th>
+                <th className="text-left p-3">{t('common.items')}</th>
+                <th className="text-left p-3">{t('customerProfile.total')}</th>
+                <th className="text-left p-3">{t('common.status')}</th>
               </tr>
             </thead>
             <tbody>
@@ -217,7 +219,7 @@ export default function CustomerProfile() {
               ))}
             </tbody>
           </table>
-          {(!orderHistory || orderHistory.length === 0) && <p className="text-center text-gray-500 py-8">No orders yet</p>}
+          {(!orderHistory || orderHistory.length === 0) && <p className="text-center text-gray-500 py-8">{t('customerProfile.noOrdersYet')}</p>}
         </div>
       </div>
     </div>

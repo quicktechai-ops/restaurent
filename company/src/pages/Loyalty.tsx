@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { loyaltyApi } from '../lib/api'
 import { Plus, Edit, Trash2, Star, Award, Settings } from 'lucide-react'
 
 export default function Loyalty() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showTierForm, setShowTierForm] = useState(false)
   const [editingTierId, setEditingTierId] = useState<number | null>(null)
@@ -34,64 +36,64 @@ export default function Loyalty() {
   // Initialize settings form when data loads
   const currentSettings = settings?.data?.[0]
 
-  if (isLoading) return <div className="text-gray-400">Loading...</div>
+  if (isLoading) return <div className="text-gray-400">{t('common.loading')}</div>
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Loyalty Program</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('loyalty.title')}</h1>
 
       {/* Settings Card */}
       <div className="card mb-6">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Settings size={20} /> Loyalty Settings</h2>
+        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Settings size={20} /> {t('loyalty.settings')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Points per Amount</label>
+            <label className="block text-sm text-gray-600 mb-1">{t('loyalty.pointsPerAmount')}</label>
             <input type="number" step="0.01" value={currentSettings?.pointsPerAmount || settingsData.pointsPerAmount} onChange={(e) => setSettingsData({ ...settingsData, pointsPerAmount: parseFloat(e.target.value) || 1 })} className="input" />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Per Amount Unit ($)</label>
+            <label className="block text-sm text-gray-600 mb-1">{t('loyalty.perAmountUnit')}</label>
             <input type="number" step="0.01" value={currentSettings?.amountUnit || settingsData.amountUnit} onChange={(e) => setSettingsData({ ...settingsData, amountUnit: parseFloat(e.target.value) || 10 })} className="input" />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Point Redeem Value ($)</label>
+            <label className="block text-sm text-gray-600 mb-1">{t('loyalty.pointRedeemValue')}</label>
             <input type="number" step="0.01" value={currentSettings?.pointsRedeemValue || settingsData.pointsRedeemValue} onChange={(e) => setSettingsData({ ...settingsData, pointsRedeemValue: parseFloat(e.target.value) || 0.1 })} className="input" />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Points Expiry (months)</label>
-            <input type="number" placeholder="Never" value={currentSettings?.pointsExpiryMonths || settingsData.pointsExpiryMonths} onChange={(e) => setSettingsData({ ...settingsData, pointsExpiryMonths: e.target.value })} className="input" />
+            <label className="block text-sm text-gray-600 mb-1">{t('loyalty.pointsExpiry')}</label>
+            <input type="number" placeholder={t('loyalty.never')} value={currentSettings?.pointsExpiryMonths || settingsData.pointsExpiryMonths} onChange={(e) => setSettingsData({ ...settingsData, pointsExpiryMonths: e.target.value })} className="input" />
           </div>
           <div className="flex items-center gap-2">
             <input type="checkbox" id="earnOnNet" checked={currentSettings?.earnOnNetBeforeTax ?? settingsData.earnOnNetBeforeTax} onChange={(e) => setSettingsData({ ...settingsData, earnOnNetBeforeTax: e.target.checked })} />
-            <label htmlFor="earnOnNet" className="text-sm">Earn on Net Before Tax</label>
+            <label htmlFor="earnOnNet" className="text-sm">{t('loyalty.earnOnNetBeforeTax')}</label>
           </div>
           <div>
-            <button onClick={handleSaveSettings} className="btn-primary">Save Settings</button>
+            <button onClick={handleSaveSettings} className="btn-primary">{t('loyalty.saveSettings')}</button>
           </div>
         </div>
         <p className="text-sm text-gray-500 mt-4">
-          Example: Earn {settingsData.pointsPerAmount} point(s) per ${settingsData.amountUnit} spent. Each point = ${settingsData.pointsRedeemValue}
+          {t('loyalty.example')}: {t('loyalty.earn')} {settingsData.pointsPerAmount} {t('loyalty.pointsPer')} ${settingsData.amountUnit} {t('loyalty.spent')}. {t('loyalty.eachPoint')} = ${settingsData.pointsRedeemValue}
         </p>
       </div>
 
       {/* Tiers */}
       <div className="card">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2"><Award size={20} /> Loyalty Tiers</h2>
+          <h2 className="text-lg font-semibold flex items-center gap-2"><Award size={20} /> {t('loyalty.tiers')}</h2>
           <button onClick={() => setShowTierForm(true)} className="btn-primary flex items-center gap-2">
-            <Plus size={20} /> Add Tier
+            <Plus size={20} /> {t('loyalty.addTier')}
           </button>
         </div>
 
         {showTierForm && (
           <form onSubmit={handleTierSubmit} className="border rounded p-4 mb-4 bg-gray-800 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input type="text" placeholder="Tier Name *" value={tierFormData.name} onChange={(e) => setTierFormData({ ...tierFormData, name: e.target.value })} className="input" required />
-            <input type="number" step="0.01" placeholder="Min Spent ($)" value={tierFormData.minTotalSpent} onChange={(e) => setTierFormData({ ...tierFormData, minTotalSpent: parseFloat(e.target.value) || 0 })} className="input" />
-            <input type="number" step="0.01" placeholder="Discount %" value={tierFormData.tierDiscountPercent} onChange={(e) => setTierFormData({ ...tierFormData, tierDiscountPercent: parseFloat(e.target.value) || 0 })} className="input" />
-            <input type="text" placeholder="Benefits" value={tierFormData.benefits} onChange={(e) => setTierFormData({ ...tierFormData, benefits: e.target.value })} className="input md:col-span-2" />
-            <input type="number" placeholder="Sort Order" value={tierFormData.sortOrder} onChange={(e) => setTierFormData({ ...tierFormData, sortOrder: parseInt(e.target.value) || 0 })} className="input" />
+            <input type="text" placeholder={`${t('loyalty.tierName')} *`} value={tierFormData.name} onChange={(e) => setTierFormData({ ...tierFormData, name: e.target.value })} className="input" required />
+            <input type="number" step="0.01" placeholder={t('loyalty.minSpent')} value={tierFormData.minTotalSpent} onChange={(e) => setTierFormData({ ...tierFormData, minTotalSpent: parseFloat(e.target.value) || 0 })} className="input" />
+            <input type="number" step="0.01" placeholder={t('loyalty.discountPercent')} value={tierFormData.tierDiscountPercent} onChange={(e) => setTierFormData({ ...tierFormData, tierDiscountPercent: parseFloat(e.target.value) || 0 })} className="input" />
+            <input type="text" placeholder={t('loyalty.benefits')} value={tierFormData.benefits} onChange={(e) => setTierFormData({ ...tierFormData, benefits: e.target.value })} className="input md:col-span-2" />
+            <input type="number" placeholder={t('loyalty.sortOrder')} value={tierFormData.sortOrder} onChange={(e) => setTierFormData({ ...tierFormData, sortOrder: parseInt(e.target.value) || 0 })} className="input" />
             <div className="md:col-span-3 flex gap-2">
-              <button type="submit" className="btn-primary">Save Tier</button>
-              <button type="button" onClick={resetTierForm} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary">{t('loyalty.saveTier')}</button>
+              <button type="button" onClick={resetTierForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         )}
@@ -106,14 +108,14 @@ export default function Loyalty() {
                   <button onClick={() => deleteTierMutation.mutate(tier.id)} className="text-red-600"><Trash2 size={14} /></button>
                 </div>
               </div>
-              <p className="text-sm text-gray-600">Min Spent: ${tier.minTotalSpent}</p>
-              <p className="text-sm text-gray-600">Discount: {tier.tierDiscountPercent}%</p>
+              <p className="text-sm text-gray-600">{t('loyalty.minSpent')}: ${tier.minTotalSpent}</p>
+              <p className="text-sm text-gray-600">{t('loyalty.discount')}: {tier.tierDiscountPercent}%</p>
               {tier.benefits && <p className="text-sm text-gray-500 mt-2">{tier.benefits}</p>}
-              <p className="text-xs text-gray-400 mt-2">{tier.customersCount} customers</p>
+              <p className="text-xs text-gray-400 mt-2">{tier.customersCount} {t('loyalty.customers')}</p>
             </div>
           ))}
         </div>
-        {tiers?.data?.length === 0 && <p className="text-center text-gray-500 py-8">No loyalty tiers configured</p>}
+        {tiers?.data?.length === 0 && <p className="text-center text-gray-500 py-8">{t('loyalty.noTiers')}</p>}
       </div>
     </div>
   )

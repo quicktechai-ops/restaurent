@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { exchangeRatesApi, currenciesApi } from '../lib/api';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 
 export default function ExchangeRates() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -87,38 +89,38 @@ export default function ExchangeRates() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this exchange rate?')) {
+    if (confirm(t('common.confirmDelete'))) {
       deleteMutation.mutate(id);
     }
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>{t('common.loading')}</div>;
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Exchange Rates</h1>
+        <h1 className="text-2xl font-bold">{t('exchangeRates.title')}</h1>
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
         >
-          <Plus className="w-4 h-4" /> Add Rate
+          <Plus className="w-4 h-4" /> {t('exchangeRates.addRate')}
         </button>
       </div>
 
       {showForm && (
         <div className="bg-gray-900 rounded-lg shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit Exchange Rate' : 'Add Exchange Rate'}</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('exchangeRates.editRate') : t('exchangeRates.addRate')}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Base Currency *</label>
+              <label className="block text-sm font-medium mb-1">{t('exchangeRates.baseCurrency')} *</label>
               <select
                 value={formData.baseCurrencyCode}
                 onChange={(e) => setFormData({ ...formData, baseCurrencyCode: e.target.value })}
                 className="w-full border border-gray-700 bg-gray-800 text-white rounded-lg px-3 py-2"
                 required
               >
-                <option value="">Select currency</option>
+                <option value="">{t('common.select')}...</option>
                 {currencies.map((c: any) => (
                   <option key={c.currencyCode} value={c.currencyCode}>
                     {c.currencyCode} - {c.name}
@@ -127,14 +129,14 @@ export default function ExchangeRates() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Target Currency *</label>
+              <label className="block text-sm font-medium mb-1">{t('exchangeRates.targetCurrency')} *</label>
               <select
                 value={formData.targetCurrencyCode}
                 onChange={(e) => setFormData({ ...formData, targetCurrencyCode: e.target.value })}
                 className="w-full border border-gray-700 bg-gray-800 text-white rounded-lg px-3 py-2"
                 required
               >
-                <option value="">Select currency</option>
+                <option value="">{t('common.select')}...</option>
                 {currencies.filter((c: any) => c.currencyCode !== formData.baseCurrencyCode).map((c: any) => (
                   <option key={c.currencyCode} value={c.currencyCode}>
                     {c.currencyCode} - {c.name}
@@ -143,7 +145,7 @@ export default function ExchangeRates() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Rate *</label>
+              <label className="block text-sm font-medium mb-1">{t('exchangeRates.rate')} *</label>
               <input
                 type="number"
                 step="0.0001"
@@ -157,7 +159,7 @@ export default function ExchangeRates() {
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Valid From *</label>
+              <label className="block text-sm font-medium mb-1">{t('exchangeRates.validFrom')} *</label>
               <input
                 type="date"
                 value={formData.validFrom}
@@ -167,7 +169,7 @@ export default function ExchangeRates() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Valid To (optional)</label>
+              <label className="block text-sm font-medium mb-1">{t('exchangeRates.validTo')} ({t('common.optional')})</label>
               <input
                 type="date"
                 value={formData.validTo}
@@ -177,10 +179,10 @@ export default function ExchangeRates() {
             </div>
             <div className="md:col-span-2 flex gap-4">
               <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-                {editingId ? 'Update' : 'Create'}
+                {editingId ? t('common.update') : t('common.create')}
               </button>
               <button type="button" onClick={resetForm} className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-500">
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </form>
@@ -191,12 +193,12 @@ export default function ExchangeRates() {
         <table className="table">
           <thead className="bg-gray-800">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Base</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valid From</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valid To</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('exchangeRates.baseCurrency')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('exchangeRates.targetCurrency')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('exchangeRates.rate')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('exchangeRates.validFrom')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('exchangeRates.validTo')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -222,7 +224,7 @@ export default function ExchangeRates() {
             {rates.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                  No exchange rates configured
+                  {t('exchangeRates.noRates')}
                 </td>
               </tr>
             )}

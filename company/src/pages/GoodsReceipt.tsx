@@ -1,20 +1,29 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import api from '../lib/api'
-import { Package, X, Check, Truck } from 'lucide-react'
+import { Package, X, Check, Truck, Eye } from 'lucide-react'
 
-interface ReceiptLine { inventoryItemId: number; itemName: string; orderedQty: number; receivedQty: number; unitCost: number; unit: string }
+interface ReceiptLine { inventoryItemId: number; itemName: string; orderedQty: number; receivedQty: number; unitCost: number; unit: string; wastePct: number }
 
 export default function GoodsReceipt() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [selectedPO, setSelectedPO] = useState<any>(null)
   const [lines, setLines] = useState<ReceiptLine[]>([])
   const [notes, setNotes] = useState('')
+  const [viewReceipt, setViewReceipt] = useState<any>(null)
 
   const { data: pendingPOs = [], isLoading } = useQuery({ 
     queryKey: ['pending-pos'], 
-    queryFn: () => api.get('/api/company/purchase-orders?status=Approved').then(r => Array.isArray(r.data) ? r.data : []) 
+    queryFn: async () => {
+      const [approved, partial] = await Promise.all([
+        api.get('/api/company/purchase-orders?status=Approved').then(r => Array.isArray(r.data) ? r.data : []),
+        api.get('/api/company/purchase-orders?status=PartiallyReceived').then(r => Array.isArray(r.data) ? r.data : [])
+      ])
+      return [...approved, ...partial]
+    }
   })
   
   const { data: receipts = [] } = useQuery({ 
@@ -24,28 +33,38 @@ export default function GoodsReceipt() {
 
   const createMutation = useMutation({
     mutationFn: (data: any) => api.post('/api/company/goods-receipts', data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['goods-receipts'] }); queryClient.invalidateQueries({ queryKey: ['pending-pos'] }); resetForm() }
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['goods-receipts'] }); queryClient.invalidateQueries({ queryKey: ['pending-pos'] }); queryClient.invalidateQueries({ queryKey: ['purchase-orders'] }); queryClient.invalidateQueries({ queryKey: ['inventory'] }); resetForm() }
   })
 
   const resetForm = () => { setShowForm(false); setSelectedPO(null); setLines([]); setNotes('') }
 
+  const loadReceiptDetail = async (id: number) => {
+    const res = await api.get(`/api/company/goods-receipts/${id}`)
+    setViewReceipt(res.data)
+  }
+
   const loadPOLines = async (poId: number) => {
     const res = await api.get(`/api/company/purchase-orders/${poId}`)
     setSelectedPO(res.data)
-    setLines(res.data.lines?.map((l: any) => ({
-      inventoryItemId: l.inventoryItemId,
-      itemName: l.itemName,
-      orderedQty: l.quantity,
-      receivedQty: l.quantity,
-      unitCost: l.unitPrice,
-      unit: l.unit
-    })) || [])
+    setLines(res.data.lines?.map((l: any) => {
+      const remaining = l.quantity - (l.receivedQuantity || 0)
+      return {
+        inventoryItemId: l.inventoryItemId,
+        itemName: l.itemName,
+        orderedQty: remaining > 0 ? remaining : 0,
+        receivedQty: remaining > 0 ? remaining : 0,
+        unitCost: l.unitPrice,
+        unit: l.unit,
+        wastePct: 0
+      }
+    }).filter((l: any) => l.receivedQty > 0) || [])
     setShowForm(true)
   }
 
   const updateReceivedQty = (index: number, qty: number) => {
     const updated = [...lines]
     updated[index].receivedQty = qty
+    updated[index].wastePct = 0
     setLines(updated)
   }
 
@@ -55,6 +74,20 @@ export default function GoodsReceipt() {
     setLines(updated)
   }
 
+  const updateWastePct = (index: number, pct: number) => {
+    const updated = [...lines]
+    updated[index].wastePct = pct
+    updated[index].receivedQty = pct > 0
+      ? updated[index].orderedQty * (1 - pct / 100)
+      : updated[index].orderedQty
+    setLines(updated)
+  }
+
+  const getLineTotal = (line: ReceiptLine) => line.orderedQty * line.unitCost
+
+  const getEffectiveUnitCost = (line: ReceiptLine) =>
+    line.receivedQty > 0 ? getLineTotal(line) / line.receivedQty : line.unitCost
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     createMutation.mutate({
@@ -63,22 +96,23 @@ export default function GoodsReceipt() {
       lines: lines.map(l => ({
         inventoryItemId: l.inventoryItemId,
         receivedQuantity: l.receivedQty,
-        unitCost: l.unitCost
+        unitCost: getEffectiveUnitCost(l),
+        orderedQuantity: l.orderedQty
       }))
     })
   }
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return <div>{t('common.loading')}</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Truck size={28} /> Goods Receipt</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Truck size={28} /> {t('inventory.goodsReceipt')}</h1>
       </div>
 
       {/* Pending POs to Receive */}
       <div className="card mb-6">
-        <h2 className="font-semibold p-4 border-b border-gray-700">Pending Purchase Orders</h2>
+        <h2 className="font-semibold p-4 border-b border-gray-700">{t('goodsReceipt.pendingPOs')}</h2>
         <div className="p-4">
           {pendingPOs?.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -91,13 +125,13 @@ export default function GoodsReceipt() {
                   <p className="text-sm text-gray-600 mb-2">{po.supplierName}</p>
                   <p className="text-sm mb-3">{po.lineCount} items • ${po.totalAmount?.toFixed(2)}</p>
                   <button onClick={() => loadPOLines(po.id)} className="btn-primary w-full flex items-center justify-center gap-2">
-                    <Package size={16} /> Receive
+                    <Package size={16} /> {t('goodsReceipt.receive')}
                   </button>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-center text-gray-500 py-4">No pending purchase orders to receive</p>
+            <p className="text-center text-gray-500 py-4">{t('goodsReceipt.noPending')}</p>
           )}
         </div>
       </div>
@@ -107,7 +141,7 @@ export default function GoodsReceipt() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b border-gray-700">
-              <h2 className="text-lg font-semibold">Receive PO-{selectedPO.id.toString().padStart(5, '0')} from {selectedPO.supplierName}</h2>
+              <h2 className="text-lg font-semibold">{t('goodsReceipt.receive')} PO-{selectedPO.id.toString().padStart(5, '0')} - {selectedPO.supplierName}</h2>
               <button onClick={resetForm} className="text-gray-500 hover:text-gray-700"><X size={20} /></button>
             </div>
             
@@ -115,11 +149,12 @@ export default function GoodsReceipt() {
               <table className="w-full mb-4 border rounded-lg overflow-hidden">
                 <thead className="bg-gray-800">
                   <tr>
-                    <th className="text-left p-3">Item</th>
-                    <th className="text-left p-3">Ordered</th>
-                    <th className="text-left p-3">Received</th>
-                    <th className="text-left p-3">Unit Cost</th>
-                    <th className="text-left p-3">Total</th>
+                    <th className="text-left p-3">{t('common.item')}</th>
+                    <th className="text-left p-3">{t('goodsReceipt.ordered')}</th>
+                    <th className="text-left p-3">{t('inventory.loss')}</th>
+                    <th className="text-left p-3">{t('goodsReceipt.received')}</th>
+                    <th className="text-left p-3">{t('goodsReceipt.unitCost')}</th>
+                    <th className="text-left p-3">{t('common.total')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -128,29 +163,44 @@ export default function GoodsReceipt() {
                       <td className="p-3">{line.itemName}</td>
                       <td className="p-3">{line.orderedQty} {line.unit}</td>
                       <td className="p-3">
+                        <select value={line.wastePct} onChange={(e) => updateWastePct(idx, parseFloat(e.target.value))} className="input w-24 text-sm">
+                          <option value={0}>{t('inventory.noLoss')}</option>
+                          <option value={1}>-1%</option>
+                          <option value={2}>-2%</option>
+                          <option value={3}>-3%</option>
+                          <option value={5}>-5%</option>
+                          <option value={8}>-8%</option>
+                          <option value={10}>-10%</option>
+                          <option value={15}>-15%</option>
+                          <option value={20}>-20%</option>
+                          <option value={25}>-25%</option>
+                          <option value={30}>-30%</option>
+                        </select>
+                      </td>
+                      <td className="p-3">
                         <input type="number" step="0.01" value={line.receivedQty} onChange={(e) => updateReceivedQty(idx, parseFloat(e.target.value) || 0)} className="input w-24" />
                       </td>
                       <td className="p-3">
                         <input type="number" step="0.01" value={line.unitCost} onChange={(e) => updateUnitCost(idx, parseFloat(e.target.value) || 0)} className="input w-24" />
                       </td>
-                      <td className="p-3 font-medium">${(line.receivedQty * line.unitCost).toFixed(2)}</td>
+                      <td className="p-3 font-medium">${getLineTotal(line).toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="border-t bg-gray-800">
-                    <td colSpan={4} className="p-3 text-right font-medium">Total:</td>
-                    <td className="p-3 font-bold">${lines.reduce((sum, l) => sum + l.receivedQty * l.unitCost, 0).toFixed(2)}</td>
+                    <td colSpan={5} className="p-3 text-right font-medium">{t('common.total')}:</td>
+                    <td className="p-3 font-bold">${lines.reduce((sum, l) => sum + getLineTotal(l), 0).toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Notes</label>
+                <label className="block text-sm font-medium mb-1">{t('common.notes')}</label>
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="input w-full" rows={2} />
               </div>
 
               <div className="flex gap-2">
-                <button type="submit" className="btn-primary flex items-center gap-2"><Check size={16} /> Confirm Receipt</button>
-                <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+                <button type="submit" className="btn-primary flex items-center gap-2"><Check size={16} /> {t('goodsReceipt.confirmReceipt')}</button>
+                <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
               </div>
             </form>
           </div>
@@ -159,21 +209,21 @@ export default function GoodsReceipt() {
 
       {/* Receipt History */}
       <div className="card overflow-hidden">
-        <h2 className="font-semibold p-4 border-b border-gray-700">Receipt History</h2>
+        <h2 className="font-semibold p-4 border-b border-gray-700">{t('goodsReceipt.history')}</h2>
         <table className="table">
           <thead className="bg-gray-800">
             <tr>
-              <th className="text-left p-3">Receipt #</th>
-              <th className="text-left p-3">PO #</th>
-              <th className="text-left p-3">Supplier</th>
-              <th className="text-left p-3">Date</th>
-              <th className="text-left p-3">Items</th>
-              <th className="text-left p-3">Total</th>
+              <th className="text-left p-3">{t('goodsReceipt.receiptNo')}</th>
+              <th className="text-left p-3">{t('purchaseOrders.poNumber')}</th>
+              <th className="text-left p-3">{t('inventory.supplier')}</th>
+              <th className="text-left p-3">{t('reservations.date')}</th>
+              <th className="text-left p-3">{t('common.items')}</th>
+              <th className="text-left p-3">{t('common.total')}</th>
             </tr>
           </thead>
           <tbody>
             {receipts?.map((r: any) => (
-              <tr key={r.id} className="border-t hover:bg-gray-800/50">
+              <tr key={r.id} className="border-t hover:bg-gray-800/50 cursor-pointer" onClick={() => loadReceiptDetail(r.id)}>
                 <td className="p-3 font-medium">GR-{r.id.toString().padStart(5, '0')}</td>
                 <td className="p-3">PO-{r.purchaseOrderId?.toString().padStart(5, '0')}</td>
                 <td className="p-3">{r.supplierName}</td>
@@ -184,8 +234,58 @@ export default function GoodsReceipt() {
             ))}
           </tbody>
         </table>
-        {(!receipts || receipts.length === 0) && <p className="text-center text-gray-500 py-8">No receipts yet</p>}
+        {(!receipts || receipts.length === 0) && <p className="text-center text-gray-500 py-8">{t('goodsReceipt.noReceipts')}</p>}
       </div>
+
+      {/* Receipt Detail Modal */}
+      {viewReceipt && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-gray-700">
+              <div>
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <Eye size={20} /> {viewReceipt.receiptNumber}
+                </h2>
+                <p className="text-sm text-gray-400">{viewReceipt.supplierName} • {new Date(viewReceipt.createdAt).toLocaleDateString()}</p>
+              </div>
+              <button onClick={() => setViewReceipt(null)} className="text-gray-500 hover:text-gray-300"><X size={20} /></button>
+            </div>
+            
+            <div className="p-4 max-h-[70vh] overflow-y-auto">
+              {viewReceipt.purchaseOrderId && (
+                <p className="text-sm text-gray-400 mb-3">{t('purchaseOrders.poNumber')}: <span className="font-medium text-gray-200">PO-{viewReceipt.purchaseOrderId.toString().padStart(5, '0')}</span></p>
+              )}
+
+              <table className="w-full mb-4 border rounded-lg overflow-hidden">
+                <thead className="bg-gray-800">
+                  <tr>
+                    <th className="text-left p-3">{t('common.item')}</th>
+                    <th className="text-left p-3">{t('inventory.unit')}</th>
+                    <th className="text-right p-3">{t('goodsReceipt.received')}</th>
+                    <th className="text-right p-3">{t('goodsReceipt.unitCost')}</th>
+                    <th className="text-right p-3">{t('common.total')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {viewReceipt.lines?.map((line: any, idx: number) => (
+                    <tr key={idx} className="border-t">
+                      <td className="p-3">{line.itemName}</td>
+                      <td className="p-3">{line.unit}</td>
+                      <td className="p-3 text-right">{line.receivedQuantity}</td>
+                      <td className="p-3 text-right">${line.unitCost?.toFixed(2)}</td>
+                      <td className="p-3 text-right font-medium">${line.totalCost?.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                  <tr className="border-t bg-gray-800">
+                    <td colSpan={4} className="p-3 text-right font-medium">{t('common.total')}:</td>
+                    <td className="p-3 text-right font-bold">${viewReceipt.grandTotal?.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

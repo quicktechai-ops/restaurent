@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import axios from 'axios'
 import { 
@@ -85,6 +86,7 @@ interface Branch {
 }
 
 export default function POS() {
+  const { t } = useTranslation()
   const { token } = useAuth()
   const [categories, setCategories] = useState<Category[]>([])
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
@@ -423,7 +425,7 @@ export default function POS() {
               }`}
             >
               <UtensilsCrossed size={18} />
-              Dine In
+              {t('pos.dineIn')}
             </button>
             <button 
               onClick={() => setOrderType('Takeaway')}
@@ -434,7 +436,7 @@ export default function POS() {
               }`}
             >
               <Package size={18} />
-              Takeaway
+              {t('pos.takeaway')}
             </button>
             <button 
               onClick={() => setOrderType('Delivery')}
@@ -445,7 +447,7 @@ export default function POS() {
               }`}
             >
               <Truck size={18} />
-              Delivery
+              {t('pos.delivery')}
             </button>
 
             {orderType === 'DineIn' && (
@@ -454,7 +456,7 @@ export default function POS() {
                 value={selectedTable || ''}
                 onChange={(e) => setSelectedTable(parseInt(e.target.value) || null)}
               >
-                <option value="">Select Table</option>
+                <option value="">{t('pos.selectTable')}</option>
                 {tables.map(t => (
                   <option key={t.id} value={t.id}>
                     {t.tableName} ({t.zone})
@@ -468,7 +470,7 @@ export default function POS() {
               className="ml-auto flex items-center gap-2 px-3 py-1.5 border rounded-lg hover:bg-gray-800/50"
             >
               <User size={18} />
-              {selectedCustomer ? selectedCustomer.name : 'Add Customer'}
+              {selectedCustomer ? selectedCustomer.name : t('pos.addCustomer')}
             </button>
           </div>
 
@@ -478,7 +480,7 @@ export default function POS() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
-                placeholder="Search items..."
+                placeholder={t('pos.searchItems')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border rounded-lg"
@@ -522,14 +524,14 @@ export default function POS() {
                     ${item.defaultPrice.toFixed(2)}
                   </div>
                   {item.allowSizes && (
-                    <div className="text-xs text-gray-500 mt-1">Multiple sizes</div>
+                    <div className="text-xs text-gray-500 mt-1">{t('pos.multipleSizes')}</div>
                   )}
                 </button>
               ))}
             </div>
             {filteredItems.length === 0 && (
               <div className="text-center text-gray-500 py-8">
-                No items found
+                {t('pos.noItemsFound')}
               </div>
             )}
           </div>
@@ -541,7 +543,7 @@ export default function POS() {
             <div className="flex items-center justify-between">
               <h2 className="font-bold text-lg flex items-center gap-2">
                 <ShoppingCart size={20} />
-                Current Order
+                {t('pos.currentOrder')}
               </h2>
               <span className={`px-2 py-1 rounded text-xs font-medium ${
                 orderType === 'DineIn' ? 'bg-primary-100 text-primary-700' :
@@ -568,7 +570,7 @@ export default function POS() {
             {orderLines.length === 0 ? (
               <div className="text-center text-gray-400 py-8">
                 <ShoppingCart size={48} className="mx-auto mb-2 opacity-50" />
-                <p>No items added</p>
+                <p>{t('pos.noItemsAdded')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -615,7 +617,7 @@ export default function POS() {
                       <div 
                         className="text-right cursor-pointer hover:bg-gray-100 rounded p-1 -m-1"
                         onClick={() => openLineDiscount(line.id)}
-                        title="Click to apply discount"
+                        title={t('pos.clickToApplyDiscount')}
                       >
                         <div className="font-semibold">${line.lineNet.toFixed(2)}</div>
                         <div className="text-xs text-gray-500">
@@ -635,19 +637,19 @@ export default function POS() {
           {/* Totals */}
           <div className="border-t p-4 space-y-2 bg-gray-800">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Subtotal</span>
+              <span className="text-gray-600">{t('pos.subtotal')}</span>
               <span>${subtotal.toFixed(2)}</span>
             </div>
             {totalLineDiscount > 0 && (
               <div className="flex justify-between text-sm text-green-600">
-                <span>Line Discounts</span>
+                <span>{t('pos.lineDiscounts')}</span>
                 <span>-${totalLineDiscount.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm items-center">
               <span className="text-gray-600 flex items-center gap-1">
                 <Percent size={14} />
-                Bill Discount
+                {t('pos.billDiscount')}
               </span>
               <div className="flex items-center gap-1">
                 <input
@@ -669,18 +671,18 @@ export default function POS() {
             )}
             {serviceCharge > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Service ({selectedBranch?.serviceChargePercent}%)</span>
+                <span className="text-gray-600">{t('pos.serviceCharge')} ({selectedBranch?.serviceChargePercent}%)</span>
                 <span>${serviceCharge.toFixed(2)}</span>
               </div>
             )}
             {tax > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">VAT ({selectedBranch?.vatPercent}%)</span>
+                <span className="text-gray-600">{t('pos.vat')} ({selectedBranch?.vatPercent}%)</span>
                 <span>${tax.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between font-bold text-lg pt-2 border-t">
-              <span>Total</span>
+              <span>{t('pos.grandTotal')}</span>
               <span className="text-primary-600">${grandTotal.toFixed(2)}</span>
             </div>
           </div>
@@ -694,7 +696,7 @@ export default function POS() {
                 className="flex items-center justify-center gap-2 px-4 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChefHat size={18} />
-                Kitchen
+                {t('pos.kitchen')}
               </button>
               <button 
                 onClick={() => {/* Print bill */}}
@@ -702,7 +704,7 @@ export default function POS() {
                 className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Receipt size={18} />
-                Print
+                {t('common.print')}
               </button>
             </div>
             <button 
@@ -717,7 +719,7 @@ export default function POS() {
               onClick={clearOrder}
               className="w-full px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium"
             >
-              Clear Order
+              {t('pos.clearOrder')}
             </button>
           </div>
         </div>
@@ -737,7 +739,7 @@ export default function POS() {
               {/* Sizes */}
               {selectedItemForModifier.sizes && selectedItemForModifier.sizes.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Size</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('pos.size')}</label>
                   <div className="grid grid-cols-3 gap-2">
                     {selectedItemForModifier.sizes.map(size => (
                       <button
@@ -759,7 +761,7 @@ export default function POS() {
 
               {/* Quantity */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('common.quantity')}</label>
                 <div className="flex items-center gap-3">
                   <button 
                     onClick={() => setItemQuantity(q => Math.max(1, q - 1))}
@@ -780,7 +782,7 @@ export default function POS() {
               {/* Modifiers */}
               {modifiers.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Add-ons</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('pos.addOns')}</label>
                   <div className="space-y-2">
                     {modifiers.map(mod => {
                       const selected = selectedModifiers.find(m => m.modifierId === mod.id)
@@ -830,7 +832,7 @@ export default function POS() {
                                 onClick={() => setSelectedModifiers(mods => [...mods, {modifierId: mod.id, quantity: 1}])}
                                 className="px-3 py-1 text-sm bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200"
                               >
-                                Add
+                                {t('common.add')}
                               </button>
                             )}
                           </div>
@@ -843,11 +845,11 @@ export default function POS() {
 
               {/* Notes */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Special Instructions</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('pos.specialInstructions')}</label>
                 <textarea
                   value={itemNotes}
                   onChange={(e) => setItemNotes(e.target.value)}
-                  placeholder="Any special requests..."
+                  placeholder={t('pos.anySpecialRequests')}
                   className="w-full border rounded-lg p-2 text-sm"
                   rows={2}
                 />
@@ -858,7 +860,7 @@ export default function POS() {
                 onClick={confirmAddItem}
                 className="w-full py-3 bg-primary-600 text-white rounded-lg font-bold hover:bg-primary-700"
               >
-                Add to Order
+                {t('pos.addToOrder')}
               </button>
             </div>
           </div>
@@ -870,20 +872,20 @@ export default function POS() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-md mx-4">
             <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="font-bold text-lg">Payment</h3>
+              <h3 className="font-bold text-lg">{t('pos.payment')}</h3>
               <button onClick={() => setShowPaymentModal(false)} className="text-gray-500 hover:text-gray-700">
                 <X size={20} />
               </button>
             </div>
             <div className="p-4">
               <div className="text-center mb-6">
-                <div className="text-sm text-gray-500">Total Amount</div>
+                <div className="text-sm text-gray-500">{t('pos.totalAmount')}</div>
                 <div className="text-4xl font-bold text-primary-600">${grandTotal.toFixed(2)}</div>
               </div>
               {processing && (
                 <div className="text-center py-4">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-2"></div>
-                  <div className="text-sm text-gray-500">Processing payment...</div>
+                  <div className="text-sm text-gray-500">{t('pos.processingPayment')}</div>
                 </div>
               )}
               {!processing && (
@@ -909,16 +911,7 @@ export default function POS() {
                       >
                         <div className="flex items-center justify-center gap-2">
                           <DollarSign size={20} />
-                          <span className="font-medium">Cash</span>
-                        </div>
-                      </button>
-                      <button
-                        onClick={() => processPayment(null, 'Card')}
-                        className="p-4 border-2 rounded-xl hover:border-primary-500 hover:bg-primary-50 transition"
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          <CreditCard size={20} />
-                          <span className="font-medium">Card</span>
+                          <span className="font-medium">{t('pos.cash')}</span>
                         </div>
                       </button>
                     </>
@@ -935,7 +928,7 @@ export default function POS() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-md mx-4">
             <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="font-bold text-lg">Select Customer</h3>
+              <h3 className="font-bold text-lg">{t('pos.selectCustomer')}</h3>
               <button onClick={() => setShowCustomerModal(false)} className="text-gray-500 hover:text-gray-700">
                 <X size={20} />
               </button>
@@ -948,7 +941,7 @@ export default function POS() {
                 }}
                 className="w-full p-3 text-left hover:bg-gray-800/50 rounded-lg mb-2 text-gray-500"
               >
-                No Customer (Walk-in)
+                {t('pos.walkIn')}
               </button>
               {customers.map(c => (
                 <button
@@ -975,14 +968,14 @@ export default function POS() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-sm mx-4">
             <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="font-bold text-lg">Line Discount</h3>
+              <h3 className="font-bold text-lg">{t('pos.lineDiscount')}</h3>
               <button onClick={() => setShowLineDiscountModal(false)} className="text-gray-500 hover:text-gray-700">
                 <X size={20} />
               </button>
             </div>
             <div className="p-4">
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Discount Percentage</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('pos.discountPercentage')}</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
@@ -1001,13 +994,13 @@ export default function POS() {
                   onClick={() => setShowLineDiscountModal(false)}
                   className="flex-1 py-2 border rounded-lg hover:bg-gray-800/50"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={applyLineDiscount}
                   className="flex-1 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                 >
-                  Apply
+                  {t('pos.apply')}
                 </button>
               </div>
             </div>

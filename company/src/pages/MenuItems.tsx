@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { menuItemsApi, categoriesApi, uploadApi } from '../lib/api'
 import api from '../lib/api'
 import { Plus, Edit, Trash2, UtensilsCrossed, Search, X, Upload, Loader2 } from 'lucide-react'
@@ -7,6 +8,7 @@ import { Plus, Edit, Trash2, UtensilsCrossed, Search, X, Upload, Loader2 } from 
 interface ItemSize { name: string; price: number; cost: number }
 
 export default function MenuItems() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<number | null>(null)
@@ -85,76 +87,76 @@ export default function MenuItems() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Menu Items</h1>
-        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> Add Item</button>
+        <h1 className="text-2xl font-bold text-gray-900">{t('nav.menuItems')}</h1>
+        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> {t('menu.addItem')}</button>
       </div>
 
       <div className="card p-4 mb-6 flex gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input className="input pl-10" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} />
+          <input className="input pl-10" placeholder={t('common.search')} value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select className="input w-48" value={categoryFilter || ''} onChange={e => setCategoryFilter(e.target.value ? parseInt(e.target.value) : null)}>
-          <option value="">All Categories</option>
+          <option value="">{t('common.all')} {t('nav.categories')}</option>
           {categories?.data?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </div>
 
       {showForm && (
         <div className="card p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit Item' : 'Add Item'}</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('menu.editItem') : t('menu.addItem')}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label className="label">Name *</label><input className="input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required /></div>
-            <div><label className="label">Arabic Name</label><input className="input" value={formData.nameAr} onChange={e => setFormData({...formData, nameAr: e.target.value})} /></div>
-            <div><label className="label">Code</label><input className="input" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} /></div>
-            <div><label className="label">Category *</label>
+            <div><label className="label">{t('common.name')} *</label><input className="input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required /></div>
+            <div><label className="label">{t('categories.arabicName')}</label><input className="input" value={formData.nameAr} onChange={e => setFormData({...formData, nameAr: e.target.value})} /></div>
+            <div><label className="label">{t('common.code')}</label><input className="input" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} /></div>
+            <div><label className="label">{t('common.category')} *</label>
               {showCategoryForm ? (
                 <div className="flex gap-2">
-                  <input type="text" placeholder="New category name..." value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} className="input flex-1" autoFocus />
+                  <input type="text" placeholder={t('inventory.newCategoryName')} value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} className="input flex-1" autoFocus />
                   <button type="button" onClick={() => newCategoryName.trim() && createCategoryMutation.mutate(newCategoryName.trim())} disabled={createCategoryMutation.isPending} className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">{createCategoryMutation.isPending ? '...' : '✓'}</button>
                   <button type="button" onClick={() => { setShowCategoryForm(false); setNewCategoryName('') }} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">✕</button>
                 </div>
               ) : (
                 <div className="flex gap-2">
                   <select className="input flex-1" value={formData.categoryId} onChange={e => setFormData({...formData, categoryId: parseInt(e.target.value)})} required>
-                    <option value="">-- Select --</option>
+                    <option value="">-- {t('common.select')} --</option>
                     {categories?.data?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
-                  <button type="button" onClick={() => setShowCategoryForm(true)} className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700" title="Add new category"><Plus size={20} /></button>
+                  <button type="button" onClick={() => setShowCategoryForm(true)} className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700" title={t('menu.addNewCategory')}><Plus size={20} /></button>
                 </div>
               )}
             </div>
-            <div><label className="label">Price *</label><input type="number" step="0.01" className="input" value={formData.defaultPrice} onChange={e => setFormData({...formData, defaultPrice: parseFloat(e.target.value) || 0})} required /></div>
-            <div><label className="label">Currency</label>
+            <div><label className="label">{t('common.price')} *</label><input type="number" step="0.01" className="input" value={formData.defaultPrice} onChange={e => setFormData({...formData, defaultPrice: parseFloat(e.target.value) || 0})} required /></div>
+            <div><label className="label">{t('branches.currency')}</label>
               <select className="input" value={formData.currencyCode} onChange={e => setFormData({...formData, currencyCode: e.target.value})}>
                 <option value="USD">USD</option><option value="EUR">EUR</option><option value="LBP">LBP</option>
               </select>
             </div>
-            <div><label className="label">Kitchen Station</label>
+            <div><label className="label">{t('menu.kitchenStation')}</label>
               {showStationForm ? (
                 <div className="flex gap-2">
-                  <input type="text" placeholder="New station name..." value={newStationName} onChange={e => setNewStationName(e.target.value)} className="input flex-1" autoFocus />
+                  <input type="text" placeholder={t('menu.newStationName')} value={newStationName} onChange={e => setNewStationName(e.target.value)} className="input flex-1" autoFocus />
                   <button type="button" onClick={() => newStationName.trim() && createStationMutation.mutate(newStationName.trim())} disabled={createStationMutation.isPending} className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">{createStationMutation.isPending ? '...' : '✓'}</button>
                   <button type="button" onClick={() => { setShowStationForm(false); setNewStationName('') }} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">✕</button>
                 </div>
               ) : (
                 <div className="flex gap-2">
                   <select className="input flex-1" value={formData.kitchenStationId} onChange={e => setFormData({...formData, kitchenStationId: e.target.value})}>
-                    <option value="">-- None --</option>
+                    <option value="">-- {t('common.none')} --</option>
                     {kitchenStations?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
-                  <button type="button" onClick={() => setShowStationForm(true)} className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700" title="Add new station"><Plus size={20} /></button>
+                  <button type="button" onClick={() => setShowStationForm(true)} className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700" title={t('menu.addNewStation')}><Plus size={20} /></button>
                 </div>
               )}
             </div>
-            <div><label className="label">Commission per Unit ($)</label>
+            <div><label className="label">{t('menu.commissionPerUnit')}</label>
               <input type="number" step="0.01" className="input" value={formData.commissionPerUnit} onChange={e => setFormData({...formData, commissionPerUnit: parseFloat(e.target.value) || 0})} />
             </div>
-            <div className="md:col-span-2"><label className="label">Description</label><textarea className="input" rows={2} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} /></div>
+            <div className="md:col-span-2"><label className="label">{t('common.description')}</label><textarea className="input" rows={2} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} /></div>
             
             {/* Image Upload */}
             <div className="md:col-span-2">
-              <label className="label flex items-center gap-2"><Upload size={16} /> Item Image</label>
+              <label className="label flex items-center gap-2"><Upload size={16} /> {t('menu.itemImage')}</label>
               <div className="flex items-center gap-4">
                 <input
                   type="file"
@@ -182,7 +184,7 @@ export default function MenuItems() {
                   className="btn-secondary flex items-center gap-2"
                 >
                   {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                  {uploading ? 'Uploading...' : 'Upload Image'}
+                  {uploading ? t('common.uploading') : t('categories.uploadImage')}
                 </button>
                 {formData.imageUrl && (
                   <div className="relative">
@@ -200,23 +202,23 @@ export default function MenuItems() {
             </div>
 
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.taxIncluded} onChange={e => setFormData({...formData, taxIncluded: e.target.checked})} /> Tax Included</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.allowSizes} onChange={e => setFormData({...formData, allowSizes: e.target.checked})} /> Allow Sizes</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.taxIncluded} onChange={e => setFormData({...formData, taxIncluded: e.target.checked})} /> {t('menu.taxIncluded')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.allowSizes} onChange={e => setFormData({...formData, allowSizes: e.target.checked})} /> {t('menu.allowSizes')}</label>
             </div>
             
             {/* Sizes Section */}
             {formData.allowSizes && (
               <div className="md:col-span-2 border rounded-lg p-4 bg-gray-800">
-                <h3 className="font-medium mb-3">Item Sizes</h3>
+                <h3 className="font-medium mb-3">{t('menu.itemSizes')}</h3>
                 <div className="flex gap-2 mb-3">
-                  <input type="text" placeholder="Size Name (e.g. Small)" className="input flex-1" value={newSize.name} onChange={e => setNewSize({...newSize, name: e.target.value})} />
-                  <input type="number" step="0.01" placeholder="Price" className="input w-24" value={newSize.price || ''} onChange={e => setNewSize({...newSize, price: parseFloat(e.target.value) || 0})} />
-                  <input type="number" step="0.01" placeholder="Cost" className="input w-24" value={newSize.cost || ''} onChange={e => setNewSize({...newSize, cost: parseFloat(e.target.value) || 0})} />
+                  <input type="text" placeholder={t('menu.sizeNameExample')} className="input flex-1" value={newSize.name} onChange={e => setNewSize({...newSize, name: e.target.value})} />
+                  <input type="number" step="0.01" placeholder={t('common.price')} className="input w-24" value={newSize.price || ''} onChange={e => setNewSize({...newSize, price: parseFloat(e.target.value) || 0})} />
+                  <input type="number" step="0.01" placeholder={t('inventory.cost')} className="input w-24" value={newSize.cost || ''} onChange={e => setNewSize({...newSize, cost: parseFloat(e.target.value) || 0})} />
                   <button type="button" onClick={addSize} className="btn-primary px-3"><Plus size={18} /></button>
                 </div>
                 {formData.sizes.length > 0 && (
                   <table className="w-full text-sm">
-                    <thead><tr className="border-b border-gray-700"><th className="text-left py-2">Size</th><th className="text-left py-2">Price</th><th className="text-left py-2">Cost</th><th></th></tr></thead>
+                    <thead><tr className="border-b border-gray-700"><th className="text-left py-2">{t('menu.size')}</th><th className="text-left py-2">{t('common.price')}</th><th className="text-left py-2">{t('inventory.cost')}</th><th></th></tr></thead>
                     <tbody>
                       {formData.sizes.map((size, idx) => (
                         <tr key={idx} className="border-b border-gray-700">
@@ -229,22 +231,22 @@ export default function MenuItems() {
                     </tbody>
                   </table>
                 )}
-                {formData.sizes.length === 0 && <p className="text-sm text-gray-500">No sizes added yet</p>}
+                {formData.sizes.length === 0 && <p className="text-sm text-gray-500">{t('menu.noSizesYet')}</p>}
               </div>
             )}
             
             <div className="md:col-span-2 flex gap-3">
-              <button type="submit" className="btn-primary">{editingId ? 'Update' : 'Create'}</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary">{editingId ? t('common.update') : t('common.create')}</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         </div>
       )}
 
       <div className="card overflow-hidden">
-        {isLoading ? <div className="p-8 text-center">Loading...</div> : (
+        {isLoading ? <div className="p-8 text-center">{t('common.loading')}</div> : (
           <table className="table">
-            <thead><tr><th>Name</th><th>Code</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>{t('common.name')}</th><th>{t('common.code')}</th><th>{t('common.category')}</th><th>{t('common.price')}</th><th>{t('common.status')}</th><th>{t('common.actions')}</th></tr></thead>
             <tbody>
               {items?.data?.map((item: any) => (
                 <tr key={item.id}>
@@ -252,10 +254,10 @@ export default function MenuItems() {
                   <td>{item.code || '-'}</td>
                   <td>{item.categoryName}</td>
                   <td>{item.currencyCode} {item.defaultPrice.toFixed(2)}</td>
-                  <td><span className={`px-2 py-1 rounded-full text-xs ${item.isAvailable ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{item.isAvailable ? 'Available' : '86\'d'}</span></td>
+                  <td><span className={`px-2 py-1 rounded-full text-xs ${item.isAvailable ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{item.isAvailable ? t('menu.available') : t('menu.unavailable')}</span></td>
                   <td className="flex gap-2">
                     <button onClick={() => { setEditingId(item.id); setFormData({ name: item.name, nameAr: item.nameAr || '', code: item.code || '', description: item.description || '', categoryId: item.categoryId, defaultPrice: item.defaultPrice, currencyCode: item.currencyCode, taxIncluded: item.taxIncluded, allowSizes: item.allowSizes, sizes: item.sizes || [], modifierIds: [], kitchenStationId: item.kitchenStationId?.toString() || '', commissionPerUnit: item.commissionPerUnit || 0, imageUrl: item.imageUrl || '' }); setShowForm(true) }} className="text-blue-600 hover:text-blue-800"><Edit size={18} /></button>
-                    <button onClick={() => confirm('Delete?') && deleteMutation.mutate(item.id)} className="text-red-600 hover:text-red-800"><Trash2 size={18} /></button>
+                    <button onClick={() => confirm(t('common.confirmDelete')) && deleteMutation.mutate(item.id)} className="text-red-600 hover:text-red-800"><Trash2 size={18} /></button>
                   </td>
                 </tr>
               ))}

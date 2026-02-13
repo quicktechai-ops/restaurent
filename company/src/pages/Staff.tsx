@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { usersApi, rolesApi, branchesApi } from '../lib/api'
 import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, Key, UserCheck } from 'lucide-react'
 
 export default function Staff() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -109,9 +111,9 @@ export default function Staff() {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Staff Management</h1>
+        <h1 className="text-2xl font-bold">{t('nav.staffManagement')}</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
-          <Plus size={20} /> Add Staff
+          <Plus size={20} /> {t('staff.addMember')}
         </button>
       </div>
 
@@ -121,41 +123,41 @@ export default function Staff() {
           onChange={(e) => setBranchFilter(e.target.value ? parseInt(e.target.value) : undefined)} 
           className="input w-64"
         >
-          <option value="">All Branches</option>
+          <option value="">{t('common.all')} {t('nav.branches')}</option>
           {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
       </div>
 
       {showForm && (
         <div className="card p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit Staff' : 'Add Staff'}</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('staff.editMember') : t('staff.addMember')}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="label">Username *</label>
+              <label className="label">{t('staff.username')} *</label>
               <input 
                 className="input" 
                 value={formData.username} 
                 onChange={e => setFormData({...formData, username: e.target.value})} 
                 required 
                 disabled={!!editingId} 
-                placeholder="Login username"
+                placeholder={t('staff.loginUsername')}
               />
             </div>
             {!editingId && (
               <div>
-                <label className="label">Password *</label>
+                <label className="label">{t('staff.password')} *</label>
                 <input 
                   type="password" 
                   className="input" 
                   value={formData.password} 
                   onChange={e => setFormData({...formData, password: e.target.value})} 
                   required 
-                  placeholder="Login password"
+                  placeholder={t('staff.loginPassword')}
                 />
               </div>
             )}
             <div>
-              <label className="label">Full Name *</label>
+              <label className="label">{t('staff.fullName')} *</label>
               <input 
                 className="input" 
                 value={formData.fullName} 
@@ -164,43 +166,43 @@ export default function Staff() {
               />
             </div>
             <div>
-              <label className="label">Role *</label>
+              <label className="label">{t('staff.role')} *</label>
               {showRoleForm ? (
                 <div className="flex gap-2">
-                  <input type="text" placeholder="New role name..." value={newRoleName} onChange={e => setNewRoleName(e.target.value)} className="input flex-1" autoFocus />
+                  <input type="text" placeholder={t('staff.newRoleName')} value={newRoleName} onChange={e => setNewRoleName(e.target.value)} className="input flex-1" autoFocus />
                   <button type="button" onClick={() => newRoleName.trim() && createRoleMutation.mutate(newRoleName.trim())} disabled={createRoleMutation.isPending} className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">{createRoleMutation.isPending ? '...' : '✓'}</button>
                   <button type="button" onClick={() => { setShowRoleForm(false); setNewRoleName('') }} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">✕</button>
                 </div>
               ) : (
                 <div className="flex gap-2">
                   <select className="input flex-1" value={formData.position} onChange={e => setFormData({...formData, position: e.target.value})} required>
-                    <option value="">-- Select Role --</option>
+                    <option value="">-- {t('common.select')} {t('staff.role')} --</option>
                     {roles?.data?.map((r: any) => <option key={r.id} value={r.name}>{r.name}</option>)}
                   </select>
-                  <button type="button" onClick={() => setShowRoleForm(true)} className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700" title="Add new role"><Plus size={20} /></button>
+                  <button type="button" onClick={() => setShowRoleForm(true)} className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700" title={t('staff.addNewRole')}><Plus size={20} /></button>
                 </div>
               )}
             </div>
             <div>
-              <label className="label">Branch *</label>
+              <label className="label">{t('staff.branch')} *</label>
               {showBranchForm ? (
                 <div className="flex gap-2">
-                  <input type="text" placeholder="New branch name..." value={newBranchName} onChange={e => setNewBranchName(e.target.value)} className="input flex-1" autoFocus />
+                  <input type="text" placeholder={t('staff.newBranchName')} value={newBranchName} onChange={e => setNewBranchName(e.target.value)} className="input flex-1" autoFocus />
                   <button type="button" onClick={() => newBranchName.trim() && createBranchMutation.mutate(newBranchName.trim())} disabled={createBranchMutation.isPending} className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">{createBranchMutation.isPending ? '...' : '✓'}</button>
                   <button type="button" onClick={() => { setShowBranchForm(false); setNewBranchName('') }} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">✕</button>
                 </div>
               ) : (
                 <div className="flex gap-2">
                   <select className="input flex-1" value={formData.defaultBranchId || ''} onChange={e => setFormData({...formData, defaultBranchId: e.target.value ? parseInt(e.target.value) : null})} required>
-                    <option value="">-- Select Branch --</option>
+                    <option value="">-- {t('common.select')} {t('staff.branch')} --</option>
                     {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
-                  <button type="button" onClick={() => setShowBranchForm(true)} className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700" title="Add new branch"><Plus size={20} /></button>
+                  <button type="button" onClick={() => setShowBranchForm(true)} className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700" title={t('staff.addNewBranch')}><Plus size={20} /></button>
                 </div>
               )}
             </div>
             <div>
-              <label className="label">Phone</label>
+              <label className="label">{t('staff.phone')}</label>
               <input 
                 className="input" 
                 value={formData.phone} 
@@ -208,7 +210,7 @@ export default function Staff() {
               />
             </div>
             <div>
-              <label className="label">Email</label>
+              <label className="label">{t('staff.email')}</label>
               <input 
                 type="email" 
                 className="input" 
@@ -217,17 +219,17 @@ export default function Staff() {
               />
             </div>
             <div>
-              <label className="label">Salary</label>
+              <label className="label">{t('staff.salary')}</label>
               <input 
                 type="number" 
                 className="input" 
                 value={formData.baseSalary} 
                 onChange={e => setFormData({...formData, baseSalary: e.target.value})} 
-                placeholder="Monthly salary"
+                placeholder={t('staff.monthlySalary')}
               />
             </div>
             <div>
-              <label className="label">Hire Date</label>
+              <label className="label">{t('staff.hireDate')}</label>
               <input 
                 type="date" 
                 className="input" 
@@ -236,25 +238,25 @@ export default function Staff() {
               />
             </div>
             <div className="md:col-span-3 flex gap-3 mt-2">
-              <button type="submit" className="btn-primary">{editingId ? 'Update' : 'Save'}</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary">{editingId ? t('common.update') : t('common.save')}</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         </div>
       )}
 
       <div className="card overflow-hidden">
-        {isLoading ? <div className="p-8 text-center">Loading...</div> : (
+        {isLoading ? <div className="p-8 text-center">{t('common.loading')}</div> : (
           <table className="table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Branch</th>
-                <th>Phone</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>{t('common.name')}</th>
+                <th>{t('staff.username')}</th>
+                <th>{t('staff.role')}</th>
+                <th>{t('staff.branch')}</th>
+                <th>{t('staff.phone')}</th>
+                <th>{t('common.status')}</th>
+                <th>{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -270,20 +272,20 @@ export default function Staff() {
                   <td>{user.phone || '-'}</td>
                   <td>
                     <span className={`px-2 py-1 rounded-full text-xs ${user.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {user.isActive ? 'Active' : 'Inactive'}
+                      {user.isActive ? t('common.active') : t('common.inactive')}
                     </span>
                   </td>
                   <td className="flex gap-2">
-                    <button onClick={() => handleEdit(user)} className="text-blue-600 hover:text-blue-800" title="Edit">
+                    <button onClick={() => handleEdit(user)} className="text-blue-600 hover:text-blue-800" title={t('common.edit')}>
                       <Edit size={18} />
                     </button>
-                    <button onClick={() => handleResetPassword(user.id)} className="text-yellow-600 hover:text-yellow-800" title="Reset Password">
+                    <button onClick={() => handleResetPassword(user.id)} className="text-yellow-600 hover:text-yellow-800" title={t('staff.resetPassword')}>
                       <Key size={18} />
                     </button>
-                    <button onClick={() => toggleMutation.mutate(user.id)} className="text-gray-600 hover:text-gray-900" title="Toggle Status">
+                    <button onClick={() => toggleMutation.mutate(user.id)} className="text-gray-600 hover:text-gray-900" title={t('staff.toggleStatus')}>
                       {user.isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                     </button>
-                    <button onClick={() => confirm('Delete this staff member?') && deleteMutation.mutate(user.id)} className="text-red-600 hover:text-red-800" title="Delete">
+                    <button onClick={() => confirm(t('common.confirmDelete')) && deleteMutation.mutate(user.id)} className="text-red-600 hover:text-red-800" title={t('common.delete')}>
                       <Trash2 size={18} />
                     </button>
                   </td>
@@ -291,7 +293,7 @@ export default function Staff() {
               ))}
               {users?.data?.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center text-gray-500 py-8">No staff members found</td>
+                  <td colSpan={7} className="text-center text-gray-500 py-8">{t('staff.noStaffFound')}</td>
                 </tr>
               )}
             </tbody>

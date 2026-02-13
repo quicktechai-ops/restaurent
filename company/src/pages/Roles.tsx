@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { rolesApi } from '../lib/api'
 import { Plus, Edit, Trash2, Shield } from 'lucide-react'
 
 export default function Roles() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -35,19 +37,19 @@ export default function Roles() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Roles & Permissions</h1>
-        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> Add Role</button>
+        <h1 className="text-2xl font-bold text-gray-900">{t('roles.title')}</h1>
+        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> {t('roles.addRole')}</button>
       </div>
 
       {showForm && (
         <div className="card p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit Role' : 'Add Role'}</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('roles.editRole') : t('roles.addRole')}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label className="label">Name *</label><input className="input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required /></div>
-              <div><label className="label">Description</label><input className="input" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} /></div>
+              <div><label className="label">{t('common.name')} *</label><input className="input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required /></div>
+              <div><label className="label">{t('common.description')}</label><input className="input" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} /></div>
             </div>
-            <div><label className="label">Permissions</label>
+            <div><label className="label">{t('roles.permissions')}</label>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Object.entries(groupedPermissions).map(([group, perms]) => (
                   <div key={group} className="border rounded p-3">
@@ -65,17 +67,17 @@ export default function Roles() {
               </div>
             </div>
             <div className="flex gap-3">
-              <button type="submit" className="btn-primary">{editingId ? 'Update' : 'Create'}</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary">{editingId ? t('common.update') : t('common.create')}</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         </div>
       )}
 
       <div className="card overflow-hidden">
-        {isLoading ? <div className="p-8 text-center">Loading...</div> : (
+        {isLoading ? <div className="p-8 text-center">{t('common.loading')}</div> : (
           <table className="table">
-            <thead><tr><th>Name</th><th>Description</th><th>Users</th><th>Permissions</th><th>Actions</th></tr></thead>
+            <thead><tr><th>{t('common.name')}</th><th>{t('common.description')}</th><th>{t('roles.users')}</th><th>{t('roles.permissions')}</th><th>{t('common.actions')}</th></tr></thead>
             <tbody>
               {roles?.data?.map((role: any) => (
                 <tr key={role.id}>
@@ -85,7 +87,7 @@ export default function Roles() {
                   <td><span className="text-sm text-gray-500">{role.permissions?.length || 0} permissions</span></td>
                   <td className="flex gap-2">
                     <button onClick={() => { setEditingId(role.id); setFormData({ name: role.name, description: role.description || '', permissionIds: [] }); setShowForm(true) }} className="text-blue-600 hover:text-blue-800"><Edit size={18} /></button>
-                    <button onClick={() => confirm('Delete?') && deleteMutation.mutate(role.id)} className="text-red-600 hover:text-red-800"><Trash2 size={18} /></button>
+                    <button onClick={() => confirm(t('common.confirmDelete')) && deleteMutation.mutate(role.id)} className="text-red-600 hover:text-red-800"><Trash2 size={18} /></button>
                   </td>
                 </tr>
               ))}

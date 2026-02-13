@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import api from '../lib/api'
 import { Clock, LogIn, LogOut, Calendar, User } from 'lucide-react'
 
 export default function Attendance() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [selectedEmployee, setSelectedEmployee] = useState('')
@@ -41,17 +43,17 @@ export default function Attendance() {
     return `${hours}h ${minutes}m`
   }
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return <div>{t('common.loading')}</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Clock size={28} /> Attendance</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Clock size={28} /> {t('attendance.title')}</h1>
       </div>
 
       {/* Quick Clock In/Out */}
       <div className="card p-4 mb-6">
-        <h2 className="font-semibold mb-4">Quick Clock In/Out</h2>
+        <h2 className="font-semibold mb-4">{t('attendance.quickClockInOut')}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {employees?.filter((e: any) => e.isActive).map((emp: any) => {
             const todayRecord = attendance?.find((a: any) => a.employeeId === emp.id && !a.clockOut)
@@ -63,11 +65,11 @@ export default function Attendance() {
                 <p className="font-medium text-sm mb-2">{emp.fullName}</p>
                 {todayRecord ? (
                   <button onClick={() => clockOutMutation.mutate(todayRecord.id)} className="w-full py-1.5 bg-red-100 text-red-700 rounded text-sm flex items-center justify-center gap-1 hover:bg-red-200">
-                    <LogOut size={14} /> Clock Out
+                    <LogOut size={14} /> {t('attendance.clockOut')}
                   </button>
                 ) : (
                   <button onClick={() => clockInMutation.mutate(emp.id)} className="w-full py-1.5 bg-green-100 text-green-700 rounded text-sm flex items-center justify-center gap-1 hover:bg-green-200">
-                    <LogIn size={14} /> Clock In
+                    <LogIn size={14} /> {t('attendance.clockIn')}
                   </button>
                 )}
               </div>
@@ -84,7 +86,7 @@ export default function Attendance() {
             <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="input" />
           </div>
           <select value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)} className="input">
-            <option value="">All Employees</option>
+            <option value="">{t('attendance.allEmployees')}</option>
             {employees?.map((e: any) => <option key={e.id} value={e.id}>{e.fullName}</option>)}
           </select>
         </div>
@@ -95,12 +97,12 @@ export default function Attendance() {
         <table className="table">
           <thead className="bg-gray-800">
             <tr>
-              <th className="text-left p-3">Employee</th>
-              <th className="text-left p-3">Date</th>
-              <th className="text-left p-3">Clock In</th>
-              <th className="text-left p-3">Clock Out</th>
-              <th className="text-left p-3">Hours Worked</th>
-              <th className="text-left p-3">Status</th>
+              <th className="text-left p-3">{t('attendance.employee')}</th>
+              <th className="text-left p-3">{t('reservations.date')}</th>
+              <th className="text-left p-3">{t('attendance.clockIn')}</th>
+              <th className="text-left p-3">{t('attendance.clockOut')}</th>
+              <th className="text-left p-3">{t('attendance.hoursWorked')}</th>
+              <th className="text-left p-3">{t('common.status')}</th>
             </tr>
           </thead>
           <tbody>
@@ -115,38 +117,38 @@ export default function Attendance() {
                   {record.clockOut ? (
                     <span className="flex items-center gap-1 text-red-600"><LogOut size={14} /> {formatTime(record.clockOut)}</span>
                   ) : (
-                    <span className="text-yellow-600">Still Working</span>
+                    <span className="text-yellow-600">{t('attendance.stillWorking')}</span>
                   )}
                 </td>
                 <td className="p-3 font-medium">{calculateHours(record.clockIn, record.clockOut)}</td>
                 <td className="p-3">
                   <span className={`px-2 py-1 rounded text-xs ${record.clockOut ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'}`}>
-                    {record.clockOut ? 'Completed' : 'Active'}
+                    {record.clockOut ? t('attendance.completed') : t('common.active')}
                   </span>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {(!attendance || attendance.length === 0) && <p className="text-center text-gray-500 py-8">No attendance records for this date</p>}
+        {(!attendance || attendance.length === 0) && <p className="text-center text-gray-500 py-8">{t('attendance.noRecords')}</p>}
       </div>
 
       {/* Summary */}
       {attendance && attendance.length > 0 && (
         <div className="card p-4 mt-6">
-          <h3 className="font-semibold mb-3">Day Summary</h3>
+          <h3 className="font-semibold mb-3">{t('attendance.daySummary')}</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
               <p className="text-2xl font-bold text-primary-600">{attendance.length}</p>
-              <p className="text-sm text-gray-500">Total Records</p>
+              <p className="text-sm text-gray-500">{t('attendance.totalRecords')}</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-green-600">{attendance.filter((a: any) => !a.clockOut).length}</p>
-              <p className="text-sm text-gray-500">Currently Working</p>
+              <p className="text-sm text-gray-500">{t('attendance.currentlyWorking')}</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-600">{attendance.filter((a: any) => a.clockOut).length}</p>
-              <p className="text-sm text-gray-500">Completed Shifts</p>
+              <p className="text-sm text-gray-500">{t('attendance.completedShifts')}</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-blue-600">
@@ -156,7 +158,7 @@ export default function Attendance() {
                   return total + diff / (1000 * 60 * 60)
                 }, 0).toFixed(1)}h
               </p>
-              <p className="text-sm text-gray-500">Total Hours</p>
+              <p className="text-sm text-gray-500">{t('attendance.totalHours')}</p>
             </div>
           </div>
         </div>

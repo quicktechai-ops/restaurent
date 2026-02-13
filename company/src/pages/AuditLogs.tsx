@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { auditLogsApi, branchesApi, usersApi } from '../lib/api'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function AuditLogs() {
+  const { t } = useTranslation()
   const [branchFilter, setBranchFilter] = useState<number | undefined>()
   const [userFilter, setUserFilter] = useState<number | undefined>()
   const [actionFilter, setActionFilter] = useState('')
@@ -43,12 +45,12 @@ export default function AuditLogs() {
     return 'bg-gray-100 text-gray-900'
   }
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return <div>{t('common.loading')}</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Audit Logs</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('auditLogs.title')}</h1>
         <span className="text-sm text-gray-500">{total} records</span>
       </div>
 
@@ -56,19 +58,19 @@ export default function AuditLogs() {
       <div className="card mb-6">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <select value={branchFilter || ''} onChange={(e) => { setBranchFilter(e.target.value ? parseInt(e.target.value) : undefined); setPage(1) }} className="input">
-            <option value="">All Branches</option>
+            <option value="">{t('auditLogs.allBranches')}</option>
             {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select>
           <select value={userFilter || ''} onChange={(e) => { setUserFilter(e.target.value ? parseInt(e.target.value) : undefined); setPage(1) }} className="input">
-            <option value="">All Users</option>
+            <option value="">{t('auditLogs.allUsers')}</option>
             {users?.data?.map((u: any) => <option key={u.id} value={u.id}>{u.fullName}</option>)}
           </select>
           <select value={actionFilter} onChange={(e) => { setActionFilter(e.target.value); setPage(1) }} className="input">
-            <option value="">All Actions</option>
+            <option value="">{t('auditLogs.allActions')}</option>
             {actionTypes?.data?.map((t: string) => <option key={t} value={t}>{t}</option>)}
           </select>
-          <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1) }} className="input" placeholder="From Date" />
-          <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1) }} className="input" placeholder="To Date" />
+          <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1) }} className="input" placeholder={t('stockMovements.fromDate')} />
+          <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1) }} className="input" placeholder={t('stockMovements.toDate')} />
         </div>
       </div>
 
@@ -77,12 +79,12 @@ export default function AuditLogs() {
         <table className="table">
           <thead>
             <tr className="border-b border-gray-700">
-              <th className="text-left p-3">Timestamp</th>
-              <th className="text-left p-3">User</th>
-              <th className="text-left p-3">Branch</th>
-              <th className="text-left p-3">Action</th>
-              <th className="text-left p-3">Entity</th>
-              <th className="text-left p-3">IP</th>
+              <th className="text-left p-3">{t('auditLogs.timestamp')}</th>
+              <th className="text-left p-3">{t('auditLogs.user')}</th>
+              <th className="text-left p-3">{t('employees.branch')}</th>
+              <th className="text-left p-3">{t('auditLogs.action')}</th>
+              <th className="text-left p-3">{t('auditLogs.entity')}</th>
+              <th className="text-left p-3">{t('auditLogs.ip')}</th>
             </tr>
           </thead>
           <tbody>
@@ -105,7 +107,7 @@ export default function AuditLogs() {
           </tbody>
         </table>
         
-        {logs.length === 0 && <p className="text-center text-gray-500 py-8">No audit logs found</p>}
+        {logs.length === 0 && <p className="text-center text-gray-500 py-8">{t('auditLogs.noLogs')}</p>}
 
         {/* Pagination */}
         {totalPages > 1 && (
@@ -119,14 +121,14 @@ export default function AuditLogs() {
                 disabled={page === 1}
                 className="btn-secondary flex items-center gap-1 disabled:opacity-50"
               >
-                <ChevronLeft size={16} /> Previous
+                <ChevronLeft size={16} /> {t('common.previous')}
               </button>
               <button 
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
                 disabled={page === totalPages}
                 className="btn-secondary flex items-center gap-1 disabled:opacity-50"
               >
-                Next <ChevronRight size={16} />
+                {t('common.next')} <ChevronRight size={16} />
               </button>
             </div>
           </div>

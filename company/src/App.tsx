@@ -42,6 +42,7 @@ import CommissionPolicies from './pages/CommissionPolicies'
 import ApprovalRules from './pages/ApprovalRules'
 import ReceiptTemplates from './pages/ReceiptTemplates'
 import Reports from './pages/Reports'
+import OrdersHistory from './pages/OrdersHistory'
 import POS from './pages/POSDark'
 
 function App() {
@@ -96,6 +97,7 @@ function App() {
                 <Route path="/loyalty-transactions" element={<LoyaltyTransactions />} />
                 <Route path="/approval-rules" element={<ApprovalRules />} />
                 <Route path="/receipt-templates" element={<ReceiptTemplates />} />
+                <Route path="/orders-history" element={<OrdersHistory />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/printers" element={<Printers />} />

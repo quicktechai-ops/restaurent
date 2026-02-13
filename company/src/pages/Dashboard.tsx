@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { dashboardApi } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -20,6 +21,7 @@ const styles = {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   
   const { data: stats, isLoading, error } = useQuery({
@@ -39,7 +41,7 @@ export default function Dashboard() {
     return (
       <div className="p-4 rounded-lg flex items-center gap-3" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5' }}>
         <AlertCircle />
-        <span>Failed to load dashboard data</span>
+        <span>{t('dashboard.loadError')}</span>
       </div>
     )
   }
@@ -47,18 +49,18 @@ export default function Dashboard() {
   const data = stats?.data
 
   const statCards = [
-    { name: 'Branches', value: data?.totalBranches || 0, max: data?.maxBranches, icon: Building2, href: '/branches', color: 'bg-blue-500' },
-    { name: 'Users', value: data?.totalUsers || 0, max: data?.maxUsers, icon: Users, href: '/users', color: 'bg-green-500' },
-    { name: 'Menu Items', value: data?.totalMenuItems || 0, icon: UtensilsCrossed, href: '/menu-items', color: 'bg-orange-500' },
-    { name: 'Categories', value: data?.totalCategories || 0, icon: FolderTree, href: '/categories', color: 'bg-purple-500' },
-    { name: 'Tables', value: data?.totalTables || 0, icon: Grid3X3, href: '/tables', color: 'bg-pink-500' },
+    { name: t('nav.branches'), value: data?.totalBranches || 0, max: data?.maxBranches, icon: Building2, href: '/branches', color: 'bg-blue-500' },
+    { name: t('dashboard.users'), value: data?.totalUsers || 0, max: data?.maxUsers, icon: Users, href: '/users', color: 'bg-green-500' },
+    { name: t('nav.menuItems'), value: data?.totalMenuItems || 0, icon: UtensilsCrossed, href: '/menu-items', color: 'bg-orange-500' },
+    { name: t('nav.categories'), value: data?.totalCategories || 0, icon: FolderTree, href: '/categories', color: 'bg-purple-500' },
+    { name: t('nav.tables'), value: data?.totalTables || 0, icon: Grid3X3, href: '/tables', color: 'bg-pink-500' },
   ]
 
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold" style={{ color: styles.textMain }}>Dashboard</h1>
-        <p style={{ color: styles.textMuted }}>Welcome back, {user?.name}</p>
+        <h1 className="text-2xl font-bold" style={{ color: styles.textMain }}>{t('common.dashboard')}</h1>
+        <p style={{ color: styles.textMuted }}>{t('dashboard.welcomeBack')}, {user?.name}</p>
       </div>
 
       {/* Plan Info */}
@@ -73,7 +75,7 @@ export default function Dashboard() {
           {data?.planExpiryDate && (
             <div className="flex items-center gap-2" style={{ color: styles.textMuted }}>
               <Calendar size={18} />
-              <span>Expires: {new Date(data.planExpiryDate).toLocaleDateString()}</span>
+              <span>{t('dashboard.expires')}: {new Date(data.planExpiryDate).toLocaleDateString()}</span>
             </div>
           )}
         </div>
@@ -106,7 +108,7 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div className="p-6 rounded-xl" style={{ background: styles.cardBg, border: `1px solid ${styles.cardBorder}` }}>
-        <h2 className="text-lg font-semibold mb-4" style={{ color: styles.textMain }}>Quick Actions</h2>
+        <h2 className="text-lg font-semibold mb-4" style={{ color: styles.textMain }}>{t('dashboard.quickActions')}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link
             to="/branches"
@@ -114,7 +116,7 @@ export default function Dashboard() {
             style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${styles.cardBorder}` }}
           >
             <Building2 className="w-8 h-8 mx-auto mb-2 text-blue-400" />
-            <span className="text-sm font-medium" style={{ color: styles.textMain }}>Add Branch</span>
+            <span className="text-sm font-medium" style={{ color: styles.textMain }}>{t('dashboard.addBranch')}</span>
           </Link>
           <Link
             to="/users"
@@ -122,7 +124,7 @@ export default function Dashboard() {
             style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${styles.cardBorder}` }}
           >
             <Users className="w-8 h-8 mx-auto mb-2 text-blue-400" />
-            <span className="text-sm font-medium" style={{ color: styles.textMain }}>Add User</span>
+            <span className="text-sm font-medium" style={{ color: styles.textMain }}>{t('dashboard.addUser')}</span>
           </Link>
           <Link
             to="/menu-items"
@@ -130,7 +132,7 @@ export default function Dashboard() {
             style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${styles.cardBorder}` }}
           >
             <UtensilsCrossed className="w-8 h-8 mx-auto mb-2 text-blue-400" />
-            <span className="text-sm font-medium" style={{ color: styles.textMain }}>Add Menu Item</span>
+            <span className="text-sm font-medium" style={{ color: styles.textMain }}>{t('dashboard.addMenuItem')}</span>
           </Link>
           <Link
             to="/categories"
@@ -138,7 +140,7 @@ export default function Dashboard() {
             style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${styles.cardBorder}` }}
           >
             <FolderTree className="w-8 h-8 mx-auto mb-2 text-blue-400" />
-            <span className="text-sm font-medium" style={{ color: styles.textMain }}>Add Category</span>
+            <span className="text-sm font-medium" style={{ color: styles.textMain }}>{t('dashboard.addCategory')}</span>
           </Link>
         </div>
       </div>

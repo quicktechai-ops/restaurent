@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import api from '../lib/api'
 import { Plus, Edit, Trash2, X, FolderOpen, Scale, GripVertical, Tag, FileText, Hash, Type, ArrowRightLeft } from 'lucide-react'
 
@@ -33,6 +34,7 @@ interface UnitConversion {
 }
 
 export default function InventorySettings() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<TabType>('categories')
   
@@ -215,8 +217,8 @@ export default function InventorySettings() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Inventory Settings</h1>
-        <p className="text-gray-500">Manage categories and units of measure for your inventory items</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('inventorySettings.title')}</h1>
+        <p className="text-gray-500">{t('inventorySettings.subtitle')}</p>
       </div>
 
       {/* Tabs */}
@@ -230,7 +232,7 @@ export default function InventorySettings() {
           }`}
         >
           <FolderOpen size={18} />
-          Categories
+          {t('inventorySettings.categories')}
           <span className="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">{categories.length}</span>
         </button>
         <button
@@ -242,7 +244,7 @@ export default function InventorySettings() {
           }`}
         >
           <Scale size={18} />
-          Units of Measure
+          {t('inventorySettings.unitsOfMeasure')}
           <span className="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">{units.length}</span>
         </button>
         <button
@@ -254,7 +256,7 @@ export default function InventorySettings() {
           }`}
         >
           <ArrowRightLeft size={18} />
-          Conversions
+          {t('inventorySettings.conversions')}
           <span className="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">{uniqueConversions.length}</span>
         </button>
       </div>
@@ -263,20 +265,20 @@ export default function InventorySettings() {
       {activeTab === 'categories' && (
         <div className="card">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Ingredient Categories</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('inventorySettings.ingredientCategories')}</h2>
             <button onClick={() => openCategoryModal()} className="btn-primary flex items-center gap-2">
-              <Plus size={18} /> Add Category
+              <Plus size={18} /> {t('inventorySettings.addCategory')}
             </button>
           </div>
 
           {loadingCategories ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
+            <div className="text-center py-8 text-gray-500">{t('common.loading')}</div>
           ) : categories.length === 0 ? (
             <div className="text-center py-12">
               <FolderOpen size={48} className="mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-500 mb-4">No categories yet</p>
+              <p className="text-gray-500 mb-4">{t('inventorySettings.noCategories')}</p>
               <button onClick={() => openCategoryModal()} className="btn-primary">
-                Create your first category
+                {t('inventorySettings.createFirstCategory')}
               </button>
             </div>
           ) : (
@@ -305,7 +307,7 @@ export default function InventorySettings() {
                         </h3>
                         {cat.parentCategoryName && (
                           <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded">
-                            in {cat.parentCategoryName}
+                            {t('inventorySettings.in')} {cat.parentCategoryName}
                           </span>
                         )}
                       </div>
@@ -323,7 +325,7 @@ export default function InventorySettings() {
                           : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                       }`}
                     >
-                      {cat.isActive ? 'Active' : 'Inactive'}
+                      {cat.isActive ? t('common.active') : t('common.inactive')}
                     </button>
                     <button onClick={() => openCategoryModal(cat)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                       <Edit size={16} />
@@ -343,20 +345,20 @@ export default function InventorySettings() {
       {activeTab === 'units' && (
         <div className="card">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Units of Measure</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('inventorySettings.unitsOfMeasure')}</h2>
             <button onClick={() => openUnitModal()} className="btn-primary flex items-center gap-2">
-              <Plus size={18} /> Add Unit
+              <Plus size={18} /> {t('inventorySettings.addUnit')}
             </button>
           </div>
 
           {loadingUnits ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
+            <div className="text-center py-8 text-gray-500">{t('common.loading')}</div>
           ) : units.length === 0 ? (
             <div className="text-center py-12">
               <Scale size={48} className="mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-500 mb-4">No units of measure yet</p>
+              <p className="text-gray-500 mb-4">{t('inventorySettings.noUnits')}</p>
               <button onClick={() => openUnitModal()} className="btn-primary">
-                Create your first unit
+                {t('inventorySettings.createFirstUnit')}
               </button>
             </div>
           ) : (
@@ -387,7 +389,7 @@ export default function InventorySettings() {
                         </span>
                       </div>
                       {unit.symbol && (
-                        <p className="text-sm text-gray-400">Symbol: {unit.symbol}</p>
+                        <p className="text-sm text-gray-400">{t('inventorySettings.symbol')}: {unit.symbol}</p>
                       )}
                     </div>
                   </div>
@@ -400,7 +402,7 @@ export default function InventorySettings() {
                           : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                       }`}
                     >
-                      {unit.isActive ? 'Active' : 'Inactive'}
+                      {unit.isActive ? t('common.active') : t('common.inactive')}
                     </button>
                     <button onClick={() => openUnitModal(unit)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                       <Edit size={16} />
@@ -420,21 +422,21 @@ export default function InventorySettings() {
       {activeTab === 'conversions' && (
         <div className="card">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Unit Conversions</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('inventorySettings.unitConversions')}</h2>
             <button onClick={() => openConversionModal()} className="btn-primary flex items-center gap-2">
-              <Plus size={18} /> Add Conversion
+              <Plus size={18} /> {t('inventorySettings.addConversion')}
             </button>
           </div>
 
           {loadingConversions ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
+            <div className="text-center py-8 text-gray-500">{t('common.loading')}</div>
           ) : uniqueConversions.length === 0 ? (
             <div className="text-center py-12">
               <ArrowRightLeft size={48} className="mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-500 mb-4">No conversions yet</p>
-              <p className="text-sm text-gray-400 mb-4">Define how units relate to each other (e.g., 1 kg = 1000 g)</p>
+              <p className="text-gray-500 mb-4">{t('inventorySettings.noConversions')}</p>
+              <p className="text-sm text-gray-400 mb-4">{t('inventorySettings.conversionHint')}</p>
               <button onClick={() => openConversionModal()} className="btn-primary">
-                Create your first conversion
+                {t('inventorySettings.createFirstConversion')}
               </button>
             </div>
           ) : (
@@ -488,8 +490,8 @@ export default function InventorySettings() {
                   <FolderOpen className="w-5 h-5 text-primary-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">{editingCategory ? 'Edit' : 'Add'} Category</h2>
-                  <p className="text-sm text-gray-500">Organize your inventory items</p>
+                  <h2 className="text-xl font-semibold text-gray-900">{editingCategory ? t('inventorySettings.editCategory') : t('inventorySettings.addCategory')}</h2>
+                  <p className="text-sm text-gray-500">{t('inventorySettings.organizeItems')}</p>
                 </div>
               </div>
               <button onClick={closeCategoryModal} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -500,11 +502,11 @@ export default function InventorySettings() {
             <form onSubmit={handleCategorySubmit} className="p-6 space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Tag size={14} className="inline mr-2" />Category Name *
+                  <Tag size={14} className="inline mr-2" />{t('inventorySettings.categoryName')} *
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g., Vegetables, Meat, Dairy"
+                  placeholder={t('inventorySettings.categoryExample')}
                   value={categoryForm.name}
                   onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -514,29 +516,29 @@ export default function InventorySettings() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FolderOpen size={14} className="inline mr-2" />Parent Category
+                  <FolderOpen size={14} className="inline mr-2" />{t('inventorySettings.parentCategory')}
                 </label>
                 <select
                   value={categoryForm.parentCategoryId || ''}
                   onChange={e => setCategoryForm({ ...categoryForm, parentCategoryId: e.target.value ? parseInt(e.target.value) : null })}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 >
-                  <option value="">None (Top Level)</option>
+                  <option value="">{t('inventorySettings.noneTopLevel')}</option>
                   {parentCategories
                     .filter((c: Category) => c.id !== editingCategory?.id)
                     .map((cat: Category) => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
                 </select>
-                <p className="text-xs text-gray-400 mt-1">Optional: Select a parent to create a subcategory</p>
+                <p className="text-xs text-gray-400 mt-1">{t('inventorySettings.parentCategoryHint')}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FileText size={14} className="inline mr-2" />Description
+                  <FileText size={14} className="inline mr-2" />{t('inventorySettings.description')}
                 </label>
                 <textarea
-                  placeholder="Optional description..."
+                  placeholder={t('inventorySettings.optionalDescription')}
                   value={categoryForm.description}
                   onChange={e => setCategoryForm({ ...categoryForm, description: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -546,7 +548,7 @@ export default function InventorySettings() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <GripVertical size={14} className="inline mr-2" />Sort Order
+                  <GripVertical size={14} className="inline mr-2" />{t('inventorySettings.sortOrder')}
                 </label>
                 <input
                   type="number"
@@ -558,10 +560,10 @@ export default function InventorySettings() {
 
               <div className="flex gap-3 pt-4 border-t border-gray-100">
                 <button type="button" onClick={closeCategoryModal} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium">
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" disabled={createCategory.isPending || updateCategory.isPending} className="flex-1 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium disabled:opacity-50">
-                  {editingCategory ? 'Update' : 'Create'}
+                  {editingCategory ? t('common.update') : t('common.create')}
                 </button>
               </div>
             </form>
@@ -579,8 +581,8 @@ export default function InventorySettings() {
                   <Scale className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">{editingUnit ? 'Edit' : 'Add'} Unit</h2>
-                  <p className="text-sm text-gray-500">Define measurement units</p>
+                  <h2 className="text-xl font-semibold text-gray-900">{editingUnit ? t('inventorySettings.editUnit') : t('inventorySettings.addUnit')}</h2>
+                  <p className="text-sm text-gray-500">{t('inventorySettings.defineMeasurementUnits')}</p>
                 </div>
               </div>
               <button onClick={closeUnitModal} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -591,11 +593,11 @@ export default function InventorySettings() {
             <form onSubmit={handleUnitSubmit} className="p-6 space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Hash size={14} className="inline mr-2" />Unit Code *
+                  <Hash size={14} className="inline mr-2" />{t('inventorySettings.unitCode')} *
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g., kg, g, liter"
+                  placeholder={t('inventorySettings.unitCodeExample')}
                   value={unitForm.code}
                   onChange={e => setUnitForm({ ...unitForm, code: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono"
@@ -605,11 +607,11 @@ export default function InventorySettings() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Type size={14} className="inline mr-2" />Full Name *
+                  <Type size={14} className="inline mr-2" />{t('inventorySettings.fullName')} *
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g., Kilogram, Gram, Liter"
+                  placeholder={t('inventorySettings.unitNameExample')}
                   value={unitForm.name}
                   onChange={e => setUnitForm({ ...unitForm, name: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -619,11 +621,11 @@ export default function InventorySettings() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Tag size={14} className="inline mr-2" />Symbol
+                  <Tag size={14} className="inline mr-2" />{t('inventorySettings.symbol')}
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g., kg, g, L"
+                  placeholder={t('inventorySettings.unitSymbolExample')}
                   value={unitForm.symbol}
                   onChange={e => setUnitForm({ ...unitForm, symbol: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -632,7 +634,7 @@ export default function InventorySettings() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <GripVertical size={14} className="inline mr-2" />Sort Order
+                  <GripVertical size={14} className="inline mr-2" />{t('inventorySettings.sortOrder')}
                 </label>
                 <input
                   type="number"
@@ -644,10 +646,10 @@ export default function InventorySettings() {
 
               <div className="flex gap-3 pt-4 border-t border-gray-100">
                 <button type="button" onClick={closeUnitModal} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium">
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" disabled={createUnit.isPending || updateUnit.isPending} className="flex-1 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium disabled:opacity-50">
-                  {editingUnit ? 'Update' : 'Create'}
+                  {editingUnit ? t('common.update') : t('common.create')}
                 </button>
               </div>
             </form>
@@ -665,8 +667,8 @@ export default function InventorySettings() {
                   <ArrowRightLeft className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">{editingConversion ? 'Edit' : 'Add'} Conversion</h2>
-                  <p className="text-sm text-gray-500">Define unit conversion ratio</p>
+                  <h2 className="text-xl font-semibold text-gray-900">{editingConversion ? t('inventorySettings.editConversion') : t('inventorySettings.addConversion')}</h2>
+                  <p className="text-sm text-gray-500">{t('inventorySettings.defineConversionRatio')}</p>
                 </div>
               </div>
               <button onClick={closeConversionModal} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -679,7 +681,7 @@ export default function InventorySettings() {
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      From Unit *
+                      {t('inventorySettings.fromUnit')} *
                     </label>
                     <select
                       value={conversionForm.fromUnitCode}
@@ -687,7 +689,7 @@ export default function InventorySettings() {
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       required
                     >
-                      <option value="">Select unit...</option>
+                      <option value="">{t('inventorySettings.selectUnit')}</option>
                       {units.filter((u: UnitOfMeasure) => u.isActive).map((unit: UnitOfMeasure) => (
                         <option key={unit.id} value={unit.code}>{unit.name} ({unit.code})</option>
                       ))}
@@ -696,7 +698,7 @@ export default function InventorySettings() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      To Unit *
+                      {t('inventorySettings.toUnit')} *
                     </label>
                     <select
                       value={conversionForm.toUnitCode}
@@ -704,7 +706,7 @@ export default function InventorySettings() {
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       required
                     >
-                      <option value="">Select unit...</option>
+                      <option value="">{t('inventorySettings.selectUnit')}</option>
                       {units.filter((u: UnitOfMeasure) => u.isActive && u.code !== conversionForm.fromUnitCode).map((unit: UnitOfMeasure) => (
                         <option key={unit.id} value={unit.code}>{unit.name} ({unit.code})</option>
                       ))}
@@ -715,7 +717,7 @@ export default function InventorySettings() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Conversion Factor *
+                  {t('inventorySettings.conversionFactor')} *
                 </label>
                 <div className="flex items-center gap-3">
                   <span className="text-gray-600 whitespace-nowrap">1 {conversionForm.fromUnitCode || '?'} =</span>
@@ -723,7 +725,7 @@ export default function InventorySettings() {
                     type="number"
                     step="0.000001"
                     min="0.000001"
-                    placeholder="e.g., 1000"
+                    placeholder={t('inventorySettings.conversionExample')}
                     value={conversionForm.conversionFactor}
                     onChange={e => setConversionForm({ ...conversionForm, conversionFactor: parseFloat(e.target.value) || 0 })}
                     className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -732,13 +734,13 @@ export default function InventorySettings() {
                   <span className="text-gray-600 whitespace-nowrap">{conversionForm.toUnitCode || '?'}</span>
                 </div>
                 <p className="text-xs text-gray-400 mt-2">
-                  Example: 1 kg = 1000 g, so factor is 1000
+                  {t('inventorySettings.conversionExampleHint')}
                 </p>
               </div>
 
               <div className="bg-blue-50 p-4 rounded-xl">
                 <p className="text-sm text-blue-700">
-                  <strong>Note:</strong> The reverse conversion will be created automatically.
+                  <strong>{t('common.note')}:</strong> {t('inventorySettings.reverseConversionNote')}
                   {conversionForm.fromUnitCode && conversionForm.toUnitCode && conversionForm.conversionFactor > 0 && (
                     <span className="block mt-1">
                       1 {conversionForm.toUnitCode} = {(1 / conversionForm.conversionFactor).toFixed(6)} {conversionForm.fromUnitCode}
@@ -749,10 +751,10 @@ export default function InventorySettings() {
 
               <div className="flex gap-3 pt-4 border-t border-gray-100">
                 <button type="button" onClick={closeConversionModal} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium">
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" disabled={createConversion.isPending || updateConversion.isPending} className="flex-1 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium disabled:opacity-50">
-                  {editingConversion ? 'Update' : 'Create'}
+                  {editingConversion ? t('common.update') : t('common.create')}
                 </button>
               </div>
             </form>

@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { employeesApi, branchesApi, usersApi } from '../lib/api'
 import { Plus, Edit, Trash2, UserCheck } from 'lucide-react'
 
 export default function Employees() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -28,45 +30,45 @@ export default function Employees() {
     else createMutation.mutate(data)
   }
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return <div>{t('common.loading')}</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">HR / Payroll</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('employees.title')}</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
-          <Plus size={20} /> Add Employee
+          <Plus size={20} /> {t('employees.addEmployee')}
         </button>
       </div>
 
       <div className="mb-4">
         <select value={branchFilter || ''} onChange={(e) => setBranchFilter(e.target.value ? parseInt(e.target.value) : undefined)} className="input w-64">
-          <option value="">All Branches</option>
+          <option value="">{t('common.all')} {t('branches.title')}</option>
           {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
       </div>
 
       {showForm && (
         <div className="card mb-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit' : 'Add'} Employee</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('employees.editEmployee') : t('employees.addEmployee')}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <select value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: parseInt(e.target.value) })} className="input" required>
-              <option value="">Select Branch *</option>
+              <option value="">{t('employees.selectBranch')} *</option>
               {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
-            <input type="text" placeholder="Full Name *" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} className="input" required />
-            <input type="text" placeholder="Position *" value={formData.position} onChange={(e) => setFormData({ ...formData, position: e.target.value })} className="input" required />
-            <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input" />
-            <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" />
-            <input type="number" step="0.01" placeholder="Base Salary" value={formData.baseSalary} onChange={(e) => setFormData({ ...formData, baseSalary: e.target.value })} className="input" />
-            <input type="date" placeholder="Hire Date" value={formData.hireDate} onChange={(e) => setFormData({ ...formData, hireDate: e.target.value })} className="input" />
+            <input type="text" placeholder={`${t('employees.fullName')} *`} value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} className="input" required />
+            <input type="text" placeholder={`${t('employees.position')} *`} value={formData.position} onChange={(e) => setFormData({ ...formData, position: e.target.value })} className="input" required />
+            <input type="tel" placeholder={t('common.phone')} value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input" />
+            <input type="email" placeholder={t('common.email')} value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" />
+            <input type="number" step="0.01" placeholder={t('employees.baseSalary')} value={formData.baseSalary} onChange={(e) => setFormData({ ...formData, baseSalary: e.target.value })} className="input" />
+            <input type="date" placeholder={t('employees.hireDate')} value={formData.hireDate} onChange={(e) => setFormData({ ...formData, hireDate: e.target.value })} className="input" />
             <select value={formData.userId} onChange={(e) => setFormData({ ...formData, userId: e.target.value })} className="input">
-              <option value="">Link to User (Optional)</option>
+              <option value="">{t('employees.linkToUser')}</option>
               {users?.data?.map((u: any) => <option key={u.id} value={u.id}>{u.fullName}</option>)}
             </select>
             <div className="md:col-span-3 flex gap-2">
-              <button type="submit" className="btn-primary">Save</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary">{t('common.save')}</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         </div>
@@ -76,13 +78,13 @@ export default function Employees() {
         <table className="table">
           <thead>
             <tr className="border-b border-gray-700">
-              <th className="text-left p-3">Name</th>
-              <th className="text-left p-3">Position</th>
-              <th className="text-left p-3">Branch</th>
-              <th className="text-left p-3">Phone</th>
-              <th className="text-left p-3">Salary</th>
-              <th className="text-left p-3">Status</th>
-              <th className="text-left p-3">Actions</th>
+              <th className="text-left p-3">{t('common.name')}</th>
+              <th className="text-left p-3">{t('employees.position')}</th>
+              <th className="text-left p-3">{t('employees.branch')}</th>
+              <th className="text-left p-3">{t('common.phone')}</th>
+              <th className="text-left p-3">{t('employees.salary')}</th>
+              <th className="text-left p-3">{t('common.status')}</th>
+              <th className="text-left p-3">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -95,7 +97,7 @@ export default function Employees() {
                 <td className="p-3">{emp.baseSalary ? `$${emp.baseSalary.toFixed(2)}` : '-'}</td>
                 <td className="p-3">
                   <button onClick={() => toggleMutation.mutate(emp.id)} className={`px-2 py-1 rounded text-xs ${emp.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {emp.isActive ? 'Active' : 'Inactive'}
+                    {emp.isActive ? t('common.active') : t('common.inactive')}
                   </button>
                 </td>
                 <td className="p-3">
@@ -108,7 +110,7 @@ export default function Employees() {
             ))}
           </tbody>
         </table>
-        {employees?.data?.length === 0 && <p className="text-center text-gray-500 py-8">No employees found</p>}
+        {employees?.data?.length === 0 && <p className="text-center text-gray-500 py-8">{t('employees.noEmployees')}</p>}
       </div>
     </div>
   )

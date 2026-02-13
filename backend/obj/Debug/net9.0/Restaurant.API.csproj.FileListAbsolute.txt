@@ -131,3 +131,8 @@ C:\Users\Ahmad\Desktop\Resto\restaurent\backend\obj\Debug\net9.0\refint\Restaura
 C:\Users\Ahmad\Desktop\Resto\restaurent\backend\obj\Debug\net9.0\Restaurant.API.pdb
 C:\Users\Ahmad\Desktop\Resto\restaurent\backend\obj\Debug\net9.0\Restaurant.API.genruntimeconfig.cache
 C:\Users\Ahmad\Desktop\Resto\restaurent\backend\obj\Debug\net9.0\ref\Restaurant.API.dll
+C:\Users\Ahmad\Desktop\Resto\restaurent\backend\bin\Debug\net9.0\Microsoft.Win32.SystemEvents.dll
+C:\Users\Ahmad\Desktop\Resto\restaurent\backend\bin\Debug\net9.0\System.Drawing.Common.dll
+C:\Users\Ahmad\Desktop\Resto\restaurent\backend\bin\Debug\net9.0\System.Private.Windows.Core.dll
+C:\Users\Ahmad\Desktop\Resto\restaurent\backend\bin\Debug\net9.0\System.Private.Windows.GdiPlus.dll
+C:\Users\Ahmad\Desktop\Resto\restaurent\backend\bin\Debug\net9.0\runtimes\win\lib\net9.0\Microsoft.Win32.SystemEvents.dll

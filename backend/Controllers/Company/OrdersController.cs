@@ -44,7 +44,12 @@ public class OrdersController : ControllerBase
             query = query.Where(o => o.BranchId == branchId.Value);
 
         if (!string.IsNullOrEmpty(status))
-            query = query.Where(o => o.OrderStatus == status);
+        {
+            if (status == "notVoided")
+                query = query.Where(o => o.OrderStatus != "Voided");
+            else
+                query = query.Where(o => o.OrderStatus == status);
+        }
 
         if (!string.IsNullOrEmpty(orderType))
             query = query.Where(o => o.OrderType == orderType);
@@ -93,6 +98,7 @@ public class OrdersController : ControllerBase
             .Include(o => o.Customer)
             .Include(o => o.WaiterUser)
             .Include(o => o.CashierUser)
+            .Include(o => o.VoidByUser)
             .Include(o => o.OrderLines)
                 .ThenInclude(ol => ol.MenuItem)
             .Include(o => o.OrderLines)
@@ -143,6 +149,9 @@ public class OrdersController : ControllerBase
             order.Notes,
             order.CreatedAt,
             order.PaidAt,
+            order.VoidedAt,
+            order.VoidReason,
+            VoidByName = order.VoidByUser?.FullName,
             Lines = order.OrderLines.Select(ol => new
             {
                 ol.OrderLineId,
@@ -475,6 +484,31 @@ public class OrdersController : ControllerBase
 
         foreach (var payment in request.Payments)
         {
+            // Validate payment method exists
+            var pmExists = await _context.PaymentMethods.AnyAsync(pm => pm.PaymentMethodId == payment.PaymentMethodId && pm.CompanyId == companyId);
+            if (!pmExists)
+            {
+                // Auto-fallback: use the first active payment method for this company
+                var fallbackPm = await _context.PaymentMethods.FirstOrDefaultAsync(pm => pm.CompanyId == companyId && pm.IsActive);
+                if (fallbackPm == null)
+                {
+                    // Auto-create a default Cash payment method for this company
+                    Console.WriteLine($"[PAY] No payment methods found for company {companyId}. Creating default Cash method.");
+                    fallbackPm = new PaymentMethod
+                    {
+                        CompanyId = companyId,
+                        Name = "Cash",
+                        Type = "Cash",
+                        IsActive = true,
+                        SortOrder = 1
+                    };
+                    _context.PaymentMethods.Add(fallbackPm);
+                    await _context.SaveChangesAsync();
+                }
+                Console.WriteLine($"[PAY] Payment method {payment.PaymentMethodId} not found, using fallback: {fallbackPm.PaymentMethodId} ({fallbackPm.Name})");
+                payment.PaymentMethodId = fallbackPm.PaymentMethodId;
+            }
+
             var orderPayment = new OrderPayment
             {
                 OrderId = id,
@@ -491,7 +525,16 @@ public class OrdersController : ControllerBase
             _context.OrderPayments.Add(orderPayment);
         }
 
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[PAY ERROR] {ex.Message}");
+            Console.WriteLine($"[PAY ERROR INNER] {ex.InnerException?.Message}");
+            return StatusCode(500, new { message = "Payment save failed", error = ex.Message, inner = ex.InnerException?.Message });
+        }
 
         // Recalculate payment totals - reload order payments from DB
         var allPayments = await _context.OrderPayments.Where(p => p.OrderId == id).ToListAsync();
@@ -640,11 +683,56 @@ public class OrdersController : ControllerBase
         }
     }
 
+    private async Task RestoreInventory(Order order)
+    {
+        try
+        {
+            // Load order lines if not already loaded
+            if (!order.OrderLines.Any())
+            {
+                await _context.Entry(order).Collection(o => o.OrderLines).LoadAsync();
+            }
+
+            foreach (var line in order.OrderLines)
+            {
+                var recipe = await _context.Recipes
+                    .Include(r => r.Ingredients)
+                    .FirstOrDefaultAsync(r => 
+                        r.MenuItemId == line.MenuItemId && 
+                        (line.MenuItemSizeId == null || r.MenuItemSizeId == line.MenuItemSizeId) &&
+                        r.IsActive);
+
+                if (recipe == null) continue;
+
+                foreach (var ingredient in recipe.Ingredients)
+                {
+                    var inventoryItem = await _context.InventoryItems
+                        .FirstOrDefaultAsync(i => i.InventoryItemId == ingredient.InventoryItemId);
+
+                    if (inventoryItem == null) continue;
+
+                    var qtyToRestore = ingredient.QuantityPerYield * line.Quantity;
+                    inventoryItem.Quantity += qtyToRestore;
+                    inventoryItem.UpdatedAt = DateTime.UtcNow;
+
+                    Console.WriteLine($"[INVENTORY] Restored {qtyToRestore} {inventoryItem.UnitOfMeasure} of {inventoryItem.Name} for voided order {order.OrderNumber}");
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[INVENTORY RESTORE ERROR] {ex.Message}");
+        }
+    }
+
     [HttpPost("{id}/void")]
     public async Task<ActionResult> VoidOrder(int id, [FromBody] VoidOrderRequest request)
     {
         var companyId = GetCompanyId();
         var userId = GetUserId();
+        var userExists = await _context.Users.AnyAsync(u => u.UserId == userId);
 
         var order = await _context.Orders
             .FirstOrDefaultAsync(o => o.OrderId == id && o.CompanyId == companyId);
@@ -656,21 +744,29 @@ public class OrdersController : ControllerBase
             return BadRequest(new { message = "Order is already voided" });
 
         var oldStatus = order.OrderStatus;
+        var wasPaid = order.PaymentStatus == "Paid";
+
         order.OrderStatus = "Voided";
         order.VoidedAt = DateTime.UtcNow;
         order.VoidReason = request.Reason;
-        order.VoidByUserId = userId;
+        order.VoidByUserId = userExists ? userId : null;
 
         _context.OrderStatusHistories.Add(new OrderStatusHistory
         {
             OrderId = id,
             OldStatus = oldStatus,
             NewStatus = "Voided",
-            UserId = userId,
+            UserId = userExists ? userId : null,
             Notes = request.Reason
         });
 
         await _context.SaveChangesAsync();
+
+        // Restore inventory if the order was paid (stock was deducted at payment)
+        if (wasPaid)
+        {
+            await RestoreInventory(order);
+        }
 
         return Ok(new { message = "Order voided" });
     }

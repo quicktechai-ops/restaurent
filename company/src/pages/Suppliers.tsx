@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { suppliersApi } from '../lib/api'
 import { Plus, Edit, Trash2, Truck } from 'lucide-react'
 
 export default function Suppliers() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -25,34 +27,34 @@ export default function Suppliers() {
     else createMutation.mutate(formData)
   }
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return <div>{t('common.loading')}</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Suppliers</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('inventory.suppliers')}</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
-          <Plus size={20} /> Add Supplier
+          <Plus size={20} /> {t('suppliers.addSupplier')}
         </button>
       </div>
 
       <div className="mb-4">
-        <input type="text" placeholder="Search suppliers..." value={search} onChange={(e) => setSearch(e.target.value)} className="input w-full max-w-md" />
+        <input type="text" placeholder={t('common.search')} value={search} onChange={(e) => setSearch(e.target.value)} className="input w-full max-w-md" />
       </div>
 
       {showForm && (
         <div className="card mb-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit' : 'Add'} Supplier</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('suppliers.editSupplier') : t('suppliers.addSupplier')}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" placeholder="Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input" required />
-            <input type="text" placeholder="Contact Person" value={formData.contactPerson} onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })} className="input" />
-            <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input" />
-            <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" />
-            <input type="text" placeholder="Payment Terms" value={formData.paymentTerms} onChange={(e) => setFormData({ ...formData, paymentTerms: e.target.value })} className="input" />
-            <input type="text" placeholder="Address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="input" />
+            <input type="text" placeholder={`${t('common.name')} *`} value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input" required />
+            <input type="text" placeholder={t('suppliers.contact')} value={formData.contactPerson} onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })} className="input" />
+            <input type="tel" placeholder={t('common.phone')} value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input" />
+            <input type="email" placeholder={t('common.email')} value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" />
+            <input type="text" placeholder={t('suppliers.paymentTerms')} value={formData.paymentTerms} onChange={(e) => setFormData({ ...formData, paymentTerms: e.target.value })} className="input" />
+            <input type="text" placeholder={t('common.address')} value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="input" />
             <div className="md:col-span-2 flex gap-2">
-              <button type="submit" className="btn-primary">Save</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary">{t('common.save')}</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         </div>
@@ -62,12 +64,12 @@ export default function Suppliers() {
         <table className="table">
           <thead>
             <tr className="border-b border-gray-700">
-              <th className="text-left p-3">Name</th>
-              <th className="text-left p-3">Contact</th>
-              <th className="text-left p-3">Phone</th>
-              <th className="text-left p-3">Email</th>
-              <th className="text-left p-3">Status</th>
-              <th className="text-left p-3">Actions</th>
+              <th className="text-left p-3">{t('common.name')}</th>
+              <th className="text-left p-3">{t('suppliers.contact')}</th>
+              <th className="text-left p-3">{t('suppliers.phone')}</th>
+              <th className="text-left p-3">{t('suppliers.email')}</th>
+              <th className="text-left p-3">{t('common.status')}</th>
+              <th className="text-left p-3">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -92,7 +94,7 @@ export default function Suppliers() {
             ))}
           </tbody>
         </table>
-        {suppliers?.data?.length === 0 && <p className="text-center text-gray-500 py-8">No suppliers found</p>}
+        {suppliers?.data?.length === 0 && <p className="text-center text-gray-500 py-8">{t('suppliers.noSuppliers')}</p>}
       </div>
     </div>
   )

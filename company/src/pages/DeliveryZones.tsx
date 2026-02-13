@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { deliveryZonesApi, branchesApi } from '../lib/api'
 import { Plus, Edit, Trash2, MapPin } from 'lucide-react'
 
 export default function DeliveryZones() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -31,34 +33,34 @@ export default function DeliveryZones() {
     else createMutation.mutate(data)
   }
 
-  if (isLoading) return <div className="text-gray-400">Loading...</div>
+  if (isLoading) return <div className="text-gray-400">{t('common.loading')}</div>
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Delivery Zones</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('admin.deliveryZones')}</h1>
         <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
-          <Plus size={20} /> Add Zone
+          <Plus size={20} /> {t('deliveryZones.addZone')}
         </button>
       </div>
 
       {showForm && (
         <div className="card mb-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit' : 'Add'} Delivery Zone</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('deliveryZones.editZone') : t('deliveryZones.addZone')}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <select value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: parseInt(e.target.value) })} className="input" required>
-              <option value="">Select Branch *</option>
+              <option value="">{t('common.select')} {t('staff.branch')} *</option>
               {branches?.data?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
-            <input type="text" placeholder="Zone Name *" value={formData.zoneName} onChange={(e) => setFormData({ ...formData, zoneName: e.target.value })} className="input" required />
-            <input type="number" step="0.01" placeholder="Base Fee *" value={formData.baseFee} onChange={(e) => setFormData({ ...formData, baseFee: parseFloat(e.target.value) || 0 })} className="input" required />
-            <input type="number" step="0.01" placeholder="Min Order Amount" value={formData.minOrderAmount} onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })} className="input" />
-            <input type="number" step="0.01" placeholder="Extra Fee per KM" value={formData.extraFeePerKm} onChange={(e) => setFormData({ ...formData, extraFeePerKm: e.target.value })} className="input" />
-            <input type="number" step="0.01" placeholder="Max Distance (KM)" value={formData.maxDistanceKm} onChange={(e) => setFormData({ ...formData, maxDistanceKm: e.target.value })} className="input" />
-            <textarea placeholder="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input md:col-span-2" rows={2} />
+            <input type="text" placeholder={`${t('deliveryZones.zoneName')} *`} value={formData.zoneName} onChange={(e) => setFormData({ ...formData, zoneName: e.target.value })} className="input" required />
+            <input type="number" step="0.01" placeholder={`${t('deliveryZones.baseFee')} *`} value={formData.baseFee} onChange={(e) => setFormData({ ...formData, baseFee: parseFloat(e.target.value) || 0 })} className="input" required />
+            <input type="number" step="0.01" placeholder={t('deliveryZones.minOrder')} value={formData.minOrderAmount} onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })} className="input" />
+            <input type="number" step="0.01" placeholder={t('deliveryZones.extraFeePerKm')} value={formData.extraFeePerKm} onChange={(e) => setFormData({ ...formData, extraFeePerKm: e.target.value })} className="input" />
+            <input type="number" step="0.01" placeholder={t('deliveryZones.maxDistance')} value={formData.maxDistanceKm} onChange={(e) => setFormData({ ...formData, maxDistanceKm: e.target.value })} className="input" />
+            <textarea placeholder={t('common.description')} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input md:col-span-2" rows={2} />
             <div className="md:col-span-2 flex gap-2">
-              <button type="submit" className="btn-primary">Save</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary">{t('common.save')}</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         </div>
@@ -68,12 +70,12 @@ export default function DeliveryZones() {
         <table className="table">
           <thead>
             <tr className="border-b border-gray-700">
-              <th className="text-left p-3">Zone Name</th>
-              <th className="text-left p-3">Branch</th>
-              <th className="text-left p-3">Base Fee</th>
-              <th className="text-left p-3">Min Order</th>
-              <th className="text-left p-3">Status</th>
-              <th className="text-left p-3">Actions</th>
+              <th className="text-left p-3">{t('deliveryZones.zoneName')}</th>
+              <th className="text-left p-3">{t('staff.branch')}</th>
+              <th className="text-left p-3">{t('deliveryZones.baseFee')}</th>
+              <th className="text-left p-3">{t('deliveryZones.minOrder')}</th>
+              <th className="text-left p-3">{t('common.status')}</th>
+              <th className="text-left p-3">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -98,7 +100,7 @@ export default function DeliveryZones() {
             ))}
           </tbody>
         </table>
-        {zones?.data?.length === 0 && <p className="text-center text-gray-500 py-8">No delivery zones found</p>}
+        {zones?.data?.length === 0 && <p className="text-center text-gray-500 py-8">{t('deliveryZones.noZones')}</p>}
       </div>
     </div>
   )

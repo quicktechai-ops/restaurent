@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../lib/api'
 import { 
   ShoppingBasket, Plus, Minus, Trash2, Search, User, 
   UtensilsCrossed, Package, Truck, CreditCard, X,
-  Percent, DollarSign, MapPin, Clock, Tag, Home, ArrowLeft, LogOut
+  Percent, DollarSign, Clock, Tag, Home, LogOut
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { printReceipt } from '../components/ReceiptPrint'
 
 const API_URL = '/api'
 
@@ -89,18 +91,18 @@ interface Branch {
   serviceChargePercent: number
 }
 
-// Dark theme styles
+// Dark theme styles — soft pro POS palette
 const styles = {
-  bgDark: '#0c0c0e',
-  panelBg: '#1c1c22',
-  glass: 'rgba(255, 255, 255, 0.05)',
-  glassBorder: 'rgba(255, 255, 255, 0.1)',
-  accent: '#0078d4',
-  success: '#2ecc71',
-  danger: '#e74c3c',
-  warning: '#f39c12',
-  textMain: '#ffffff',
-  textMuted: '#a0a0a0',
+  bgDark: '#151820',
+  panelBg: '#1c2028',
+  glass: 'rgba(255, 255, 255, 0.04)',
+  glassBorder: 'rgba(255, 255, 255, 0.07)',
+  accent: '#4da6e8',
+  success: '#63d9a0',
+  danger: '#f28b8b',
+  warning: '#f0c850',
+  textMain: '#e8eaed',
+  textMuted: '#717a88',
 }
 
 interface Reservation {
@@ -115,7 +117,8 @@ interface Reservation {
 }
 
 export default function POS() {
-  const { logout } = useAuth()
+  const { t } = useTranslation()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [categories, setCategories] = useState<Category[]>([])
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
@@ -151,6 +154,8 @@ export default function POS() {
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
+
+
 
   useEffect(() => {
     fetchData()
@@ -383,7 +388,7 @@ export default function POS() {
         })
       }
 
-      const payRes = await api.post(`${API_URL}/company/orders/${orderId}/pay`, {
+      await api.post(`${API_URL}/company/orders/${orderId}/pay`, {
         payments: [{
           paymentMethodId: paymentMethodId || 1,
           amount: grandTotal,
@@ -391,8 +396,39 @@ export default function POS() {
         }]
       })
 
-      alert(`✓ Order #${orderRes.data.orderNumber} paid via ${paymentMethodName}\nStatus: ${payRes.data.paymentStatus}`)
+      // Build receipt data before clearing order
+      const receipt = {
+        orderNumber: orderRes.data.orderNumber || orderId.toString(),
+        orderType: orderType === 'DineIn' ? t('pos.dineIn') : orderType === 'Takeaway' ? t('pos.takeaway') : t('pos.delivery'),
+        branchName: selectedBranch.name,
+        tableName: selectedTable ? tables.find(tb => tb.id === selectedTable)?.tableName : undefined,
+        customerName: selectedCustomer?.name,
+        lines: orderLines.map(l => ({
+          name: l.name,
+          sizeName: l.sizeName,
+          quantity: l.quantity,
+          effectivePrice: l.effectivePrice,
+          lineNet: l.lineNet,
+          discountPercent: l.discountPercent,
+          modifiers: l.modifiers,
+          notes: l.notes
+        })),
+        subtotal,
+        totalLineDiscount,
+        billDiscountPercent: billDiscount,
+        billDiscountAmount,
+        serviceChargePercent: selectedBranch.serviceChargePercent,
+        serviceChargeAmount: serviceCharge,
+        vatPercent: selectedBranch.vatPercent,
+        vatAmount: tax,
+        grandTotal,
+        paymentMethod: paymentMethodName,
+        companyName: user?.companyName || '',
+        dateTime: new Date()
+      }
+
       setShowPaymentModal(false)
+      printReceipt(receipt, t)
       clearOrder()
 
     } catch (error: any) {
@@ -415,37 +451,34 @@ export default function POS() {
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ 
-      background: `radial-gradient(circle at top left, #1a1a2e 0%, ${styles.bgDark} 100%)`,
+      background: styles.bgDark,
       color: styles.textMain,
-      fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
+      fontFamily: "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif",
       zIndex: 50
     }}>
       {/* Header */}
-      <header className="h-[50px] flex items-center justify-between px-4 border-b shrink-0 z-50" style={{
-        background: 'rgba(0,0,0,0.3)',
-        backdropFilter: 'blur(15px)',
-        borderColor: styles.glassBorder
+      <header className="h-[48px] flex items-center justify-between px-5 shrink-0 z-50" style={{
+        background: '#111419',
+        borderBottom: `1px solid ${styles.glassBorder}`
       }}>
-        <div className="flex items-center gap-3">
+        {/* Left: Nav + Brand */}
+        <div className="flex items-center gap-4">
           <button 
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 pr-3 mr-2 hover:text-blue-400 transition-colors"
-            style={{ borderRight: `1px solid ${styles.glassBorder}` }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ background: styles.glass, border: `1px solid ${styles.glassBorder}` }}
           >
-            <ArrowLeft size={18} />
-            <Home size={18} />
+            <Home size={16} style={{ color: styles.textMuted }} />
           </button>
-          <div style={{ color: styles.accent }}>
-            <ShoppingBasket size={24} />
+          <div className="flex items-center gap-2">
+            <ShoppingBasket size={20} style={{ color: styles.accent }} />
+            <span className="text-sm font-semibold tracking-wide" style={{ color: styles.textMain }}>
+              POS <span style={{ color: styles.accent }}>PRO</span>
+            </span>
           </div>
-          <h2 className="text-sm tracking-wide">
-            RETAIL POS <span className="font-black" style={{ color: styles.accent }}>PRO</span>
-          </h2>
-        </div>
-
-        <div className="flex items-center gap-4 text-sm" style={{ color: styles.textMuted }}>
+          <div className="h-5 w-px mx-1" style={{ background: styles.glassBorder }} />
           <select 
-            className="px-3 py-2 rounded-lg outline-none max-w-[260px]"
+            className="px-2.5 py-1.5 rounded-lg outline-none text-xs"
             style={{ 
               background: styles.glass, 
               border: `1px solid ${styles.glassBorder}`,
@@ -458,67 +491,73 @@ export default function POS() {
             }}
           >
             {branches.map(b => (
-              <option key={b.id} value={b.id} style={{ background: '#111118' }}>
-                {b.name} (VAT {b.vatPercent}% • SVC {b.serviceChargePercent}%)
+              <option key={b.id} value={b.id} style={{ background: '#111419' }}>
+                {b.name}
               </option>
             ))}
           </select>
-          <span className="flex items-center gap-1">
-            <MapPin size={14} /> {selectedBranch?.name}
-          </span>
-          <span>VAT: {selectedBranch?.vatPercent || 0}% | Service: {selectedBranch?.serviceChargePercent || 0}%</span>
-          <span className="flex items-center gap-1">
-            <Clock size={14} /> {currentTime.toLocaleTimeString()}
+        </div>
+
+        {/* Right: Info + Logout */}
+        <div className="flex items-center gap-3 text-xs" style={{ color: styles.textMuted }}>
+          <span>{t('pos.vat')} {selectedBranch?.vatPercent || 0}%</span>
+          <span className="opacity-30">|</span>
+          <span>{t('pos.serviceCharge')} {selectedBranch?.serviceChargePercent || 0}%</span>
+          <div className="h-5 w-px mx-1" style={{ background: styles.glassBorder }} />
+          <span className="flex items-center gap-1.5 font-medium" style={{ color: styles.textMain }}>
+            <Clock size={13} /> {currentTime.toLocaleTimeString()}
           </span>
           <button 
             onClick={logout}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-600/20 transition-colors"
-            style={{ color: styles.danger }}
-            title="Logout"
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-red-500/10"
+            style={{ border: `1px solid ${styles.glassBorder}` }}
+            title={t('common.logout')}
           >
-            <LogOut size={18} />
+            <LogOut size={14} style={{ color: styles.danger }} />
           </button>
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Menu Section */}
-        <main className="flex-1 flex flex-col p-4 overflow-hidden gap-3">
-          {/* Top Controls */}
-          <div className="flex gap-2 items-center flex-wrap">
-            <div className="flex gap-2 items-center flex-wrap">
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {/* Controls Bar */}
+          <div className="flex items-center gap-3 px-5 py-3 shrink-0" style={{ 
+            background: '#1a1e26',
+            borderBottom: `1px solid ${styles.glassBorder}` 
+          }}>
+            {/* Order Type Tabs */}
+            <div className="flex rounded-lg overflow-hidden" style={{ border: `1px solid ${styles.glassBorder}` }}>
               {(['DineIn', 'Takeaway', 'Delivery'] as const).map(type => (
                 <button
                   key={type}
                   onClick={() => setOrderType(type)}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl font-bold transition-all select-none ${
-                    orderType === type ? 'scale-[0.98]' : ''
-                  }`}
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all select-none"
                   style={{
                     background: orderType === type 
-                      ? type === 'DineIn' ? 'rgba(0,120,212,0.18)' 
-                      : type === 'Takeaway' ? 'rgba(243,156,18,0.18)' 
-                      : 'rgba(46,204,113,0.18)'
-                      : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${orderType === type 
+                      ? type === 'DineIn' ? 'rgba(77,166,232,0.15)' 
+                      : type === 'Takeaway' ? 'rgba(240,200,80,0.15)' 
+                      : 'rgba(99,217,160,0.15)'
+                      : 'transparent',
+                    color: orderType === type 
                       ? type === 'DineIn' ? styles.accent 
                       : type === 'Takeaway' ? styles.warning 
                       : styles.success
-                      : styles.glassBorder}`,
-                    color: styles.textMain
+                      : styles.textMuted,
+                    borderRight: `1px solid ${styles.glassBorder}`
                   }}
                 >
-                  {type === 'DineIn' && <UtensilsCrossed size={16} />}
-                  {type === 'Takeaway' && <Package size={16} />}
-                  {type === 'Delivery' && <Truck size={16} />}
-                  {type === 'DineIn' ? 'Dine In' : type}
+                  {type === 'DineIn' && <UtensilsCrossed size={14} />}
+                  {type === 'Takeaway' && <Package size={14} />}
+                  {type === 'Delivery' && <Truck size={14} />}
+                  {type === 'DineIn' ? t('pos.dineIn') : type === 'Takeaway' ? t('pos.takeaway') : t('pos.delivery')}
                 </button>
               ))}
             </div>
 
             {orderType === 'DineIn' && (
               <select 
-                className="px-3 py-2.5 rounded-xl outline-none min-w-[220px]"
+                className="px-3 py-2 rounded-lg outline-none text-xs"
                 style={{ 
                   background: styles.glass, 
                   border: `1px solid ${styles.glassBorder}`,
@@ -527,39 +566,26 @@ export default function POS() {
                 value={selectedTable || ''}
                 onChange={(e) => setSelectedTable(parseInt(e.target.value) || null)}
               >
-                <option value="" style={{ background: '#111118' }}>Select Table</option>
+                <option value="" style={{ background: '#1a1e26' }}>{t('pos.selectTable')}</option>
                 {tables.map(t => (
-                  <option key={t.id} value={t.id} style={{ background: '#111118' }}>
+                  <option key={t.id} value={t.id} style={{ background: '#1a1e26' }}>
                     {t.tableName} ({t.zone})
                   </option>
                 ))}
               </select>
             )}
 
-            <button 
-              onClick={() => setShowCustomerModal(true)}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all ml-auto select-none hover:-translate-y-0.5"
-              style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: `1px solid ${styles.glassBorder}`,
-                color: styles.textMain
-              }}
-            >
-              <User size={16} />
-              {selectedCustomer ? selectedCustomer.name : 'Add Customer'}
-            </button>
-          </div>
+            <div className="flex-1" />
 
-          {/* Search - only show when viewing items */}
-          {selectedCategory && (
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2" size={18} style={{ color: styles.textMuted }} />
+            {/* Search */}
+            <div className="relative w-[240px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={14} style={{ color: styles.textMuted }} />
               <input
                 type="text"
-                placeholder="Search item name or code..."
+                placeholder={t('pos.searchItems')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-xl outline-none"
+                className="w-full pl-9 pr-3 py-2 rounded-lg outline-none text-xs"
                 style={{ 
                   background: styles.glass, 
                   border: `1px solid ${styles.glassBorder}`,
@@ -567,70 +593,79 @@ export default function POS() {
                 }}
               />
             </div>
-          )}
+
+            {/* Customer */}
+            <button 
+              onClick={() => setShowCustomerModal(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all select-none text-xs"
+              style={{
+                background: selectedCustomer ? 'rgba(77,166,232,0.1)' : styles.glass,
+                border: `1px solid ${selectedCustomer ? 'rgba(77,166,232,0.3)' : styles.glassBorder}`,
+                color: selectedCustomer ? styles.accent : styles.textMuted
+              }}
+            >
+              <User size={14} />
+              {selectedCustomer ? selectedCustomer.name : t('pos.addCustomer')}
+            </button>
+          </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 overflow-y-auto pr-1">
-            {/* Categories Grid - Show when no category selected */}
+          <div className="flex-1 overflow-y-auto p-5">
+            {/* Categories Grid */}
             {!selectedCategory ? (
-              <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+              <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
                 {categories.map(cat => {
                   const itemCount = menuItems.filter(i => i.categoryId === cat.id).length
                   return (
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.id)}
-                      className="aspect-square rounded-2xl overflow-hidden transition-all cursor-pointer select-none hover:-translate-y-2 hover:shadow-2xl relative group"
+                      className="rounded-xl overflow-hidden transition-all cursor-pointer select-none hover:-translate-y-1 hover:shadow-xl relative group"
                       style={{
-                        background: 'linear-gradient(135deg, #2a2a35 0%, #1a1a22 100%)',
-                        border: `1px solid ${styles.glassBorder}`
+                        background: styles.panelBg,
+                        border: `1px solid ${styles.glassBorder}`,
+                        aspectRatio: '4/3'
                       }}
                     >
                       {cat.image && (
                         <img 
                           src={cat.image} 
                           alt={cat.name}
-                          className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity"
+                          className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-opacity"
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 p-4">
-                        <h3 className="font-black text-lg text-white">{cat.name}</h3>
-                        <span className="text-sm" style={{ color: styles.textMuted }}>{itemCount} items</span>
-                      </div>
-                      <div className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center" 
-                        style={{ background: 'rgba(255,255,255,0.1)' }}>
-                        <span className="text-xs font-bold">{itemCount}</span>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <h3 className="font-bold text-sm">{cat.name}</h3>
+                        <span className="text-[11px]" style={{ color: styles.textMuted }}>{itemCount} {t('common.items')}</span>
                       </div>
                     </button>
                   )
                 })}
               </div>
             ) : (
-              /* Items Grid - Show when category is selected */
               <>
-                {/* Back to Categories Button */}
-                <button
-                  onClick={() => {
-                    setSelectedCategory(null)
-                    setSearchTerm('')
-                  }}
-                  className="flex items-center gap-2 mb-4 px-4 py-2 rounded-xl transition-all hover:-translate-x-1"
-                  style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${styles.glassBorder}`,
-                    color: styles.textMain
-                  }}
-                >
-                  <span style={{ fontSize: '18px' }}>←</span>
-                  <span className="font-bold">Back to Categories</span>
-                  <span className="ml-2 px-2 py-0.5 rounded text-sm" style={{ background: styles.accent }}>
-                    {categories.find(c => c.id === selectedCategory)?.name}
+                {/* Category Header */}
+                <div className="flex items-center gap-3 mb-4">
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(null)
+                      setSearchTerm('')
+                    }}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
+                    style={{ background: styles.glass, border: `1px solid ${styles.glassBorder}` }}
+                  >
+                    <span className="text-sm">←</span>
+                  </button>
+                  <span className="font-semibold text-sm">{categories.find(c => c.id === selectedCategory)?.name}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: styles.glass, color: styles.textMuted }}>
+                    {filteredItems.length} {t('common.items')}
                   </span>
-                </button>
+                </div>
 
-                <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
+                {/* Items Grid */}
+                <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
                   {filteredItems.map(item => (
                     <button
                       key={item.id}
@@ -641,24 +676,23 @@ export default function POS() {
                         border: `1px solid ${styles.glassBorder}`
                       }}
                     >
-                      <div className="w-full h-28 overflow-hidden" style={{ background: '#2a2a30' }}>
+                      <div className="w-full h-24 overflow-hidden" style={{ background: '#1e222b' }}>
                         <img 
-                          src={item.imageUrl || `https://placehold.co/200x120/2a2a30/666?text=${encodeURIComponent(item.name.substring(0,10))}`} 
+                          src={item.imageUrl || `https://placehold.co/200x120/1e222b/555?text=${encodeURIComponent(item.name.substring(0,8))}`} 
                           alt={item.name}
                           className="w-full h-full object-cover"
-                          onError={(e) => { (e.target as HTMLImageElement).src = `https://placehold.co/200x120/2a2a30/666?text=${encodeURIComponent(item.name.substring(0,10))}` }}
+                          onError={(e) => { (e.target as HTMLImageElement).src = `https://placehold.co/200x120/1e222b/555?text=${encodeURIComponent(item.name.substring(0,8))}` }}
                         />
                       </div>
-                      <div className="p-3 flex flex-col gap-1">
-                        <h4 className="font-bold text-sm leading-tight line-clamp-2">{item.name}</h4>
-                        {item.code && <span className="text-xs" style={{ color: styles.textMuted }}>{item.code}</span>}
+                      <div className="p-2.5 flex flex-col gap-0.5">
+                        <h4 className="font-semibold text-xs leading-tight line-clamp-2">{item.name}</h4>
                         <div className="flex items-center justify-between gap-1 mt-1">
-                          <span className="font-black text-lg" style={{ color: styles.success }}>{money(item.defaultPrice)}</span>
+                          <span className="font-bold text-sm" style={{ color: styles.success }}>{money(item.defaultPrice)}</span>
                           {item.allowSizes && (
-                            <span className="text-[10px] px-2 py-0.5 rounded" style={{ 
-                              background: 'rgba(0,120,212,0.2)',
+                            <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ 
+                              background: 'rgba(77,166,232,0.12)',
                               color: styles.accent
-                            }}>Sizes</span>
+                            }}>{t('pos.sizes')}</span>
                           )}
                         </div>
                       </div>
@@ -666,8 +700,8 @@ export default function POS() {
                   ))}
                 </div>
                 {filteredItems.length === 0 && (
-                  <div className="text-center py-8" style={{ color: styles.textMuted }}>
-                    No items found in this category
+                  <div className="text-center py-12 text-sm" style={{ color: styles.textMuted }}>
+                    {t('pos.noItemsFound')}
                   </div>
                 )}
               </>
@@ -676,49 +710,55 @@ export default function POS() {
         </main>
 
         {/* Receipt Sidebar */}
-        <aside className="w-[340px] flex flex-col p-4 shrink-0 overflow-hidden gap-2" style={{
-          background: 'rgba(0,0,0,0.4)',
-          backdropFilter: 'blur(25px)',
+        <aside className="w-[360px] flex flex-col shrink-0 overflow-hidden" style={{
+          background: '#111419',
           borderLeft: `1px solid ${styles.glassBorder}`
         }}>
-          {/* Header */}
-          <div className="flex items-center justify-between pb-3" style={{ borderBottom: `1px solid ${styles.glassBorder}` }}>
-            <h3 className="font-bold text-base flex items-center gap-2" style={{ color: styles.accent }}>
-              <ShoppingBasket size={18} /> CURRENT ORDER
-            </h3>
-            <span className="text-xs font-black px-2.5 py-1 rounded-full" style={{
-              background: orderType === 'DineIn' ? 'rgba(0,120,212,0.15)' 
-                : orderType === 'Takeaway' ? 'rgba(243,156,18,0.15)' 
-                : 'rgba(46,204,113,0.15)',
-              border: `1px solid ${orderType === 'DineIn' ? 'rgba(0,120,212,0.5)' 
-                : orderType === 'Takeaway' ? 'rgba(243,156,18,0.5)' 
-                : 'rgba(46,204,113,0.5)'}`
+          {/* Sidebar Header */}
+          <div className="flex items-center justify-between px-4 py-3 shrink-0" style={{ borderBottom: `1px solid ${styles.glassBorder}` }}>
+            <div className="flex items-center gap-2">
+              <ShoppingBasket size={16} style={{ color: styles.accent }} />
+              <span className="font-semibold text-sm">{t('pos.currentOrder')}</span>
+            </div>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{
+              background: orderType === 'DineIn' ? 'rgba(77,166,232,0.12)' 
+                : orderType === 'Takeaway' ? 'rgba(240,200,80,0.12)' 
+                : 'rgba(99,217,160,0.12)',
+              color: orderType === 'DineIn' ? styles.accent 
+                : orderType === 'Takeaway' ? styles.warning 
+                : styles.success
             }}>
-              {orderType}
+              {orderType === 'DineIn' ? t('pos.dineIn') : orderType === 'Takeaway' ? t('pos.takeaway') : t('pos.delivery')}
             </span>
           </div>
 
-          {/* Meta */}
-          <div className="text-sm flex flex-col gap-1 pb-1" style={{ color: styles.textMuted }}>
-            {selectedTable && <div>Table: {tables.find(t => t.id === selectedTable)?.tableName}</div>}
-            {selectedCustomer && <div>Customer: {selectedCustomer.name}</div>}
-          </div>
+          {/* Meta Info */}
+          {(selectedTable || selectedCustomer) && (
+            <div className="flex items-center gap-3 px-4 py-2 text-xs shrink-0" style={{ 
+              color: styles.textMuted,
+              borderBottom: `1px solid ${styles.glassBorder}` 
+            }}>
+              {selectedTable && <span>{t('reservations.table')}: <strong style={{ color: styles.textMain }}>{tables.find(t => t.id === selectedTable)?.tableName}</strong></span>}
+              {selectedTable && selectedCustomer && <span className="opacity-30">|</span>}
+              {selectedCustomer && <span>{t('loyaltyTransactions.customer')}: <strong style={{ color: styles.textMain }}>{selectedCustomer.name}</strong></span>}
+            </div>
+          )}
 
           {/* Upcoming Reservations */}
           {upcomingReservations.length > 0 && (
-            <div className="mb-3 rounded-xl p-3" style={{
-              background: 'rgba(243,156,18,0.1)',
-              border: '1px solid rgba(243,156,18,0.3)'
+            <div className="mx-4 mt-3 mb-1 rounded-lg p-2.5 shrink-0" style={{
+              background: 'rgba(240,200,80,0.06)',
+              border: '1px solid rgba(240,200,80,0.15)'
             }}>
-              <div className="flex items-center gap-2 mb-2" style={{ color: styles.warning }}>
-                <Clock size={14} />
-                <span className="font-bold text-xs">UPCOMING RESERVATIONS</span>
-                <span className="ml-auto text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(243,156,18,0.2)' }}>
+              <div className="flex items-center gap-2 mb-1.5" style={{ color: styles.warning }}>
+                <Clock size={12} />
+                <span className="font-semibold text-[10px] uppercase tracking-wider">{t('pos.upcomingReservations')}</span>
+                <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(240,200,80,0.12)' }}>
                   {upcomingReservations.length}
                 </span>
               </div>
-              <div className="space-y-1.5 max-h-24 overflow-y-auto">
-                {upcomingReservations.slice(0, 5).map(res => {
+              <div className="space-y-1 max-h-20 overflow-y-auto">
+                {upcomingReservations.slice(0, 4).map(res => {
                   const resDate = new Date(res.reservationDate)
                   const today = new Date()
                   const isToday = resDate.toDateString() === today.toDateString()
@@ -728,14 +768,14 @@ export default function POS() {
                   const dateLabel = isToday ? 'Today' : isTomorrow ? 'Tomorrow' : resDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
                   
                   return (
-                    <div key={res.id} className="flex items-center gap-2 text-xs" style={{ color: styles.textMain }}>
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${isToday ? 'bg-red-500/20 text-red-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                    <div key={res.id} className="flex items-center gap-2 text-[11px]">
+                      <span className={`px-1 py-0.5 rounded text-[9px] font-bold ${isToday ? 'bg-red-500/15 text-red-400' : 'bg-gray-500/15 text-gray-400'}`}>
                         {dateLabel}
                       </span>
-                      <span className="font-medium">{res.startTime?.substring(0, 5)}</span>
-                      <span className="truncate flex-1">{res.customerName}</span>
-                      <span className="flex items-center gap-1" style={{ color: styles.textMuted }}>
-                        <User size={10} /> {res.partySize}
+                      <span className="font-medium" style={{ color: styles.textMain }}>{res.startTime?.substring(0, 5)}</span>
+                      <span className="truncate flex-1" style={{ color: styles.textMuted }}>{res.customerName}</span>
+                      <span className="flex items-center gap-0.5" style={{ color: styles.textMuted }}>
+                        <User size={9} /> {res.partySize}
                       </span>
                     </div>
                   )
@@ -744,80 +784,76 @@ export default function POS() {
             </div>
           )}
 
-          {/* Order List */}
-          <div className="flex-1 overflow-y-auto pr-1">
+          {/* Order Lines */}
+          <div className="flex-1 overflow-y-auto px-4 py-3">
             {orderLines.length === 0 ? (
-              <div className="rounded-xl p-5 text-center" style={{
-                border: `1px dashed rgba(255,255,255,0.18)`,
-                background: 'rgba(255,255,255,0.03)',
-                color: styles.textMuted
-              }}>
-                <ShoppingBasket size={34} className="mx-auto mb-2 opacity-70" />
-                <div className="font-black text-white mt-1">No items added</div>
-                <div className="mt-1">Tap a menu item to add it.</div>
+              <div className="flex flex-col items-center justify-center h-full text-center" style={{ color: styles.textMuted }}>
+                <ShoppingBasket size={28} className="mb-2 opacity-40" />
+                <div className="font-semibold text-sm" style={{ color: styles.textMain }}>{t('pos.noItemsAdded')}</div>
+                <div className="text-xs mt-1">{t('pos.tapToAdd')}</div>
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="space-y-1.5">
                 {orderLines.map(line => (
-                  <div key={line.id} className="rounded-xl p-3 flex justify-between items-start gap-2.5" style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    border: `1px solid rgba(255,255,255,0.08)`
+                  <div key={line.id} className="rounded-lg p-2.5 flex gap-2.5" style={{
+                    background: 'rgba(255,255,255,0.02)',
+                    border: `1px solid rgba(255,255,255,0.05)`
                   }}>
-                    <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                      <span className="px-2 py-0.5 rounded-md text-xs font-black text-white" style={{ background: styles.accent }}>
-                        {line.quantity}
-                      </span>
-                      <div className="min-w-0">
-                        <div className="font-extrabold text-sm truncate">{line.name}</div>
-                        {line.sizeName && <div className="text-xs mt-0.5" style={{ color: styles.textMuted }}>{line.sizeName}</div>}
-                        {line.modifiers.length > 0 && (
-                          <div className="text-xs mt-1" style={{ color: 'rgba(0,120,212,0.9)' }}>
-                            {line.modifiers.map(m => m.name).join(', ')}
-                          </div>
-                        )}
-                        {line.notes && (
-                          <div className="text-xs mt-1 italic" style={{ color: 'rgba(255,255,255,0.55)' }}>{line.notes}</div>
-                        )}
-                        <div className="flex items-center gap-2 mt-2.5">
-                          <button 
-                            onClick={() => updateLineQuantity(line.id, -1)}
-                            className="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:-translate-y-0.5"
-                            style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${styles.glassBorder}` }}
-                          >
-                            <Minus size={12} />
-                          </button>
-                          <div className="w-6 text-center font-black">{line.quantity}</div>
-                          <button 
-                            onClick={() => updateLineQuantity(line.id, 1)}
-                            className="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:-translate-y-0.5"
-                            style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${styles.glassBorder}` }}
-                          >
-                            <Plus size={12} />
-                          </button>
+                    {/* Qty Badge */}
+                    <span className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5" style={{ 
+                      background: 'rgba(77,166,232,0.12)', color: styles.accent 
+                    }}>
+                      {line.quantity}
+                    </span>
+
+                    {/* Item Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-xs truncate">{line.name}</div>
+                      {line.sizeName && <div className="text-[10px] mt-0.5" style={{ color: styles.textMuted }}>{line.sizeName}</div>}
+                      {line.modifiers.length > 0 && (
+                        <div className="text-[10px] mt-0.5" style={{ color: styles.accent }}>
+                          {line.modifiers.map(m => m.name).join(', ')}
                         </div>
+                      )}
+                      {line.notes && (
+                        <div className="text-[10px] mt-0.5 italic" style={{ color: styles.textMuted }}>{line.notes}</div>
+                      )}
+                      {/* Qty Controls */}
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <button 
+                          onClick={() => updateLineQuantity(line.id, -1)}
+                          className="w-5 h-5 rounded flex items-center justify-center"
+                          style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${styles.glassBorder}` }}
+                        >
+                          <Minus size={10} />
+                        </button>
+                        <span className="text-[10px] font-bold w-4 text-center">{line.quantity}</span>
+                        <button 
+                          onClick={() => updateLineQuantity(line.id, 1)}
+                          className="w-5 h-5 rounded flex items-center justify-center"
+                          style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${styles.glassBorder}` }}
+                        >
+                          <Plus size={10} />
+                        </button>
                       </div>
                     </div>
 
-                    <div className="flex flex-col items-end gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <div 
-                          className="text-right cursor-pointer rounded-lg p-1.5 -m-1.5 transition-all hover:bg-gray-900/5"
-                          onClick={() => openLineDiscount(line.id)}
-                          title="Click to apply discount"
-                        >
-                          <div className="font-black">{money(line.lineNet)}</div>
-                          <div className="text-xs" style={{ color: styles.textMuted }}>{money(line.effectivePrice)} x {line.quantity}</div>
-                          {line.discountPercent > 0 && (
-                            <div className="text-xs mt-0.5" style={{ color: styles.success }}>-{line.discountPercent}% off</div>
-                          )}
-                        </div>
-                        <Trash2 
-                          size={14} 
-                          className="cursor-pointer" 
-                          style={{ color: styles.danger }}
-                          onClick={() => removeLine(line.id)}
-                        />
+                    {/* Price + Actions */}
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <div 
+                        className="text-right cursor-pointer"
+                        onClick={() => openLineDiscount(line.id)}
+                        title={t('pos.clickToApplyDiscount')}
+                      >
+                        <div className="font-bold text-xs">{money(line.lineNet)}</div>
+                        <div className="text-[10px]" style={{ color: styles.textMuted }}>{money(line.effectivePrice)} × {line.quantity}</div>
+                        {line.discountPercent > 0 && (
+                          <div className="text-[10px]" style={{ color: styles.success }}>-{line.discountPercent}%</div>
+                        )}
                       </div>
+                      <button onClick={() => removeLine(line.id)} className="mt-auto">
+                        <Trash2 size={12} style={{ color: styles.danger, opacity: 0.6 }} />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -825,23 +861,26 @@ export default function POS() {
             )}
           </div>
 
-          {/* Totals - Fixed at bottom */}
-          <div className="pt-2 space-y-1 shrink-0" style={{ borderTop: `2px solid ${styles.glassBorder}` }}>
+          {/* Totals & Actions */}
+          <div className="px-4 py-3 space-y-1.5 shrink-0" style={{ 
+            borderTop: `1px solid ${styles.glassBorder}`,
+            background: '#0e1116'
+          }}>
             <div className="flex justify-between text-xs" style={{ color: styles.textMuted }}>
-              <span>Subtotal</span>
+              <span>{t('pos.subtotal')}</span>
               <span>{money(subtotal)}</span>
             </div>
 
             {totalLineDiscount > 0 && (
               <div className="flex justify-between text-xs" style={{ color: styles.success }}>
-                <span>Discounts</span>
+                <span>{t('pos.lineDiscounts')}</span>
                 <span>-{money(totalLineDiscount)}</span>
               </div>
             )}
 
             <div className="flex justify-between text-xs items-center" style={{ color: styles.textMuted }}>
               <span className="flex items-center gap-1">
-                <Percent size={12} /> Bill %
+                <Percent size={11} /> {t('pos.billDiscount')}
               </span>
               <span className="flex items-center gap-1">
                 <input
@@ -850,57 +889,57 @@ export default function POS() {
                   max="100"
                   value={billDiscount}
                   onChange={(e) => setBillDiscount(parseFloat(e.target.value) || 0)}
-                  className="w-14 text-right rounded px-2 py-1 outline-none font-bold text-xs"
+                  className="w-12 text-right rounded px-1.5 py-0.5 outline-none font-semibold text-xs"
                   style={{ 
                     background: 'rgba(255,255,255,0.04)', 
                     border: `1px solid ${styles.glassBorder}`,
                     color: styles.textMain
                   }}
                 />
-                <span className="font-bold">%</span>
+                <span className="font-semibold">%</span>
               </span>
             </div>
 
             {(serviceCharge > 0 || tax > 0) && (
               <div className="flex justify-between text-xs" style={{ color: styles.textMuted }}>
-                <span>SVC + VAT</span>
+                <span>{t('pos.serviceCharge')} + {t('pos.vat')}</span>
                 <span>{money(serviceCharge + tax)}</span>
               </div>
             )}
 
-            <div className="flex justify-between items-baseline text-2xl font-black pt-1">
-              <span>TOTAL</span>
-              <span style={{ color: styles.success }}>{money(grandTotal)}</span>
+            <div className="flex justify-between items-baseline pt-1.5 pb-1" style={{ borderTop: `1px solid ${styles.glassBorder}` }}>
+              <span className="text-sm font-semibold">{t('pos.grandTotal')}</span>
+              <span className="text-xl font-bold" style={{ color: styles.success }}>{money(grandTotal)}</span>
             </div>
 
-            <button 
-              onClick={() => setShowPaymentModal(true)}
-              disabled={orderLines.length === 0}
-              className="w-full py-3 rounded-xl font-black text-base flex justify-between items-center select-none disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
-                color: '#000',
-                boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
-              }}
-            >
-              <span>PAY</span>
-              <span className="flex items-center gap-2">
-                {money(grandTotal)}
-                <CreditCard size={16} />
-              </span>
-            </button>
-
-            <button 
-              onClick={clearOrder}
-              className="w-full py-2 rounded-lg font-bold text-sm select-none transition-all hover:bg-red-500/10"
-              style={{
-                border: `1px solid rgba(231,76,60,0.3)`,
-                background: 'rgba(231,76,60,0.06)',
-                color: '#ffb3ac'
-              }}
-            >
-              Clear Order
-            </button>
+            <div className="flex gap-2 pt-1">
+              <button 
+                onClick={clearOrder}
+                className="px-4 py-2.5 rounded-lg font-semibold text-xs select-none transition-all"
+                style={{
+                  border: `1px solid rgba(242,139,139,0.2)`,
+                  background: 'rgba(242,139,139,0.06)',
+                  color: styles.danger
+                }}
+              >
+                {t('pos.clearOrder')}
+              </button>
+              <button 
+                onClick={() => setShowPaymentModal(true)}
+                disabled={orderLines.length === 0}
+                className="flex-1 py-2.5 rounded-lg font-bold text-sm flex justify-between items-center select-none disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                style={{
+                  background: orderLines.length > 0 ? 'rgba(99,217,160,0.15)' : styles.glass,
+                  border: `1px solid ${orderLines.length > 0 ? 'rgba(99,217,160,0.3)' : styles.glassBorder}`,
+                  color: orderLines.length > 0 ? styles.success : styles.textMuted
+                }}
+              >
+                <span className="flex items-center gap-1.5">
+                  <CreditCard size={14} /> {t('pos.pay')}
+                </span>
+                <span className="font-bold">{money(grandTotal)}</span>
+              </button>
+            </div>
           </div>
         </aside>
       </div>
@@ -934,7 +973,7 @@ export default function POS() {
               {/* Sizes */}
               {selectedItemForModifier.sizes && selectedItemForModifier.sizes.length > 0 && (
                 <div>
-                  <div className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: styles.textMuted }}>Size</div>
+                  <div className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: styles.textMuted }}>{t('pos.size')}</div>
                   <div className="grid grid-cols-3 gap-2.5">
                     {selectedItemForModifier.sizes.map(size => (
                       <button
@@ -956,7 +995,7 @@ export default function POS() {
 
               {/* Quantity */}
               <div>
-                <div className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: styles.textMuted }}>Quantity</div>
+                <div className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: styles.textMuted }}>{t('common.quantity')}</div>
                 <div className="flex items-center gap-3">
                   <button 
                     onClick={() => setItemQuantity(q => Math.max(1, q - 1))}
@@ -979,7 +1018,7 @@ export default function POS() {
               {/* Modifiers */}
               {modifiers.length > 0 && (
                 <div>
-                  <div className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: styles.textMuted }}>Add-ons</div>
+                  <div className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: styles.textMuted }}>{t('pos.addOns')}</div>
                   <div className="space-y-2">
                     {modifiers.map(mod => {
                       const selected = selectedModifiers.find(m => m.modifierId === mod.id)
@@ -1035,7 +1074,7 @@ export default function POS() {
                                 className="px-2.5 py-2 rounded-lg font-black"
                                 style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid rgba(255,255,255,0.16)` }}
                               >
-                                Add
+                                {t('common.add')}
                               </button>
                             )}
                           </div>
@@ -1048,11 +1087,11 @@ export default function POS() {
 
               {/* Notes */}
               <div>
-                <div className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: styles.textMuted }}>Special Instructions</div>
+                <div className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: styles.textMuted }}>{t('pos.specialInstructions')}</div>
                 <textarea
                   value={itemNotes}
                   onChange={(e) => setItemNotes(e.target.value)}
-                  placeholder="Any special requests..."
+                  placeholder={t('pos.anySpecialRequests')}
                   className="w-full rounded-xl p-2.5 outline-none resize-y min-h-[70px]"
                   style={{ 
                     background: 'rgba(255,255,255,0.04)', 
@@ -1069,14 +1108,14 @@ export default function POS() {
                 className="px-3.5 py-3 rounded-xl font-black"
                 style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid rgba(255,255,255,0.16)` }}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button 
                 onClick={confirmAddItem}
                 className="px-3.5 py-3 rounded-xl font-black"
                 style={{ background: 'rgba(0,120,212,0.18)', border: `1px solid rgba(0,120,212,0.6)` }}
               >
-                Add to Order
+                {t('pos.addToOrder')}
               </button>
             </div>
           </div>
@@ -1096,7 +1135,7 @@ export default function POS() {
           }}>
             <div className="px-4 py-3.5 flex items-center justify-between" style={{ borderBottom: `1px solid rgba(255,255,255,0.08)` }}>
               <div className="font-black text-base flex items-center gap-2.5">
-                <CreditCard size={18} style={{ color: styles.success }} /> Payment
+                <CreditCard size={18} style={{ color: styles.success }} /> {t('pos.payment')}
               </div>
               <button 
                 onClick={() => setShowPaymentModal(false)}
@@ -1109,7 +1148,7 @@ export default function POS() {
 
             <div className="p-4 space-y-4">
               <div className="text-center">
-                <div className="text-sm" style={{ color: styles.textMuted }}>Total Amount</div>
+                <div className="text-sm" style={{ color: styles.textMuted }}>{t('pos.totalAmount')}</div>
                 <div className="text-4xl font-black mt-1.5" style={{ color: styles.accent }}>{money(grandTotal)}</div>
               </div>
 
@@ -1119,7 +1158,7 @@ export default function POS() {
                     borderColor: 'rgba(255,255,255,0.15)',
                     borderTopColor: styles.accent
                   }}></div>
-                  <div className="mt-2.5 text-sm" style={{ color: styles.textMuted }}>Processing payment...</div>
+                  <div className="mt-2.5 text-sm" style={{ color: styles.textMuted }}>{t('pos.processingPayment')}</div>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2.5">
@@ -1148,17 +1187,7 @@ export default function POS() {
                           border: `1px solid rgba(255,255,255,0.14)`
                         }}
                       >
-                        <DollarSign size={18} /> Cash
-                      </button>
-                      <button
-                        onClick={() => processPayment(null, 'Card')}
-                        className="p-3.5 rounded-xl font-black flex items-center justify-center gap-2.5 transition-all select-none hover:-translate-y-0.5"
-                        style={{
-                          background: 'rgba(255,255,255,0.03)',
-                          border: `1px solid rgba(255,255,255,0.14)`
-                        }}
-                      >
-                        <CreditCard size={18} /> Card
+                        <DollarSign size={18} /> {t('pos.cash')}
                       </button>
                     </>
                   )}
@@ -1172,7 +1201,7 @@ export default function POS() {
                 className="px-3.5 py-3 rounded-xl font-black"
                 style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid rgba(255,255,255,0.16)` }}
               >
-                Close
+                {t('common.close')}
               </button>
             </div>
           </div>
@@ -1192,7 +1221,7 @@ export default function POS() {
           }}>
             <div className="px-4 py-3.5 flex items-center justify-between" style={{ borderBottom: `1px solid rgba(255,255,255,0.08)` }}>
               <div className="font-black text-base flex items-center gap-2.5">
-                <User size={18} style={{ color: styles.accent }} /> Select Customer
+                <User size={18} style={{ color: styles.accent }} /> {t('pos.selectCustomer')}
               </div>
               <button 
                 onClick={() => setShowCustomerModal(false)}
@@ -1212,7 +1241,7 @@ export default function POS() {
                 className="w-full p-3 text-left rounded-xl transition-all hover:bg-gray-900/5"
                 style={{ color: styles.textMuted }}
               >
-                No Customer (Walk-in)
+                {t('pos.walkIn')}
               </button>
               {customers.map(c => (
                 <button
@@ -1239,7 +1268,7 @@ export default function POS() {
                 className="px-3.5 py-3 rounded-xl font-black"
                 style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid rgba(255,255,255,0.16)` }}
               >
-                Close
+                {t('common.close')}
               </button>
             </div>
           </div>
@@ -1259,7 +1288,7 @@ export default function POS() {
           }}>
             <div className="px-4 py-3.5 flex items-center justify-between" style={{ borderBottom: `1px solid rgba(255,255,255,0.08)` }}>
               <div className="font-black text-base flex items-center gap-2.5">
-                <Tag size={18} style={{ color: styles.success }} /> Line Discount
+                <Tag size={18} style={{ color: styles.success }} /> {t('pos.lineDiscount')}
               </div>
               <button 
                 onClick={() => setShowLineDiscountModal(false)}
@@ -1272,7 +1301,7 @@ export default function POS() {
 
             <div className="p-4 space-y-4">
               <div>
-                <div className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: styles.textMuted }}>Discount Percentage</div>
+                <div className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: styles.textMuted }}>{t('pos.discountPercentage')}</div>
                 <div className="flex items-center gap-2.5">
                   <input
                     type="number"
@@ -1302,19 +1331,20 @@ export default function POS() {
                 className="px-3.5 py-3 rounded-xl font-black"
                 style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid rgba(255,255,255,0.16)` }}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button 
                 onClick={applyLineDiscount}
                 className="px-3.5 py-3 rounded-xl font-black"
                 style={{ background: 'rgba(46,204,113,0.18)', border: `1px solid rgba(46,204,113,0.6)` }}
               >
-                Apply
+                {t('pos.apply')}
               </button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   )
 }

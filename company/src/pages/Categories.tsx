@@ -1,9 +1,11 @@
 import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { categoriesApi, uploadApi } from '../lib/api'
 import { Plus, Edit, Trash2, FolderTree, Upload, X, Loader2 } from 'lucide-react'
 
 export default function Categories() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -28,25 +30,25 @@ export default function Categories() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> Add Category</button>
+        <h1 className="text-2xl font-bold text-gray-900">{t('nav.categories')}</h1>
+        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> {t('categories.addCategory')}</button>
       </div>
 
       {showForm && (
         <div className="card p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit Category' : 'Add Category'}</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('categories.editCategory') : t('categories.addCategory')}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label className="label">Name *</label><input className="input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required /></div>
-            <div><label className="label">Arabic Name</label><input className="input" value={formData.nameAr} onChange={e => setFormData({...formData, nameAr: e.target.value})} /></div>
-            <div><label className="label">Parent Category</label>
+            <div><label className="label">{t('common.name')} *</label><input className="input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required /></div>
+            <div><label className="label">{t('categories.arabicName')}</label><input className="input" value={formData.nameAr} onChange={e => setFormData({...formData, nameAr: e.target.value})} /></div>
+            <div><label className="label">{t('categories.parentCategory')}</label>
               <select className="input" value={formData.parentCategoryId || ''} onChange={e => setFormData({...formData, parentCategoryId: e.target.value ? parseInt(e.target.value) : null})}>
-                <option value="">-- None --</option>
+                <option value="">-- {t('common.none')} --</option>
                 {categories?.data?.filter((c: any) => c.id !== editingId).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-            <div><label className="label">Sort Order</label><input type="number" className="input" value={formData.sortOrder} onChange={e => setFormData({...formData, sortOrder: parseInt(e.target.value) || 0})} /></div>
+            <div><label className="label">{t('categories.sortOrder')}</label><input type="number" className="input" value={formData.sortOrder} onChange={e => setFormData({...formData, sortOrder: parseInt(e.target.value) || 0})} /></div>
             <div className="md:col-span-2">
-              <label className="label flex items-center gap-2"><Upload size={16} /> Category Image</label>
+              <label className="label flex items-center gap-2"><Upload size={16} /> {t('categories.categoryImage')}</label>
               <div className="flex items-center gap-4">
                 <input
                   type="file"
@@ -74,7 +76,7 @@ export default function Categories() {
                   className="btn-secondary flex items-center gap-2"
                 >
                   {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                  {uploading ? 'Uploading...' : 'Upload Image'}
+                  {uploading ? t('common.uploading') : t('categories.uploadImage')}
                 </button>
                 {formData.image && (
                   <div className="relative">
@@ -91,17 +93,17 @@ export default function Categories() {
               </div>
             </div>
             <div className="md:col-span-2 flex gap-3">
-              <button type="submit" className="btn-primary">{editingId ? 'Update' : 'Create'}</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary">{editingId ? t('common.update') : t('common.create')}</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         </div>
       )}
 
       <div className="card overflow-hidden">
-        {isLoading ? <div className="p-8 text-center">Loading...</div> : (
+        {isLoading ? <div className="p-8 text-center">{t('common.loading')}</div> : (
           <table className="table">
-            <thead><tr><th>Name</th><th>Arabic</th><th>Parent</th><th>Items</th><th>Actions</th></tr></thead>
+            <thead><tr><th>{t('common.name')}</th><th>{t('categories.arabic')}</th><th>{t('categories.parent')}</th><th>{t('common.items')}</th><th>{t('common.actions')}</th></tr></thead>
             <tbody>
               {categories?.data?.map((cat: any) => (
                 <tr key={cat.id}>
@@ -111,7 +113,7 @@ export default function Categories() {
                   <td>{cat.itemsCount}</td>
                   <td className="flex gap-2">
                     <button onClick={() => { setEditingId(cat.id); setFormData({ name: cat.name, nameAr: cat.nameAr || '', parentCategoryId: cat.parentCategoryId, sortOrder: cat.sortOrder, image: cat.image || '' }); setShowForm(true) }} className="text-blue-600 hover:text-blue-800"><Edit size={18} /></button>
-                    <button onClick={() => confirm('Delete?') && deleteMutation.mutate(cat.id)} className="text-red-600 hover:text-red-800"><Trash2 size={18} /></button>
+                    <button onClick={() => confirm(t('common.confirmDelete')) && deleteMutation.mutate(cat.id)} className="text-red-600 hover:text-red-800"><Trash2 size={18} /></button>
                   </td>
                 </tr>
               ))}

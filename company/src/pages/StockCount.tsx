@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import api from '../lib/api'
 import { Plus, ClipboardList, Check, AlertCircle } from 'lucide-react'
 
 interface CountLine { inventoryItemId: number; itemName: string; systemQty: number; countedQty: number; unit: string; variance: number }
 
 export default function StockCount() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [countName, setCountName] = useState('')
@@ -62,28 +64,28 @@ export default function StockCount() {
   const totalVariance = lines.reduce((sum, l) => sum + Math.abs(l.variance), 0)
   const itemsWithVariance = lines.filter(l => l.variance !== 0).length
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return <div>{t('common.loading')}</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><ClipboardList size={28} /> Stock Count</h1>
-        <button onClick={startNewCount} className="btn-primary flex items-center gap-2"><Plus size={20} /> New Stock Count</button>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><ClipboardList size={28} /> {t('inventory.stockCount')}</h1>
+        <button onClick={startNewCount} className="btn-primary flex items-center gap-2"><Plus size={20} /> {t('stockCount.newCount')}</button>
       </div>
 
       {showForm && (
         <div className="card mb-6 p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Physical Stock Count</h2>
+            <h2 className="text-lg font-semibold">{t('stockCount.physicalCount')}</h2>
             <div className="flex items-center gap-4 text-sm">
-              <span className="text-gray-600">Items with variance: <strong className="text-orange-600">{itemsWithVariance}</strong></span>
-              <span className="text-gray-600">Total variance: <strong className={totalVariance > 0 ? 'text-red-600' : 'text-green-600'}>{totalVariance.toFixed(2)}</strong></span>
+              <span className="text-gray-600">{t('stockCount.itemsWithVariance')}: <strong className="text-orange-600">{itemsWithVariance}</strong></span>
+              <span className="text-gray-600">{t('stockCount.totalVariance')}: <strong className={totalVariance > 0 ? 'text-red-600' : 'text-green-600'}>{totalVariance.toFixed(2)}</strong></span>
             </div>
           </div>
           
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Count Name</label>
+              <label className="block text-sm font-medium mb-1">{t('stockCount.countName')}</label>
               <input type="text" value={countName} onChange={(e) => setCountName(e.target.value)} className="input w-full max-w-md" placeholder={`Stock Count ${new Date().toLocaleDateString()}`} />
             </div>
 
@@ -91,11 +93,11 @@ export default function StockCount() {
               <table className="table">
                 <thead className="bg-gray-800 sticky top-0">
                   <tr>
-                    <th className="text-left p-3">Item</th>
-                    <th className="text-left p-3">Unit</th>
-                    <th className="text-left p-3">System Qty</th>
-                    <th className="text-left p-3">Counted Qty</th>
-                    <th className="text-left p-3">Variance</th>
+                    <th className="text-left p-3">{t('common.item')}</th>
+                    <th className="text-left p-3">{t('stockCount.unit')}</th>
+                    <th className="text-left p-3">{t('stockCount.systemQty')}</th>
+                    <th className="text-left p-3">{t('stockCount.countedQty')}</th>
+                    <th className="text-left p-3">{t('stockCount.variance')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -114,7 +116,7 @@ export default function StockCount() {
                             {line.variance > 0 ? '+' : ''}{line.variance.toFixed(2)}
                           </span>
                         ) : (
-                          <span className="text-green-600 flex items-center gap-1"><Check size={14} /> Match</span>
+                          <span className="text-green-600 flex items-center gap-1"><Check size={14} /> {t('stockCount.match')}</span>
                         )}
                       </td>
                     </tr>
@@ -124,8 +126,8 @@ export default function StockCount() {
             </div>
 
             <div className="flex gap-2 mt-4">
-              <button type="submit" className="btn-primary flex items-center gap-2"><Check size={16} /> Complete Count & Apply Adjustments</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary flex items-center gap-2"><Check size={16} /> {t('stockCount.completeCount')}</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         </div>
@@ -133,16 +135,16 @@ export default function StockCount() {
 
       {/* Count History */}
       <div className="card overflow-hidden">
-        <h2 className="font-semibold p-4 border-b border-gray-700">Count History</h2>
+        <h2 className="font-semibold p-4 border-b border-gray-700">{t('stockCount.countHistory')}</h2>
         <table className="table">
           <thead className="bg-gray-800">
             <tr>
-              <th className="text-left p-3">Date</th>
-              <th className="text-left p-3">Name</th>
-              <th className="text-left p-3">Items Counted</th>
-              <th className="text-left p-3">Variances</th>
-              <th className="text-left p-3">Counted By</th>
-              <th className="text-left p-3">Status</th>
+              <th className="text-left p-3">{t('reservations.date')}</th>
+              <th className="text-left p-3">{t('common.name')}</th>
+              <th className="text-left p-3">{t('stockCount.itemsCounted')}</th>
+              <th className="text-left p-3">{t('stockCount.variances')}</th>
+              <th className="text-left p-3">{t('stockCount.countedBy')}</th>
+              <th className="text-left p-3">{t('common.status')}</th>
             </tr>
           </thead>
           <tbody>
@@ -155,7 +157,7 @@ export default function StockCount() {
                   {count.varianceCount > 0 ? (
                     <span className="text-orange-600">{count.varianceCount} items</span>
                   ) : (
-                    <span className="text-green-600">All matched</span>
+                    <span className="text-green-600">{t('stockCount.allMatched')}</span>
                   )}
                 </td>
                 <td className="p-3 text-sm text-gray-600">{count.countedBy}</td>
@@ -168,7 +170,7 @@ export default function StockCount() {
             ))}
           </tbody>
         </table>
-        {(!counts || counts.length === 0) && <p className="text-center text-gray-500 py-8">No stock counts yet</p>}
+        {(!counts || counts.length === 0) && <p className="text-center text-gray-500 py-8">{t('stockCount.noCounts')}</p>}
       </div>
     </div>
   )

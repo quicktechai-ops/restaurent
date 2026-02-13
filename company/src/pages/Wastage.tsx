@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import api from '../lib/api'
 import { Plus, Trash2, AlertTriangle } from 'lucide-react'
 
 export default function Wastage() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({ inventoryItemId: '', quantity: 0, reason: '', notes: '' })
@@ -32,53 +34,53 @@ export default function Wastage() {
 
   const selectedItem = inventoryItems?.find((i: any) => i.id === parseInt(formData.inventoryItemId))
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return <div>{t('common.loading')}</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><AlertTriangle size={28} /> Wastage Recording</h1>
-        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> Record Wastage</button>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><AlertTriangle size={28} /> {t('inventory.wastage')}</h1>
+        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> {t('wastage.record')}</button>
       </div>
 
       {showForm && (
         <div className="card mb-6 p-6">
-          <h2 className="text-lg font-semibold mb-4">Record Wastage</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('wastage.record')}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Item *</label>
+              <label className="block text-sm font-medium mb-1">{t('common.item')} *</label>
               <select value={formData.inventoryItemId} onChange={(e) => setFormData({ ...formData, inventoryItemId: e.target.value })} className="input" required>
-                <option value="">Select Item</option>
+                <option value="">{t('common.select')} {t('common.item')}</option>
                 {inventoryItems?.map((item: any) => <option key={item.id} value={item.id}>{item.name} ({item.unitOfMeasure})</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Quantity *</label>
+              <label className="block text-sm font-medium mb-1">{t('common.quantity')} *</label>
               <div className="flex items-center gap-2">
                 <input type="number" step="0.01" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: parseFloat(e.target.value) || 0 })} className="input" required />
                 <span className="text-gray-500">{selectedItem?.unitOfMeasure || 'units'}</span>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Reason *</label>
+              <label className="block text-sm font-medium mb-1">{t('wastage.reason')} *</label>
               <select value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} className="input" required>
-                <option value="">Select Reason</option>
-                <option value="Expired">Expired</option>
-                <option value="Damaged">Damaged</option>
-                <option value="Spoiled">Spoiled</option>
-                <option value="Spilled">Spilled</option>
-                <option value="Theft">Theft/Missing</option>
-                <option value="Quality">Quality Issue</option>
-                <option value="Other">Other</option>
+                <option value="">{t('common.select')} {t('wastage.reason')}</option>
+                <option value="Expired">{t('wastage.expired')}</option>
+                <option value="Damaged">{t('wastage.damaged')}</option>
+                <option value="Spoiled">{t('wastage.spoiled')}</option>
+                <option value="Spilled">{t('wastage.spilled')}</option>
+                <option value="Theft">{t('wastage.theft')}</option>
+                <option value="Quality">{t('wastage.qualityIssue')}</option>
+                <option value="Other">{t('wastage.other')}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Notes</label>
+              <label className="block text-sm font-medium mb-1">{t('common.notes')}</label>
               <input type="text" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input" />
             </div>
             <div className="md:col-span-2 flex gap-2">
-              <button type="submit" className="btn-primary">Record Wastage</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary">{t('wastage.record')}</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         </div>
@@ -88,13 +90,13 @@ export default function Wastage() {
         <table className="table">
           <thead className="bg-gray-800">
             <tr>
-              <th className="text-left p-3">Date</th>
-              <th className="text-left p-3">Item</th>
-              <th className="text-left p-3">Quantity</th>
-              <th className="text-left p-3">Reason</th>
-              <th className="text-left p-3">Cost Impact</th>
-              <th className="text-left p-3">Recorded By</th>
-              <th className="text-left p-3">Notes</th>
+              <th className="text-left p-3">{t('reservations.date')}</th>
+              <th className="text-left p-3">{t('common.item')}</th>
+              <th className="text-left p-3">{t('common.quantity')}</th>
+              <th className="text-left p-3">{t('wastage.reason')}</th>
+              <th className="text-left p-3">{t('wastage.costImpact')}</th>
+              <th className="text-left p-3">{t('wastage.recordedBy')}</th>
+              <th className="text-left p-3">{t('common.notes')}</th>
             </tr>
           </thead>
           <tbody>
@@ -111,7 +113,7 @@ export default function Wastage() {
             ))}
           </tbody>
         </table>
-        {(!wastages || wastages.length === 0) && <p className="text-center text-gray-500 py-8">No wastage records</p>}
+        {(!wastages || wastages.length === 0) && <p className="text-center text-gray-500 py-8">{t('wastage.noRecords')}</p>}
       </div>
     </div>
   )

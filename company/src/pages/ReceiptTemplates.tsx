@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import api from '../lib/api'
 import { Plus, Edit, Trash2, FileText, Eye } from 'lucide-react'
 
 export default function ReceiptTemplates() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -72,34 +74,34 @@ export default function ReceiptTemplates() {
     setShowForm(true)
   }
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return <div>{t('common.loading')}</div>
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><FileText size={28} /> Receipt Templates</h1>
-        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> Add Template</button>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><FileText size={28} /> {t('receiptTemplates.title')}</h1>
+        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2"><Plus size={20} /> {t('receiptTemplates.addTemplate')}</button>
       </div>
 
       {showForm && (
         <div className="card mb-6 p-6">
-          <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit' : 'Create'} Receipt Template</h2>
+          <h2 className="text-lg font-semibold mb-4">{editingId ? t('receiptTemplates.editTemplate') : t('receiptTemplates.addTemplate')}</h2>
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium mb-1">Template Name *</label>
+                <label className="block text-sm font-medium mb-1">{t('receiptTemplates.templateName')} *</label>
                 <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input" required />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Type *</label>
+                <label className="block text-sm font-medium mb-1">{t('common.type')} *</label>
                 <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="input" required>
-                  <option value="customer">Customer Receipt</option>
-                  <option value="kitchen">Kitchen Ticket</option>
-                  <option value="label">Food Label</option>
+                  <option value="customer">{t('receiptTemplates.customerReceipt')}</option>
+                  <option value="kitchen">{t('receiptTemplates.kitchenTicket')}</option>
+                  <option value="label">{t('receiptTemplates.foodLabel')}</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Paper Size</label>
+                <label className="block text-sm font-medium mb-1">{t('receiptTemplates.paperSize')}</label>
                 <select value={formData.paperSize} onChange={(e) => setFormData({ ...formData, paperSize: e.target.value })} className="input">
                   <option value="58mm">58mm</option>
                   <option value="80mm">80mm</option>
@@ -107,47 +109,47 @@ export default function ReceiptTemplates() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Language</label>
+                <label className="block text-sm font-medium mb-1">{t('receiptTemplates.language')}</label>
                 <select value={formData.language} onChange={(e) => setFormData({ ...formData, language: e.target.value })} className="input">
-                  <option value="en">English</option>
-                  <option value="ar">Arabic</option>
-                  <option value="both">Bilingual (EN + AR)</option>
+                  <option value="en">{t('receiptTemplates.english')}</option>
+                  <option value="ar">{t('receiptTemplates.arabic')}</option>
+                  <option value="both">{t('receiptTemplates.bilingual')}</option>
                 </select>
               </div>
             </div>
 
-            <h3 className="font-medium mb-3">Display Options</h3>
+            <h3 className="font-medium mb-3">{t('receiptTemplates.displayOptions')}</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showLogo} onChange={(e) => setFormData({ ...formData, showLogo: e.target.checked })} /> Show Logo</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showAddress} onChange={(e) => setFormData({ ...formData, showAddress: e.target.checked })} /> Show Address</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showPhone} onChange={(e) => setFormData({ ...formData, showPhone: e.target.checked })} /> Show Phone</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showTaxNumber} onChange={(e) => setFormData({ ...formData, showTaxNumber: e.target.checked })} /> Show Tax Number</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showItemCode} onChange={(e) => setFormData({ ...formData, showItemCode: e.target.checked })} /> Show Item Codes</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showModifiers} onChange={(e) => setFormData({ ...formData, showModifiers: e.target.checked })} /> Show Modifiers</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showDiscountDetails} onChange={(e) => setFormData({ ...formData, showDiscountDetails: e.target.checked })} /> Show Discounts</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showPaymentDetails} onChange={(e) => setFormData({ ...formData, showPaymentDetails: e.target.checked })} /> Show Payment Details</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showTips} onChange={(e) => setFormData({ ...formData, showTips: e.target.checked })} /> Show Tips</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showLogo} onChange={(e) => setFormData({ ...formData, showLogo: e.target.checked })} /> {t('receiptTemplates.showLogo')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showAddress} onChange={(e) => setFormData({ ...formData, showAddress: e.target.checked })} /> {t('receiptTemplates.showAddress')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showPhone} onChange={(e) => setFormData({ ...formData, showPhone: e.target.checked })} /> {t('receiptTemplates.showPhone')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showTaxNumber} onChange={(e) => setFormData({ ...formData, showTaxNumber: e.target.checked })} /> {t('receiptTemplates.showTaxNumber')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showItemCode} onChange={(e) => setFormData({ ...formData, showItemCode: e.target.checked })} /> {t('receiptTemplates.showItemCodes')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showModifiers} onChange={(e) => setFormData({ ...formData, showModifiers: e.target.checked })} /> {t('receiptTemplates.showModifiers')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showDiscountDetails} onChange={(e) => setFormData({ ...formData, showDiscountDetails: e.target.checked })} /> {t('receiptTemplates.showDiscounts')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showPaymentDetails} onChange={(e) => setFormData({ ...formData, showPaymentDetails: e.target.checked })} /> {t('receiptTemplates.showPaymentDetails')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showTips} onChange={(e) => setFormData({ ...formData, showTips: e.target.checked })} /> {t('receiptTemplates.showTips')}</label>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium mb-1">Footer Text (English)</label>
+                <label className="block text-sm font-medium mb-1">{t('receiptTemplates.footerTextEn')}</label>
                 <textarea value={formData.footerText} onChange={(e) => setFormData({ ...formData, footerText: e.target.value })} className="input" rows={2} />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Footer Text (Arabic)</label>
+                <label className="block text-sm font-medium mb-1">{t('receiptTemplates.footerTextAr')}</label>
                 <textarea value={formData.footerTextAr} onChange={(e) => setFormData({ ...formData, footerTextAr: e.target.value })} className="input" rows={2} dir="rtl" />
               </div>
             </div>
 
             <div className="flex items-center gap-4 mb-6">
-              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.isDefault} onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })} /> Set as Default</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} /> Active</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.isDefault} onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })} /> {t('receiptTemplates.setAsDefault')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} /> {t('common.active')}</label>
             </div>
 
             <div className="flex gap-2">
-              <button type="submit" className="btn-primary">{editingId ? 'Update' : 'Create'} Template</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary">{editingId ? t('common.update') : t('common.create')}</button>
+              <button type="button" onClick={resetForm} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
         </div>
@@ -161,28 +163,28 @@ export default function ReceiptTemplates() {
                 <h3 className="font-semibold flex items-center gap-2">
                   <FileText size={18} className="text-primary-600" />
                   {template.name}
-                  {template.isDefault && <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded">Default</span>}
+                  {template.isDefault && <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded">{t('receiptTemplates.defaultLabel')}</span>}
                 </h3>
                 <p className="text-sm text-gray-500 capitalize">{template.type} • {template.paperSize} • {template.language}</p>
               </div>
               <span className={`px-2 py-1 rounded text-xs ${template.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                {template.isActive ? 'Active' : 'Inactive'}
+                {template.isActive ? t('common.active') : t('common.inactive')}
               </span>
             </div>
             <div className="text-sm text-gray-600 mb-3">
-              <p>Options: {[
-                template.showLogo && 'Logo',
-                template.showAddress && 'Address',
-                template.showModifiers && 'Modifiers',
-                template.showDiscountDetails && 'Discounts'
+              <p>{t('receiptTemplates.options')}: {[
+                template.showLogo && t('receiptTemplates.showLogo'),
+                template.showAddress && t('receiptTemplates.showAddress'),
+                template.showModifiers && t('receiptTemplates.showModifiers'),
+                template.showDiscountDetails && t('receiptTemplates.showDiscounts')
               ].filter(Boolean).join(', ')}</p>
             </div>
             <div className="flex gap-2">
               <button onClick={() => setPreviewTemplate(template)} className="flex-1 py-1.5 bg-gray-100 text-gray-700 rounded text-sm flex items-center justify-center gap-1 hover:bg-gray-200">
-                <Eye size={14} /> Preview
+                <Eye size={14} /> {t('receiptTemplates.preview')}
               </button>
               <button onClick={() => handleEdit(template)} className="flex-1 py-1.5 bg-blue-100 text-blue-700 rounded text-sm flex items-center justify-center gap-1 hover:bg-blue-200">
-                <Edit size={14} /> Edit
+                <Edit size={14} /> {t('common.edit')}
               </button>
               <button onClick={() => deleteMutation.mutate(template.id)} className="py-1.5 px-3 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200">
                 <Trash2 size={14} />
@@ -191,7 +193,7 @@ export default function ReceiptTemplates() {
           </div>
         ))}
       </div>
-      {(!templates || templates.length === 0) && <p className="text-center text-gray-500 py-8">No receipt templates defined</p>}
+      {(!templates || templates.length === 0) && <p className="text-center text-gray-500 py-8">{t('receiptTemplates.noTemplates')}</p>}
 
       {/* Preview Modal */}
       {previewTemplate && (
@@ -220,7 +222,7 @@ export default function ReceiptTemplates() {
               <div className="border-t border-dashed my-2"></div>
               <div className="text-center text-gray-600">{previewTemplate.footerText}</div>
             </div>
-            <button onClick={() => setPreviewTemplate(null)} className="btn-secondary w-full mt-4">Close Preview</button>
+            <button onClick={() => setPreviewTemplate(null)} className="btn-secondary w-full mt-4">{t('receiptTemplates.closePreview')}</button>
           </div>
         </div>
       )}

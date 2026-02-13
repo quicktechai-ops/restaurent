@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import api from '../lib/api'
 import { Star, Plus, Minus, ArrowUpDown, Filter, User } from 'lucide-react'
 
 export default function LoyaltyTransactions() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [filters, setFilters] = useState({ customerId: '', type: '', dateFrom: '', dateTo: '' })
   const [showAdjustModal, setShowAdjustModal] = useState(false)
@@ -43,32 +45,32 @@ export default function LoyaltyTransactions() {
     }
   }
 
-  if (isLoading) return <div className="text-gray-400">Loading...</div>
+  if (isLoading) return <div className="text-gray-400">{t('common.loading')}</div>
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Star size={28} /> Loyalty Transactions</h1>
-        <button onClick={() => setShowAdjustModal(true)} className="btn-primary flex items-center gap-2"><ArrowUpDown size={20} /> Adjust Points</button>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Star size={28} /> {t('loyaltyTransactions.title')}</h1>
+        <button onClick={() => setShowAdjustModal(true)} className="btn-primary flex items-center gap-2"><ArrowUpDown size={20} /> {t('loyaltyTransactions.adjustPoints')}</button>
       </div>
 
       {/* Filters */}
       <div className="card p-4 mb-6">
         <div className="flex items-center gap-2 mb-3">
           <Filter size={18} className="text-gray-500" />
-          <span className="font-medium">Filters</span>
+          <span className="font-medium">{t('common.filter')}</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <select value={filters.customerId} onChange={(e) => setFilters({ ...filters, customerId: e.target.value })} className="input">
-            <option value="">All Customers</option>
+            <option value="">{t('common.all')} {t('loyaltyTransactions.customer')}</option>
             {customers?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <select value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })} className="input">
-            <option value="">All Types</option>
-            <option value="Earn">Earn</option>
-            <option value="Redeem">Redeem</option>
-            <option value="Adjust">Adjust</option>
-            <option value="Expire">Expire</option>
+            <option value="">{t('common.all')} {t('common.type')}</option>
+            <option value="Earn">{t('loyaltyTransactions.earn')}</option>
+            <option value="Redeem">{t('loyaltyTransactions.redeem')}</option>
+            <option value="Adjust">{t('loyaltyTransactions.adjust')}</option>
+            <option value="Expire">{t('loyaltyTransactions.expire')}</option>
           </select>
           <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })} className="input" />
           <input type="date" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })} className="input" />
@@ -80,13 +82,13 @@ export default function LoyaltyTransactions() {
         <table className="table">
           <thead className="bg-gray-800">
             <tr>
-              <th className="text-left p-3">Date</th>
-              <th className="text-left p-3">Customer</th>
-              <th className="text-left p-3">Type</th>
-              <th className="text-left p-3">Points</th>
-              <th className="text-left p-3">Balance After</th>
-              <th className="text-left p-3">Reference</th>
-              <th className="text-left p-3">Notes</th>
+              <th className="text-left p-3">{t('reservations.date')}</th>
+              <th className="text-left p-3">{t('loyaltyTransactions.customer')}</th>
+              <th className="text-left p-3">{t('common.type')}</th>
+              <th className="text-left p-3">{t('loyaltyTransactions.points')}</th>
+              <th className="text-left p-3">{t('loyaltyTransactions.balanceAfter')}</th>
+              <th className="text-left p-3">{t('loyaltyTransactions.reference')}</th>
+              <th className="text-left p-3">{t('common.notes')}</th>
             </tr>
           </thead>
           <tbody>
@@ -110,42 +112,42 @@ export default function LoyaltyTransactions() {
             ))}
           </tbody>
         </table>
-        {(!transactions || transactions.length === 0) && <p className="text-center text-gray-500 py-8">No transactions found</p>}
+        {(!transactions || transactions.length === 0) && <p className="text-center text-gray-500 py-8">{t('loyaltyTransactions.noTransactions')}</p>}
       </div>
 
       {/* Adjust Points Modal */}
       {showAdjustModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-md p-6">
-            <h2 className="text-lg font-semibold mb-4">Adjust Loyalty Points</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('loyaltyTransactions.adjustPoints')}</h2>
             <form onSubmit={handleAdjust}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Customer *</label>
+                  <label className="block text-sm font-medium mb-1">{t('loyaltyTransactions.customer')} *</label>
                   <select value={adjustForm.customerId} onChange={(e) => setAdjustForm({ ...adjustForm, customerId: e.target.value })} className="input" required>
-                    <option value="">Select Customer</option>
+                    <option value="">{t('common.select')} {t('loyaltyTransactions.customer')}</option>
                     {customers?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Adjustment Type *</label>
+                  <label className="block text-sm font-medium mb-1">{t('loyaltyTransactions.adjustmentType')} *</label>
                   <select value={adjustForm.type} onChange={(e) => setAdjustForm({ ...adjustForm, type: e.target.value })} className="input" required>
-                    <option value="add">Add Points</option>
-                    <option value="subtract">Subtract Points</option>
+                    <option value="add">{t('loyaltyTransactions.addPoints')}</option>
+                    <option value="subtract">{t('loyaltyTransactions.subtractPoints')}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Points *</label>
+                  <label className="block text-sm font-medium mb-1">{t('loyaltyTransactions.points')} *</label>
                   <input type="number" min="1" value={adjustForm.points} onChange={(e) => setAdjustForm({ ...adjustForm, points: parseInt(e.target.value) || 0 })} className="input" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Reason *</label>
+                  <label className="block text-sm font-medium mb-1">{t('loyaltyTransactions.reason')} *</label>
                   <textarea value={adjustForm.reason} onChange={(e) => setAdjustForm({ ...adjustForm, reason: e.target.value })} className="input" rows={2} required />
                 </div>
               </div>
               <div className="flex gap-2 mt-6">
-                <button type="submit" className="btn-primary">Apply Adjustment</button>
-                <button type="button" onClick={() => setShowAdjustModal(false)} className="btn-secondary">Cancel</button>
+                <button type="submit" className="btn-primary">{t('loyaltyTransactions.applyAdjustment')}</button>
+                <button type="button" onClick={() => setShowAdjustModal(false)} className="btn-secondary">{t('common.cancel')}</button>
               </div>
             </form>
           </div>

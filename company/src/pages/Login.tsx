@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { Building2, Eye, EyeOff, AlertCircle } from 'lucide-react'
 
 export default function Login() {
+  const { t, i18n } = useTranslation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -12,6 +14,12 @@ export default function Login() {
 
   const { login } = useAuth()
   const navigate = useNavigate()
+
+  // Set RTL direction based on language
+  useEffect(() => {
+    document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr'
+    document.documentElement.lang = i18n.language
+  }, [i18n.language])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,7 +30,7 @@ export default function Login() {
       await login(username, password)
       navigate('/')
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid username or password')
+      setError(err.response?.data?.message || t('auth.loginError'))
     } finally {
       setIsLoading(false)
     }
@@ -35,8 +43,8 @@ export default function Login() {
           <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Building2 className="w-8 h-8 text-primary-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Company Admin</h1>
-          <p className="text-gray-600 mt-1">Sign in to manage your restaurant</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('auth.login')}</h1>
+          <p className="text-gray-600 mt-1">{t('common.welcome')}</p>
         </div>
 
         {error && (
@@ -49,7 +57,7 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label htmlFor="username" className="label">
-              Username
+              {t('auth.username')}
             </label>
             <input
               type="text"
@@ -57,14 +65,14 @@ export default function Login() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="input"
-              placeholder="Enter your username"
+              placeholder={t('auth.usernamePlaceholder')}
               required
             />
           </div>
 
           <div>
             <label htmlFor="password" className="label">
-              Password
+              {t('auth.password')}
             </label>
             <div className="relative">
               <input
@@ -73,7 +81,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input pr-10"
-                placeholder="Enter your password"
+                placeholder={t('auth.passwordPlaceholder')}
                 required
               />
               <button
@@ -94,16 +102,16 @@ export default function Login() {
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Signing in...
+                {t('common.loading')}
               </span>
             ) : (
-              'Sign In'
+              t('auth.loginButton')
             )}
           </button>
         </form>
 
         <p className="mt-8 text-center text-sm text-gray-500">
-          Restaurant POS System - Company Portal
+          {t('auth.companyPortal')}
         </p>
       </div>
     </div>
