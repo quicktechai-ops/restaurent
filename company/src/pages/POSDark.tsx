@@ -89,6 +89,9 @@ interface Branch {
   name: string
   vatPercent: number
   serviceChargePercent: number
+  address?: string
+  location?: string
+  phone?: string
 }
 
 // Dark theme styles — soft pro POS palette
@@ -128,6 +131,7 @@ export default function POS() {
   const [branches, setBranches] = useState<Branch[]>([])
   const [modifiers, setModifiers] = useState<Modifier[]>([])
   const [upcomingReservations, setUpcomingReservations] = useState<Reservation[]>([])
+  const [receiptTemplate, setReceiptTemplate] = useState<any>(null)
   
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
@@ -172,7 +176,7 @@ export default function POS() {
       const startDateStr = today.toISOString().split('T')[0]
       const endDateStr = endDate.toISOString().split('T')[0]
 
-      const [catRes, itemsRes, tablesRes, custRes, pmRes, branchRes, modRes, reservationsRes] = await Promise.all([
+      const [catRes, itemsRes, tablesRes, custRes, pmRes, branchRes, modRes, reservationsRes, templatesRes] = await Promise.all([
         api.get(`${API_URL}/company/categories`),
         api.get(`${API_URL}/company/menu-items`),
         api.get(`${API_URL}/company/tables`),
@@ -180,7 +184,8 @@ export default function POS() {
         api.get(`${API_URL}/company/payment-methods`),
         api.get(`${API_URL}/company/branches`),
         api.get(`${API_URL}/company/modifiers`),
-        api.get(`${API_URL}/company/reservations?startDate=${startDateStr}&endDate=${endDateStr}`)
+        api.get(`${API_URL}/company/reservations?startDate=${startDateStr}&endDate=${endDateStr}`),
+        api.get(`${API_URL}/company/receipt-templates`).catch(() => ({ data: [] }))
       ])
       
       setCategories(catRes.data.filter((c: Category) => c.isActive))
@@ -191,6 +196,11 @@ export default function POS() {
       setBranches(branchRes.data)
       setModifiers(modRes.data.filter((m: Modifier) => m.isActive))
       setUpcomingReservations(reservationsRes.data.filter((r: Reservation) => r.status !== 'Canceled' && r.status !== 'NoShow'))
+      
+      // Set default receipt template
+      const templates = Array.isArray(templatesRes.data) ? templatesRes.data : []
+      const defaultTpl = templates.find((t: any) => t.isDefault && t.isActive) || templates.find((t: any) => t.isActive)
+      if (defaultTpl) setReceiptTemplate(defaultTpl)
       
       if (branchRes.data.length > 0) {
         setSelectedBranch(branchRes.data[0])
@@ -401,6 +411,8 @@ export default function POS() {
         orderNumber: orderRes.data.orderNumber || orderId.toString(),
         orderType: orderType === 'DineIn' ? t('pos.dineIn') : orderType === 'Takeaway' ? t('pos.takeaway') : t('pos.delivery'),
         branchName: selectedBranch.name,
+        branchLocation: selectedBranch.address || selectedBranch.location,
+        branchPhone: selectedBranch.phone,
         tableName: selectedTable ? tables.find(tb => tb.id === selectedTable)?.tableName : undefined,
         customerName: selectedCustomer?.name,
         lines: orderLines.map(l => ({
@@ -424,7 +436,21 @@ export default function POS() {
         grandTotal,
         paymentMethod: paymentMethodName,
         companyName: user?.companyName || '',
-        dateTime: new Date()
+        dateTime: new Date(),
+        template: receiptTemplate ? {
+          showAddress: receiptTemplate.showAddress,
+          showPhone: receiptTemplate.showPhone,
+          showOrderNumber: receiptTemplate.showOrderNumber,
+          showDate: receiptTemplate.showDate,
+          showOrderType: receiptTemplate.showOrderType,
+          showTable: receiptTemplate.showTable,
+          showCustomer: receiptTemplate.showCustomer,
+          showPaymentMethod: receiptTemplate.showPaymentMethod,
+          showModifiers: receiptTemplate.showModifiers,
+          showDiscountDetails: receiptTemplate.showDiscountDetails,
+          footerText: receiptTemplate.footerText,
+          footerText2: receiptTemplate.footerText2
+        } : undefined
       }
 
       setShowPaymentModal(false)

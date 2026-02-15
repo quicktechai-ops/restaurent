@@ -19,13 +19,21 @@ export default function ReceiptTemplates() {
     showAddress: true,
     showPhone: true,
     showTaxNumber: true,
+    showOrderNumber: true,
+    showDate: true,
+    showOrderType: true,
+    showTable: true,
+    showCustomer: true,
+    showPaymentMethod: true,
     showItemCode: false,
     showModifiers: true,
     showDiscountDetails: true,
     showPaymentDetails: true,
     showTips: true,
     footerText: 'Thank you for your visit!',
+    footerText2: 'Please come again',
     footerTextAr: '',
+    footerTextAr2: '',
     isDefault: false,
     isActive: true
   })
@@ -56,9 +64,11 @@ export default function ReceiptTemplates() {
     setFormData({
       name: '', type: 'customer', paperSize: '80mm', language: 'en',
       showLogo: true, showAddress: true, showPhone: true, showTaxNumber: true,
-      showItemCode: false, showModifiers: true, showDiscountDetails: true,
-      showPaymentDetails: true, showTips: true, footerText: 'Thank you for your visit!',
-      footerTextAr: '', isDefault: false, isActive: true
+      showOrderNumber: true, showDate: true, showOrderType: true, showTable: true,
+      showCustomer: true, showPaymentMethod: true, showItemCode: false, showModifiers: true,
+      showDiscountDetails: true, showPaymentDetails: true, showTips: true,
+      footerText: 'Thank you for your visit!', footerText2: 'Please come again',
+      footerTextAr: '', footerTextAr2: '', isDefault: false, isActive: true
     })
   }
 
@@ -70,7 +80,33 @@ export default function ReceiptTemplates() {
 
   const handleEdit = (template: any) => {
     setEditingId(template.id)
-    setFormData({ ...template })
+    setFormData({
+      name: template.name || '',
+      type: template.type || 'customer',
+      paperSize: template.paperSize || '80mm',
+      language: template.language || 'en',
+      showLogo: template.showLogo ?? true,
+      showAddress: template.showAddress ?? true,
+      showPhone: template.showPhone ?? true,
+      showTaxNumber: template.showTaxNumber ?? true,
+      showOrderNumber: template.showOrderNumber ?? true,
+      showDate: template.showDate ?? true,
+      showOrderType: template.showOrderType ?? true,
+      showTable: template.showTable ?? true,
+      showCustomer: template.showCustomer ?? true,
+      showPaymentMethod: template.showPaymentMethod ?? true,
+      showItemCode: template.showItemCode ?? false,
+      showModifiers: template.showModifiers ?? true,
+      showDiscountDetails: template.showDiscountDetails ?? true,
+      showPaymentDetails: template.showPaymentDetails ?? true,
+      showTips: template.showTips ?? true,
+      footerText: template.footerText || 'Thank you for your visit!',
+      footerText2: template.footerText2 || 'Please come again',
+      footerTextAr: template.footerTextAr || '',
+      footerTextAr2: template.footerTextAr2 || '',
+      isDefault: template.isDefault ?? false,
+      isActive: template.isActive ?? true
+    })
     setShowForm(true)
   }
 
@@ -118,12 +154,26 @@ export default function ReceiptTemplates() {
               </div>
             </div>
 
-            <h3 className="font-medium mb-3">{t('receiptTemplates.displayOptions')}</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <h3 className="font-medium mb-3">{t('receiptTemplates.headerOptions')}</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showLogo} onChange={(e) => setFormData({ ...formData, showLogo: e.target.checked })} /> {t('receiptTemplates.showLogo')}</label>
               <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showAddress} onChange={(e) => setFormData({ ...formData, showAddress: e.target.checked })} /> {t('receiptTemplates.showAddress')}</label>
               <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showPhone} onChange={(e) => setFormData({ ...formData, showPhone: e.target.checked })} /> {t('receiptTemplates.showPhone')}</label>
               <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showTaxNumber} onChange={(e) => setFormData({ ...formData, showTaxNumber: e.target.checked })} /> {t('receiptTemplates.showTaxNumber')}</label>
+            </div>
+
+            <h3 className="font-medium mb-3">{t('receiptTemplates.orderInfoOptions')}</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showOrderNumber} onChange={(e) => setFormData({ ...formData, showOrderNumber: e.target.checked })} /> {t('receiptTemplates.showOrderNumber')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showDate} onChange={(e) => setFormData({ ...formData, showDate: e.target.checked })} /> {t('receiptTemplates.showDate')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showOrderType} onChange={(e) => setFormData({ ...formData, showOrderType: e.target.checked })} /> {t('receiptTemplates.showOrderType')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showTable} onChange={(e) => setFormData({ ...formData, showTable: e.target.checked })} /> {t('receiptTemplates.showTable')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showCustomer} onChange={(e) => setFormData({ ...formData, showCustomer: e.target.checked })} /> {t('receiptTemplates.showCustomer')}</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showPaymentMethod} onChange={(e) => setFormData({ ...formData, showPaymentMethod: e.target.checked })} /> {t('receiptTemplates.showPaymentMethod')}</label>
+            </div>
+
+            <h3 className="font-medium mb-3">{t('receiptTemplates.itemOptions')}</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
               <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showItemCode} onChange={(e) => setFormData({ ...formData, showItemCode: e.target.checked })} /> {t('receiptTemplates.showItemCodes')}</label>
               <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showModifiers} onChange={(e) => setFormData({ ...formData, showModifiers: e.target.checked })} /> {t('receiptTemplates.showModifiers')}</label>
               <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showDiscountDetails} onChange={(e) => setFormData({ ...formData, showDiscountDetails: e.target.checked })} /> {t('receiptTemplates.showDiscounts')}</label>
@@ -131,14 +181,25 @@ export default function ReceiptTemplates() {
               <label className="flex items-center gap-2"><input type="checkbox" checked={formData.showTips} onChange={(e) => setFormData({ ...formData, showTips: e.target.checked })} /> {t('receiptTemplates.showTips')}</label>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <h3 className="font-medium mb-3">{t('receiptTemplates.footerSection')}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium mb-1">{t('receiptTemplates.footerTextEn')}</label>
-                <textarea value={formData.footerText} onChange={(e) => setFormData({ ...formData, footerText: e.target.value })} className="input" rows={2} />
+                <label className="block text-sm font-medium mb-1">{t('receiptTemplates.footerLine1En')}</label>
+                <input type="text" value={formData.footerText} onChange={(e) => setFormData({ ...formData, footerText: e.target.value })} className="input" placeholder="Thank you for your visit!" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">{t('receiptTemplates.footerTextAr')}</label>
-                <textarea value={formData.footerTextAr} onChange={(e) => setFormData({ ...formData, footerTextAr: e.target.value })} className="input" rows={2} dir="rtl" />
+                <label className="block text-sm font-medium mb-1">{t('receiptTemplates.footerLine1Ar')}</label>
+                <input type="text" value={formData.footerTextAr} onChange={(e) => setFormData({ ...formData, footerTextAr: e.target.value })} className="input" dir="rtl" placeholder="شكراً لزيارتكم" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('receiptTemplates.footerLine2En')}</label>
+                <input type="text" value={formData.footerText2} onChange={(e) => setFormData({ ...formData, footerText2: e.target.value })} className="input" placeholder="Please come again" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('receiptTemplates.footerLine2Ar')}</label>
+                <input type="text" value={formData.footerTextAr2} onChange={(e) => setFormData({ ...formData, footerTextAr2: e.target.value })} className="input" dir="rtl" placeholder="نتطلع لرؤيتكم مجدداً" />
               </div>
             </div>
 
@@ -200,27 +261,32 @@ export default function ReceiptTemplates() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setPreviewTemplate(null)}>
           <div className="bg-gray-900 rounded-xl shadow-xl p-6 max-w-sm" onClick={e => e.stopPropagation()}>
             <h2 className="text-center font-bold mb-2">RECEIPT PREVIEW</h2>
-            <div className="border-2 border-dashed border-gray-300 p-4 font-mono text-xs">
+            <div className="border-2 border-dashed border-gray-300 p-4 font-mono text-xs bg-white text-black">
               {previewTemplate.showLogo && <div className="text-center mb-2">[LOGO]</div>}
               <div className="text-center font-bold">Restaurant Name</div>
               {previewTemplate.showAddress && <div className="text-center text-gray-600">123 Main Street</div>}
               {previewTemplate.showPhone && <div className="text-center text-gray-600">Tel: +1 234 567 890</div>}
               {previewTemplate.showTaxNumber && <div className="text-center text-gray-600 mb-2">Tax#: 12345678</div>}
-              <div className="border-t border-dashed my-2"></div>
-              <div>Order #1234 • Table 5</div>
-              <div className="text-gray-600">Dec 7, 2025 7:30 PM</div>
-              <div className="border-t border-dashed my-2"></div>
+              <div className="border-t border-dashed border-black my-2"></div>
+              {previewTemplate.showOrderNumber && <div className="flex justify-between"><span>Order #</span><span>#1234</span></div>}
+              {previewTemplate.showDate && <div className="flex justify-between"><span>Date</span><span>Dec 7, 2025 7:30 PM</span></div>}
+              {previewTemplate.showOrderType && <div className="flex justify-between"><span>Type</span><span>Dine In</span></div>}
+              {previewTemplate.showTable && <div className="flex justify-between"><span>Table</span><span>Table 5</span></div>}
+              {previewTemplate.showCustomer && <div className="flex justify-between"><span>Customer</span><span>John Doe</span></div>}
+              {previewTemplate.showPaymentMethod && <div className="flex justify-between"><span>Payment</span><span>Cash</span></div>}
+              <div className="border-t border-dashed border-black my-2"></div>
               <div className="flex justify-between"><span>2x Burger</span><span>$24.00</span></div>
-              {previewTemplate.showModifiers && <div className="text-gray-500 ml-2">- Extra cheese</div>}
+              {previewTemplate.showModifiers && <div className="text-gray-500 ml-2">+ Extra cheese</div>}
               <div className="flex justify-between"><span>1x Cola</span><span>$3.00</span></div>
-              <div className="border-t border-dashed my-2"></div>
+              <div className="border-t border-dashed border-black my-2"></div>
               <div className="flex justify-between"><span>Subtotal</span><span>$27.00</span></div>
-              {previewTemplate.showDiscountDetails && <div className="flex justify-between text-green-600"><span>Discount 10%</span><span>-$2.70</span></div>}
+              {previewTemplate.showDiscountDetails && <div className="flex justify-between text-red-600"><span>Discount 10%</span><span>-$2.70</span></div>}
               <div className="flex justify-between"><span>Tax</span><span>$2.43</span></div>
-              <div className="flex justify-between font-bold"><span>TOTAL</span><span>$26.73</span></div>
-              {previewTemplate.showPaymentDetails && <><div className="border-t border-dashed my-2"></div><div>Paid: Cash $30.00</div><div>Change: $3.27</div></>}
-              <div className="border-t border-dashed my-2"></div>
-              <div className="text-center text-gray-600">{previewTemplate.footerText}</div>
+              <div className="flex justify-between font-bold border-t-2 border-b-2 border-double border-black py-1 my-1"><span>TOTAL</span><span>$26.73</span></div>
+              {previewTemplate.showPaymentDetails && <><div className="text-gray-600">Paid: $30.00</div><div className="text-gray-600">Change: $3.27</div></>}
+              <div className="border-t border-dashed border-black my-2"></div>
+              <div className="text-center font-bold">{previewTemplate.footerText || 'Thank you!'}</div>
+              {previewTemplate.footerText2 && <div className="text-center text-gray-600">{previewTemplate.footerText2}</div>}
             </div>
             <button onClick={() => setPreviewTemplate(null)} className="btn-secondary w-full mt-4">{t('receiptTemplates.closePreview')}</button>
           </div>

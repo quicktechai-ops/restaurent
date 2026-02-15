@@ -70,14 +70,39 @@ public class ReceiptTemplate
     [MaxLength(50)]
     public string Name { get; set; } = string.Empty;
     
+    [MaxLength(10)]
+    public string PaperSize { get; set; } = "80mm";
+    
     [MaxLength(500)]
     public string? HeaderText { get; set; }
     
     [MaxLength(500)]
     public string? FooterText { get; set; }
     
-    public bool ShowLogo { get; set; } = true;
+    [MaxLength(500)]
+    public string? FooterText2 { get; set; }
     
+    [MaxLength(500)]
+    public string? FooterTextAr { get; set; }
+    
+    [MaxLength(500)]
+    public string? FooterTextAr2 { get; set; }
+    
+    public bool ShowLogo { get; set; } = true;
+    public bool ShowAddress { get; set; } = true;
+    public bool ShowPhone { get; set; } = true;
+    public bool ShowTaxNumber { get; set; } = true;
+    public bool ShowOrderNumber { get; set; } = true;
+    public bool ShowDate { get; set; } = true;
+    public bool ShowOrderType { get; set; } = true;
+    public bool ShowTable { get; set; } = true;
+    public bool ShowCustomer { get; set; } = true;
+    public bool ShowPaymentMethod { get; set; } = true;
+    public bool ShowItemCode { get; set; } = false;
+    public bool ShowModifiers { get; set; } = true;
+    public bool ShowDiscountDetails { get; set; } = true;
+    public bool ShowPaymentDetails { get; set; } = true;
+    public bool ShowTips { get; set; } = true;
     public bool ShowBarcode { get; set; } = false;
     
     [MaxLength(10)]

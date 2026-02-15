@@ -100,6 +100,33 @@ using (var scope = app.Services.CreateScope())
     {
         await context.Database.EnsureCreatedAsync();
         Console.WriteLine("Database schema verified/created successfully");
+        
+        // Add missing columns to receipt_templates if they don't exist
+        try
+        {
+            await context.Database.ExecuteSqlRawAsync(@"
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS paper_size VARCHAR(10) DEFAULT '80mm';
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_address BOOLEAN DEFAULT true;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_phone BOOLEAN DEFAULT true;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_tax_number BOOLEAN DEFAULT true;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_order_number BOOLEAN DEFAULT true;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_date BOOLEAN DEFAULT true;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_order_type BOOLEAN DEFAULT true;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_table BOOLEAN DEFAULT true;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_customer BOOLEAN DEFAULT true;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_payment_method BOOLEAN DEFAULT true;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_item_code BOOLEAN DEFAULT false;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_modifiers BOOLEAN DEFAULT true;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_discount_details BOOLEAN DEFAULT true;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_payment_details BOOLEAN DEFAULT true;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS show_tips BOOLEAN DEFAULT true;
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS footer_text2 VARCHAR(500);
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS footer_text_ar VARCHAR(500);
+                ALTER TABLE receipt_templates ADD COLUMN IF NOT EXISTS footer_text_ar2 VARCHAR(500);
+            ");
+            Console.WriteLine("Receipt template columns verified");
+        }
+        catch (Exception) { /* Columns may already exist */ }
     }
     catch (Exception ex)
     {

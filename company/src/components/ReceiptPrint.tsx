@@ -1,7 +1,26 @@
+export interface ReceiptTemplate {
+  showLogo?: boolean
+  showAddress?: boolean
+  showPhone?: boolean
+  showTaxNumber?: boolean
+  showOrderNumber?: boolean
+  showDate?: boolean
+  showOrderType?: boolean
+  showTable?: boolean
+  showCustomer?: boolean
+  showPaymentMethod?: boolean
+  showModifiers?: boolean
+  showDiscountDetails?: boolean
+  footerText?: string
+  footerText2?: string
+}
+
 export interface ReceiptData {
   orderNumber: string
   orderType: string
   branchName: string
+  branchLocation?: string
+  branchPhone?: string
   tableName?: string
   customerName?: string
   lines: {
@@ -26,6 +45,7 @@ export interface ReceiptData {
   paymentMethod: string
   companyName: string
   dateTime: Date
+  template?: ReceiptTemplate
 }
 
 function esc(s: string) {
@@ -37,6 +57,9 @@ function money(n: number) {
 }
 
 export function printReceipt(data: ReceiptData, t: (key: string) => string) {
+  const tpl = data.template || {}
+  const show = (key: keyof ReceiptTemplate, defaultVal = true) => tpl[key] !== undefined ? tpl[key] : defaultVal
+  
   const dateStr = data.dateTime.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })
   const timeStr = data.dateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
 
@@ -47,14 +70,14 @@ export function printReceipt(data: ReceiptData, t: (key: string) => string) {
     if (line.sizeName) name += ` <span style="font-weight:normal;font-size:11px">(${esc(line.sizeName)})</span>`
 
     let details = ''
-    if (line.modifiers.length > 0) {
+    if (show('showModifiers') && line.modifiers.length > 0) {
       const modText = line.modifiers.map(m => `${esc(m.name)}${m.quantity > 1 ? ` x${m.quantity}` : ''}`).join(', ')
       details += `<div style="font-size:10px;color:#555;padding-left:10px;padding-top:2px">+ ${modText}</div>`
     }
     if (line.notes) {
       details += `<div style="font-size:10px;color:#777;padding-left:10px;padding-top:2px;font-style:italic">${esc(line.notes)}</div>`
     }
-    if (line.discountPercent > 0) {
+    if (show('showDiscountDetails') && line.discountPercent > 0) {
       details += `<div style="font-size:10px;color:#c00;padding-left:10px;padding-top:2px">${t('receipt.discount')}: -${line.discountPercent}%</div>`
     }
 
@@ -72,9 +95,9 @@ export function printReceipt(data: ReceiptData, t: (key: string) => string) {
 
   let totalsHtml = `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span>${t('receipt.subtotal')}</span><span>${money(data.subtotal)}</span></div>`
 
-  if (data.totalLineDiscount > 0)
+  if (show('showDiscountDetails') && data.totalLineDiscount > 0)
     totalsHtml += `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;color:#c00"><span>${t('receipt.lineDiscounts')}</span><span>-${money(data.totalLineDiscount)}</span></div>`
-  if (data.billDiscountPercent > 0)
+  if (show('showDiscountDetails') && data.billDiscountPercent > 0)
     totalsHtml += `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;color:#c00"><span>${t('receipt.billDiscount')} (${data.billDiscountPercent}%)</span><span>-${money(data.billDiscountAmount)}</span></div>`
   if (data.serviceChargeAmount > 0)
     totalsHtml += `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span>${t('receipt.serviceCharge')} (${data.serviceChargePercent}%)</span><span>${money(data.serviceChargeAmount)}</span></div>`
@@ -82,14 +105,21 @@ export function printReceipt(data: ReceiptData, t: (key: string) => string) {
     totalsHtml += `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span>${t('receipt.vat')} (${data.vatPercent}%)</span><span>${money(data.vatAmount)}</span></div>`
 
   let metaHtml = ''
-  metaHtml += `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>${t('receipt.orderNo')}</span><span style="font-weight:bold">#${esc(data.orderNumber)}</span></div>`
-  metaHtml += `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>${t('receipt.date')}</span><span>${dateStr} ${timeStr}</span></div>`
-  metaHtml += `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>${t('receipt.type')}</span><span>${esc(data.orderType)}</span></div>`
-  if (data.tableName)
+  if (show('showOrderNumber'))
+    metaHtml += `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>${t('receipt.orderNo')}</span><span style="font-weight:bold">#${esc(data.orderNumber)}</span></div>`
+  if (show('showDate'))
+    metaHtml += `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>${t('receipt.date')}</span><span>${dateStr} ${timeStr}</span></div>`
+  if (show('showOrderType'))
+    metaHtml += `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>${t('receipt.type')}</span><span>${esc(data.orderType)}</span></div>`
+  if (show('showTable') && data.tableName)
     metaHtml += `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>${t('receipt.table')}</span><span>${esc(data.tableName)}</span></div>`
-  if (data.customerName)
+  if (show('showCustomer') && data.customerName)
     metaHtml += `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>${t('receipt.customer')}</span><span>${esc(data.customerName)}</span></div>`
-  metaHtml += `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>${t('receipt.payment')}</span><span>${esc(data.paymentMethod)}</span></div>`
+  if (show('showPaymentMethod'))
+    metaHtml += `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>${t('receipt.payment')}</span><span>${esc(data.paymentMethod)}</span></div>`
+
+  const footerLine1 = tpl.footerText || t('receipt.thankYou')
+  const footerLine2 = tpl.footerText2 || t('receipt.visitAgain')
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/>
     <style>
@@ -100,7 +130,8 @@ export function printReceipt(data: ReceiptData, t: (key: string) => string) {
     </style>
   </head><body>
     <div style="font-size:20px;font-weight:bold;text-align:center;margin-bottom:2px">${esc(data.companyName)}</div>
-    <div style="font-size:12px;color:#333;text-align:center;margin-bottom:6px">${esc(data.branchName)}</div>
+    <div style="font-size:12px;color:#333;text-align:center;margin-bottom:2px">${esc(data.branchName)}${show('showAddress') && data.branchLocation ? ' - ' + esc(data.branchLocation) : ''}</div>
+    ${show('showPhone') && data.branchPhone ? `<div style="font-size:11px;color:#555;text-align:center;margin-bottom:6px">${esc(data.branchPhone)}</div>` : ''}
     <hr style="border:none;border-top:1px dashed #000;margin:10px 0"/>
     ${metaHtml}
     <hr style="border:none;border-top:1px dashed #000;margin:10px 0"/>
@@ -118,8 +149,8 @@ export function printReceipt(data: ReceiptData, t: (key: string) => string) {
       <span>${t('receipt.grandTotal')}</span><span>${money(data.grandTotal)}</span>
     </div>
     <div style="text-align:center;margin-top:14px;padding-top:8px">
-      <div style="font-size:13px;font-weight:bold;margin-bottom:4px">${t('receipt.thankYou')}</div>
-      <div style="font-size:11px;color:#555">${t('receipt.visitAgain')}</div>
+      <div style="font-size:13px;font-weight:bold;margin-bottom:4px">${esc(footerLine1)}</div>
+      ${footerLine2 ? `<div style="font-size:11px;color:#555">${esc(footerLine2)}</div>` : ''}
     </div>
   </body></html>`
 

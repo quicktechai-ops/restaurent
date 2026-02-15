@@ -260,7 +260,7 @@ public class SettingsController : ControllerBase
     }
 
     [HttpPut("receipt-templates/{id}")]
-    public async Task<ActionResult<ReceiptTemplateListDto>> UpdateReceiptTemplate(int id, [FromBody] UpdateReceiptTemplateRequest request)
+    public async Task<ActionResult<ReceiptTemplateListDto>> UpdateReceiptTemplate(int id, [FromBody] CreateReceiptTemplateRequest request)
     {
         var companyId = GetCompanyId();
         var template = await _context.ReceiptTemplates.FirstOrDefaultAsync(r => r.ReceiptTemplateId == id && r.CompanyId == companyId);
